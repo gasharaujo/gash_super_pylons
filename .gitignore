@@ -1,0 +1,16 @@
+.gradle/
+**/build/
+**/bin/
+**/out/
+**/run/
+**/run-client/
+**/run-server/
+artifacts/
+test-results/
+.idea/
+.vscode/
+*.iml
+*.log
+hs_err_pid*
+local.properties
+.DS_Store
