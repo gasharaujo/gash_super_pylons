@@ -11,6 +11,17 @@ sourceSets.main {
     resources.srcDir '../common/src/main/resources'
 }
 
+sourceSets.test.java.srcDir '../common/src/test/java'
+
+dependencies {
+    testImplementation(enforcedPlatform('org.junit:junit-bom:5.14.1'))
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation "net.neoforged:testframework:${neo_version}"
+}
+
+test { useJUnitPlatform() }
+
 base {
     archivesName = "${mod_id}-neoforge-${minecraft_version}"
 }
@@ -19,6 +30,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
     version = neo_version
+
 
     runs {
         client {
@@ -38,6 +50,11 @@ neoForge {
         }
     }
 }
+neoForge.unitTest {
+    enable()
+    testedMod = neoForge.mods.gash_super_pylons
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 25

@@ -21,13 +21,17 @@ public final class PylonAnimation {
     }
 
     public static void apply(PoseStack pose, float ticks) {
-        double bob = Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
-        pose.translate(0.5, 7.0 / 16.0 + bob, 0.5);
-        // Positive Y rotation is counterclockwise when viewed from above.
-        pose.mulPose(Axis.YP.rotationDegrees(ticks * 360.0F / ROTATION_TICKS));
+        applyOrbit(pose, ticks);
         // Preserve the core's Z/Y/X Euler rotation from Pylon.json about its own center.
         pose.mulPose(Axis.ZP.rotationDegrees(-125.0F));
         pose.mulPose(Axis.YP.rotationDegrees(45.0F));
         pose.mulPose(Axis.XP.rotationDegrees(180.0F));
+    }
+
+    public static void applyOrbit(PoseStack pose, float ticks) {
+        double bob = Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
+        pose.translate(0.5, 7.0 / 16.0 + bob, 0.5);
+        // Positive Y rotation is counterclockwise when viewed from above.
+        pose.mulPose(Axis.YP.rotationDegrees(ticks * 360.0F / ROTATION_TICKS));
     }
 }

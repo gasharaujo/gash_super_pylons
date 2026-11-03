@@ -30,7 +30,7 @@ public final class SuperPylonsMod {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
         DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MOD_ID);
     public static final RegistryObject<SuperPylonBlock> SUPER_PYLON = BLOCKS.register("super_pylon", () ->
-        new SuperPylonBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+        new SuperPylonBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion().explosionResistance(3600000.0F)));
     public static final RegistryObject<BlockItem> SUPER_PYLON_ITEM = ITEMS.register("super_pylon", () ->
         new SuperPylonBlockItem(SUPER_PYLON.get(), new Item.Properties()));
     public static final RegistryObject<BlockEntityType<SuperPylonBlockEntity>> SUPER_PYLON_ENTITY =

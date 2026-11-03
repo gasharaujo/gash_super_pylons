@@ -2,7 +2,7 @@
 
 Mod independente de Minecraft por **Gasharaujo**.
 
-A versão **0.2.0** adiciona o bloco **Super Pylon**, com a estrutura do modelo fornecido no Blockbench usando a textura vanilla de bloco de ferro. O core tem textura branca opaca e animação no mundo, na mão e no inventário. Não exige outros mods além do loader correspondente.
+A versão **0.3.0** adiciona armazenamento de até **2.048 itens exatamente iguais**, receita de fabricação e imunidade a explosões. O Super Pylon usa a estrutura de ferro do modelo fornecido no Blockbench; seu core branco é substituído visualmente pelo item armazenado. Não exige outros mods além do loader correspondente.
 
 | Minecraft | Loader de compilação | Java | Módulo |
 | --- | --- | --- | --- |
@@ -24,7 +24,20 @@ Encontre o bloco na aba **Blocos funcionais** do Criativo ou use:
 
 O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**: 1,25 unidades do modelo, entre os extremos inferior e superior. O cubo permanece dentro do frame durante todo o ciclo.
 
-A colisão segue as 12 barras do frame. O core não tem colisão. Use uma picareta de pedra ou superior para recuperar o bloco. Ainda não há receita nem efeitos de gameplay.
+A colisão segue as 12 barras do frame. O core não tem colisão; a área de seleção e clique cobre todo o frame. O bloco tem a dureza e os requisitos de ferramenta do bloco de ferro: use uma picareta de pedra ou superior para recuperá-lo. É imune a explosões.
+
+### Receita e armazenamento
+
+Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloco de tijolos de pedra talhados** (`minecraft:chiseled_stone_bricks`), produzindo 1 Super Pylon.
+
+- **Botão direito com um item:** deposita os itens da mão até o limite de 2.048. O item aparece girando e flutuando no lugar do core.
+- **Correspondência exata:** item, nome, encantamentos, dano e NBT/componentes precisam ser iguais. A quantidade da stack não faz parte dessa comparação.
+- **Botão esquerdo:** retira 1 item. **Shift + botão esquerdo:** retira até uma stack normal do item (64, 16 ou 1, conforme o item).
+- Os itens retirados vão para o inventário; se faltar espaço, o restante cai no chão.
+- Ao esvaziar o armazenamento, o core branco reaparece e outro tipo de item pode ser inserido.
+- Segurar o ataque minera o bloco normalmente em Sobrevivência. Ao quebrar, o conteúdo restante é derrubado em stacks normais. No Criativo, enquanto houver conteúdo, o ataque retira itens em vez de destruir o pylon instantaneamente.
+
+Itens com a tag **`#gsp:modifier_item`** não entram no armazenamento e não substituem o core. A tag é fornecida vazia para receber os modificadores futuros ou itens adicionados por datapacks. Inserir transfere os itens da mão também no Criativo.
 
 Cada módulo gera um JAR próprio. Todas as dependências declaradas no mod usam apenas versão mínima, sem limite máximo. Isso não substitui a validação em outras versões de Minecraft ou do loader.
 
@@ -74,7 +87,9 @@ Para um cliente de desenvolvimento isolado, execute `.\gradlew.bat runClient` de
 
 ## Desenvolvimento
 
-Os módulos usam registros e renderizadores específicos para as APIs do Forge e NeoForge. O código e os recursos compartilhados ficam em `common/src/main/`. A animação é inteiramente visual, sem ticker de servidor e sem pacotes de sincronização.
+Os módulos usam registros, persistência e renderizadores específicos para as APIs do Forge e NeoForge. O código e os recursos compartilhados ficam em `common/src/main/`. A animação é visual e não exige ticker de servidor. Alterações de conteúdo são salvas e sincronizadas com o pacote vanilla de atualização de block entity.
+
+Os builds NeoForge executam testes JUnit com um servidor temporário do framework oficial, cobrindo capacidade, conservação dos itens, metadados, modificadores, persistência e propriedades de quebra/explosão. Os testes e sua tag de exemplo não são incluídos nos JARs distribuídos.
 
 O arquivo original foi movido de `Pylon.json` para `model-source/Pylon.json`. O modelo de frame usado pelo jogo fica em `common/src/main/resources/assets/gash_super_pylons/models/block/super_pylon.json`. O core é separado do modelo estático para permitir sua rotação em todas as versões.
 

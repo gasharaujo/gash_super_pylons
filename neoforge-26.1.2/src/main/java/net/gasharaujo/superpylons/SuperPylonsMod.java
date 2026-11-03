@@ -31,7 +31,7 @@ public final class SuperPylonsMod {
         DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MOD_ID);
     public static final DeferredBlock<SuperPylonBlock> SUPER_PYLON = BLOCKS.registerBlock(
         "super_pylon", SuperPylonBlock::new,
-        () -> BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
+        () -> BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion().explosionResistance(3600000.0F));
     public static final DeferredItem<BlockItem> SUPER_PYLON_ITEM = ITEMS.registerSimpleBlockItem(SUPER_PYLON);
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SuperPylonBlockEntity>> SUPER_PYLON_ENTITY =
         BLOCK_ENTITIES.register("super_pylon", () ->

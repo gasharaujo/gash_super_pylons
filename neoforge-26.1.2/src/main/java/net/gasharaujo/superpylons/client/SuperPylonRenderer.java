@@ -2,6 +2,9 @@ package net.gasharaujo.superpylons.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
@@ -16,6 +19,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
 
     public static final class State extends BlockEntityRenderState {
         public float ticks;
+        public final ItemStackRenderState storedItem = new ItemStackRenderState();
     }
 
     @Override
@@ -27,11 +31,21 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         BlockEntityRenderer.super.extractRenderState(entity, state, partialTick, camera, breaking);
         state.ticks = entity.getLevel() == null ? 0 :
             PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
+        Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.storedItem,
+            entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
     }
 
     @Override
     public void submit(State state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
-        core.submit(pose, collector, state.ticks, state.lightCoords, OverlayTexture.NO_OVERLAY,
-            0, state.breakProgress);
+        if (state.storedItem.isEmpty()) {
+            core.submit(pose, collector, state.ticks, state.lightCoords, OverlayTexture.NO_OVERLAY,
+                0, state.breakProgress);
+        } else {
+            pose.pushPose();
+            PylonAnimation.applyOrbit(pose, state.ticks);
+            pose.scale(0.5F, 0.5F, 0.5F);
+            state.storedItem.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+            pose.popPose();
+        }
     }
 }
