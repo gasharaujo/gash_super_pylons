@@ -3,6 +3,9 @@ package net.gasharaujo.superpylons;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.util.TriState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.EventPriority;
@@ -13,6 +16,20 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 @EventBusSubscriber(modid = SuperPylonsMod.MOD_ID)
 public final class PylonInteractions {
     private PylonInteractions() {}
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void removeUpgrade(PlayerInteractEvent.RightClickBlock event) {
+        Player player = event.getEntity();
+        if (event.getHand() != InteractionHand.MAIN_HAND || !player.isShiftKeyDown() ||
+            !player.getMainHandItem().isEmpty() || player.getOffhandItem().isEmpty() ||
+            event.getUseBlock() == TriState.FALSE) return;
+        // Vanilla skips the block-use method while sneaking with an occupied offhand.
+        if (event.getLevel().getBlockEntity(event.getPos()) instanceof SuperPylonBlockEntity pylon &&
+            pylon.use(player, InteractionHand.MAIN_HAND)) {
+            event.setCancellationResult(event.getLevel().isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME);
+            event.setCanceled(true);
+        }
+    }
 
     /** Creative skips Block.attack, so intercept it while the pylon still holds items. */
     @SubscribeEvent(priority = EventPriority.LOWEST)

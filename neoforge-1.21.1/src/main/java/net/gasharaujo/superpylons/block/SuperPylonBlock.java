@@ -1,5 +1,13 @@
 package net.gasharaujo.superpylons.block;
 
+import java.util.List;
+import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -36,15 +44,36 @@ public final class SuperPylonBlock extends BaseEntityBlock {
     public SuperPylonBlock(Properties properties) { super(properties); }
 
     @Override
-    public  ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    public ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon && pylon.use(player, hand)) {
+            return ItemInteractionResult.sidedSuccess(level.isClientSide());
+        }
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
 
-        if (held.isEmpty() || PylonItemRules.isModifier(held) || player.isSpectator()) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (player.getMainHandItem().isEmpty() && player.isShiftKeyDown() &&
+            level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon && pylon.use(player, InteractionHand.MAIN_HAND)) {
+            return InteractionResult.sidedSuccess(level.isClientSide());
         }
-        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon) {
-            pylon.insertFrom(held);
-        }
-        return ItemInteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+        return createTickerHelper(type, SuperPylonsMod.SUPER_PYLON_ENTITY.get(),
+            (world, pos, currentState, pylon) -> {
+                if (world instanceof ServerLevel server) pylon.tick(server);
+            });
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof SuperPylonBlockEntity pylon &&
+            pylon.hasPackedDrop()) return List.of();
+        return super.getDrops(state, params);
     }
 
     @Override

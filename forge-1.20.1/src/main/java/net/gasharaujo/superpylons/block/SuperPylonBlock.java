@@ -1,5 +1,13 @@
 package net.gasharaujo.superpylons.block;
 
+import java.util.List;
+import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -35,14 +43,26 @@ public final class SuperPylonBlock extends BaseEntityBlock {
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        ItemStack held = player.getItemInHand(hand);
-        if (held.isEmpty() || PylonItemRules.isModifier(held) || player.isSpectator()) {
-            return InteractionResult.PASS;
+        if (level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon && pylon.use(player, hand)) {
+            return InteractionResult.sidedSuccess(level.isClientSide());
         }
-        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon) {
-            pylon.insertFrom(held);
-        }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+        return createTickerHelper(type, SuperPylonsMod.SUPER_PYLON_ENTITY.get(),
+            (world, pos, currentState, pylon) -> {
+                if (world instanceof ServerLevel server) pylon.tick(server);
+            });
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof SuperPylonBlockEntity pylon &&
+            pylon.hasPackedDrop()) return List.of();
+        return super.getDrops(state, params);
     }
 
     @Override

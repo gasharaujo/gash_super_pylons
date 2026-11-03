@@ -111,11 +111,44 @@ final class PylonContentsTest {
         template.set(DataComponents.CUSTOM_NAME, Component.literal("Stored name"));
         original.contents.restore(template, 2048);
         CompoundTag saved = original.getUpdateTag(server.registryAccess());
+        saved.putInt("stored_count", 2048); // A pylon saved by 0.4.0.
         SuperPylonBlockEntity loaded = new SuperPylonBlockEntity(BlockPos.ZERO, state);
         PylonTestSerialization.load(loaded, saved, server);
         assertEquals(2048, loaded.getStoredCount());
         assertEquals(1, loaded.getStoredItem().getCount());
         assertTrue(PylonItemRules.exactlyEqual(template, loaded.getStoredItem()));
+    }
+
+    @Test
+    void unlimitedStoragePersistsAmountsAboveTheOldIntLimit(MinecraftServer server) {
+        var state = SuperPylonsMod.SUPER_PYLON.get().defaultBlockState();
+        SuperPylonBlockEntity original = new SuperPylonBlockEntity(BlockPos.ZERO, state);
+        original.loadUpgrades("storage_upgrade_6,quantity_upgrade_6");
+        long amount = (long) Integer.MAX_VALUE + 128;
+        ItemStack template = new ItemStack(Items.COBBLESTONE);
+        original.contents.restore(template, amount, original.getItemCapacity());
+        SuperPylonBlockEntity loaded = new SuperPylonBlockEntity(BlockPos.ZERO, state);
+        PylonTestSerialization.load(loaded, original.getUpdateTag(server.registryAccess()), server);
+        assertEquals(Long.MAX_VALUE, loaded.getItemCapacity());
+        assertEquals(amount, loaded.getStoredCount());
+        assertEquals(64, loaded.contents.extract(Integer.MAX_VALUE).getCount());
+        assertEquals(amount - 64, loaded.getStoredCount());
+        assertTrue(loaded.hasPackedDrop());
+    }
+
+    @Test
+    void tanksKeepOneFluidAndDoNotConsumeDuringSimulation(MinecraftServer server) {
+        PylonTank<String> tank = new PylonTank<>();
+        long capacity = 2_048_000L;
+        assertEquals(6400, tank.insert("water", 6400, capacity, String::equals, true));
+        assertEquals(0, tank.amount());
+        assertEquals(6400, tank.insert("water", 6400, capacity, String::equals, false));
+        assertEquals(0, tank.insert("lava", 1000, capacity, String::equals, false));
+        assertEquals(1000, tank.extract(1000, true));
+        assertEquals(6400, tank.amount());
+        assertEquals(6400, tank.extract(Integer.MAX_VALUE, false));
+        assertNull(tank.resource());
+        assertEquals(1000, tank.insert("lava", 1000, capacity, String::equals, false));
     }
 
     @Test

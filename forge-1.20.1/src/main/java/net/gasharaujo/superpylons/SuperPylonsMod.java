@@ -1,5 +1,11 @@
 package net.gasharaujo.superpylons;
 
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.function.Supplier;
+import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.gasharaujo.superpylons.block.PylonUpgradeItem;
+
 import com.mojang.logging.LogUtils;
 import net.gasharaujo.superpylons.block.SuperPylonBlock;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
@@ -40,6 +46,18 @@ public final class SuperPylonsMod {
         BLOCK_ENTITIES.register("super_pylon", () ->
             BlockEntityType.Builder.of(SuperPylonBlockEntity::new, SUPER_PYLON.get()).build(null));
 
+    public static final Supplier<? extends Item> UPGRADE_BASE =
+        ITEMS.register("upgrade_base", () -> new Item(new Item.Properties()));
+    public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
+
+    private static Map<PylonUpgrade, Supplier<? extends Item>> registerUpgrades() {
+        Map<PylonUpgrade, Supplier<? extends Item>> items = new EnumMap<>(PylonUpgrade.class);
+        for (PylonUpgrade upgrade : PylonUpgrade.values()) {
+            items.put(upgrade, ITEMS.register(upgrade.id(), () -> new PylonUpgradeItem(upgrade, new Item.Properties())));
+        }
+        return items;
+    }
+
     public SuperPylonsMod() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         BLOCKS.register(bus);
@@ -56,9 +74,12 @@ public final class SuperPylonsMod {
         }
     }
 
+
     private void addCreativeItem(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(SUPER_PYLON_ITEM.get());
+            event.accept(UPGRADE_BASE.get());
+            UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
         }
     }
 }

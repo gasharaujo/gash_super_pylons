@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gash_super_pylons:item/storage_upgrade_5"
+  }
+}

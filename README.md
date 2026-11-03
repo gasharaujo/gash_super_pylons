@@ -2,7 +2,7 @@
 
 Mod independente de Minecraft por **Gasharaujo**.
 
-O Super Pylon armazena até **2.048 itens exatamente iguais** e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco. A versão **0.4.0** adiciona integrações opcionais para inspecionar o armazenamento.
+O Super Pylon armazena **2.048 itens exatamente iguais** na configuração inicial e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco. A versão **0.5.0** adiciona upgrades de armazenamento, geradores, tanques e Clicker.
 
 | Minecraft | Loader de compilação | Java | Módulo |
 | --- | --- | --- | --- |
@@ -30,18 +30,39 @@ A colisão segue as 12 barras do frame. O core não tem colisão; a área de sel
 
 Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloco de tijolos de pedra talhados** (`minecraft:chiseled_stone_bricks`), produzindo 1 Super Pylon.
 
-- **Botão direito com um item:** deposita os itens da mão até o limite de 2.048. O item aparece girando e flutuando no lugar do core.
+- **Botão direito com um item:** deposita os itens da mão até o limite atual. O item aparece girando e flutuando no lugar do core.
 - **Correspondência exata:** item, nome, encantamentos, dano e NBT/componentes precisam ser iguais. A quantidade da stack não faz parte dessa comparação.
 - **Botão esquerdo:** retira 1 item. **Shift + botão esquerdo:** retira até uma stack normal do item (64, 16 ou 1, conforme o item).
 - Os itens retirados vão para o inventário; se faltar espaço, o restante cai no chão.
 - Ao esvaziar o armazenamento, o core branco reaparece e outro tipo de item pode ser inserido.
-- Segurar o ataque minera o bloco normalmente em Sobrevivência. Ao quebrar, o conteúdo restante é derrubado em stacks normais. No Criativo, enquanto houver conteúdo, o ataque retira itens em vez de destruir o pylon instantaneamente.
+- Segurar o ataque minera o bloco normalmente em Sobrevivência. Na quebra, o conteúdo sai em stacks ou fica no próprio pylon quando o volume é grande. No Criativo, enquanto houver conteúdo, o ataque retira itens em vez de destruir o pylon instantaneamente.
 
-Itens com a tag **`#gsp:modifier_item`** não entram no armazenamento e não substituem o core. A tag é fornecida vazia para receber os modificadores futuros ou itens adicionados por datapacks. Inserir transfere os itens da mão também no Criativo.
+Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A tag inclui os upgrades e pode ser estendida por datapacks. Inserir transfere os itens da mão também no Criativo.
+
+### Upgrades
+
+Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior substitui o anterior no mesmo slot e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é velocidade, quantidade, especialidade e armazenamento.
+
+| Tier | Intervalo em ticks | Produção por ciclo | Capacidade de armazenamento |
+| --- | ---: | ---: | ---: |
+| I | 40 | 1 | 2× |
+| II | 30 | 4 | 4× |
+| III | 20 | 8 | 8× |
+| IV | 10 | 16 | 16× |
+| V | 5 | 32 | 32× |
+| VI | 1 | 64 | Ilimitada |
+
+Um gerador começa com produção de 1 a cada 40 ticks. Os geradores de itens aceitam somente o produto que geram. O **Clicker** usa uma unidade do item armazenado para clicar com o botão direito na face superior do bloco abaixo, no intervalo de velocidade. O item volta ao pylon se o clique o deixar intacto. Um resultado alterado que não combine com o estoque sai como drop.
+
+Fluid Storage, geradores de água e lava, bigorna e encantamento exigem o pylon sem itens e bloqueiam depósitos de itens. Bigorna e encantamento reservam o slot de especialidade para suas funções futuras.
+
+Os tanques aceitam baldes e automação de fluidos. A capacidade é de **1 B por item** da capacidade correspondente. Os geradores de água e lava produzem **100 mB por unidade** de produção e aceitam o próprio fluido. Fluid Storage só pode ser removido vazio. A remoção de um gerador com líquido pede um segundo clique em até 5 segundos para descartar seu conteúdo. Quebrar o pylon descarta o líquido.
+
+Remover armazenamento exige que o conteúdo caiba na capacidade restante. Na quebra, volumes acima de 64 stacks são guardados no próprio pylon junto com os upgrades. Coloque o bloco novamente para recuperar esse estoque.
 
 ### Overlays opcionais
 
-Jade, WTHIT (fork do Waila) e The One Probe mostram o nome do item armazenado e a quantidade de **0 a 2.048** ao inspecionar o Super Pylon. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
+Jade, WTHIT (fork do Waila) e The One Probe mostram o conteúdo armazenado, a quantidade e a capacidade atual. Em modo tanque, mostram a quantidade em mB. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
 
 Jade e WTHIT leem o conteúdo que o pylon sincroniza com o cliente. The One Probe usa sua consulta ao servidor, onde também precisa estar instalado em multijogador. Cada integração é ativada pelo overlay correspondente.
 
