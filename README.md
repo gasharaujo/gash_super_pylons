@@ -2,7 +2,7 @@
 
 Mod independente de Minecraft por **Gasharaujo**.
 
-A versão **0.1.0** é a base vazia do projeto: carrega o mod e registra sua inicialização no log. Os pylons, blocos, itens, receitas e efeitos serão desenvolvidos depois. Não exige outros mods além do loader correspondente.
+A versão **0.2.0** adiciona o bloco **Super Pylon**, com a estrutura do modelo fornecido no Blockbench usando a textura vanilla de bloco de ferro. O core tem textura branca opaca e animação no mundo, na mão e no inventário. Não exige outros mods além do loader correspondente.
 
 | Minecraft | Loader de compilação | Java | Módulo |
 | --- | --- | --- | --- |
@@ -13,6 +13,18 @@ A versão **0.1.0** é a base vazia do projeto: carrega o mod e registra sua ini
 Identificador do mod: `gash_super_pylons`
 
 Pacote Java: `net.gasharaujo.superpylons`
+
+## Super Pylon
+
+Encontre o bloco na aba **Blocos funcionais** do Criativo ou use:
+
+```text
+/give @s gash_super_pylons:super_pylon
+```
+
+O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**: 1,25 unidades do modelo, entre os extremos inferior e superior. O cubo permanece dentro do frame durante todo o ciclo.
+
+A colisão segue as 12 barras do frame. O core não tem colisão. Use uma picareta de pedra ou superior para recuperar o bloco. Ainda não há receita nem efeitos de gameplay.
 
 Cada módulo gera um JAR próprio. Todas as dependências declaradas no mod usam apenas versão mínima, sem limite máximo. Isso não substitui a validação em outras versões de Minecraft ou do loader.
 
@@ -62,7 +74,11 @@ Para um cliente de desenvolvimento isolado, execute `.\gradlew.bat runClient` de
 
 ## Desenvolvimento
 
-Os módulos são independentes para acomodar as diferenças entre as APIs do Forge e NeoForge. Não há conteúdo de gameplay nesta etapa. O código de inicialização usa apenas APIs comuns a cliente e servidor.
+Os módulos usam registros e renderizadores específicos para as APIs do Forge e NeoForge. O código e os recursos compartilhados ficam em `common/src/main/`. A animação é inteiramente visual, sem ticker de servidor e sem pacotes de sincronização.
+
+O arquivo original foi movido de `Pylon.json` para `model-source/Pylon.json`. O modelo de frame usado pelo jogo fica em `common/src/main/resources/assets/gash_super_pylons/models/block/super_pylon.json`. O core é separado do modelo estático para permitir sua rotação em todas as versões.
+
+Após editar o modelo original, execute `python tools/generate_model.py` para atualizar os recursos. Mudanças de tamanho ou inclinação do core também precisam ser aplicadas em `PylonCoreModel.java` e `PylonAnimation.java`. Os recursos gerados são versionados; compilar não exige Python.
 
 Integração contínua: `.github/workflows/build.yml` compila as três versões e guarda os JARs como artefatos.
 

@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "base": "gash_super_pylons:item/super_pylon",
+    "model": {
+      "type": "gash_super_pylons:super_pylon"
+    }
+  }
+}
