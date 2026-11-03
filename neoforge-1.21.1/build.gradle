@@ -13,7 +13,24 @@ sourceSets.main {
 
 sourceSets.test.java.srcDir '../common/src/test/java'
 
+repositories {
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeModule 'maven.modrinth', 'jade'
+            includeModule 'maven.modrinth', 'the-one-probe'
+        }
+    }
+    maven {
+        url = 'https://maven2.bai.lol'
+        content { includeModule 'mcp.mobius.waila', 'wthit-api' }
+    }
+}
+
 dependencies {
+    compileOnly 'maven.modrinth:jade:eYz2YBGT'
+    compileOnly 'mcp.mobius.waila:wthit-api:neo-12.10.2'
+    compileOnly 'maven.modrinth:the-one-probe:4bbMy0Mh'
     testImplementation(enforcedPlatform('org.junit:junit-bom:5.14.1'))
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

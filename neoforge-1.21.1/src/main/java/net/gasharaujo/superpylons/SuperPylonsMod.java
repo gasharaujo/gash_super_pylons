@@ -3,6 +3,9 @@ package net.gasharaujo.superpylons;
 import com.mojang.logging.LogUtils;
 import net.gasharaujo.superpylons.block.SuperPylonBlock;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
+import net.gasharaujo.superpylons.compat.PylonProbeProvider;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -42,7 +45,14 @@ public final class SuperPylonsMod {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         bus.addListener(this::addCreativeItem);
+        bus.addListener(this::enqueueIntegrations);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
+    }
+
+    private void enqueueIntegrations(InterModEnqueueEvent event) {
+        if (ModList.get().isLoaded("theoneprobe")) {
+            PylonProbeProvider.enqueueRegistration();
+        }
     }
 
     private void addCreativeItem(BuildCreativeModeTabContentsEvent event) {

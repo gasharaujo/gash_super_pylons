@@ -2,7 +2,7 @@
 
 Mod independente de Minecraft por **Gasharaujo**.
 
-A versão **0.3.0** adiciona armazenamento de até **2.048 itens exatamente iguais**, receita de fabricação e imunidade a explosões. O Super Pylon usa a estrutura de ferro do modelo fornecido no Blockbench; seu core branco é substituído visualmente pelo item armazenado. Não exige outros mods além do loader correspondente.
+O Super Pylon armazena até **2.048 itens exatamente iguais** e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco. A versão **0.4.0** adiciona integrações opcionais para inspecionar o armazenamento.
 
 | Minecraft | Loader de compilação | Java | Módulo |
 | --- | --- | --- | --- |
@@ -38,6 +38,12 @@ Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloc
 - Segurar o ataque minera o bloco normalmente em Sobrevivência. Ao quebrar, o conteúdo restante é derrubado em stacks normais. No Criativo, enquanto houver conteúdo, o ataque retira itens em vez de destruir o pylon instantaneamente.
 
 Itens com a tag **`#gsp:modifier_item`** não entram no armazenamento e não substituem o core. A tag é fornecida vazia para receber os modificadores futuros ou itens adicionados por datapacks. Inserir transfere os itens da mão também no Criativo.
+
+### Overlays opcionais
+
+Jade, WTHIT (fork do Waila) e The One Probe mostram o nome do item armazenado e a quantidade de **0 a 2.048** ao inspecionar o Super Pylon. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
+
+Jade e WTHIT leem o conteúdo que o pylon sincroniza com o cliente. The One Probe usa sua consulta ao servidor, onde também precisa estar instalado em multijogador. Cada integração é ativada pelo overlay correspondente.
 
 Cada módulo gera um JAR próprio. Todas as dependências declaradas no mod usam apenas versão mínima, sem limite máximo. Isso não substitui a validação em outras versões de Minecraft ou do loader.
 

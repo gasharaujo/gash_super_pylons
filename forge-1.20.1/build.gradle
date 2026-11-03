@@ -38,7 +38,24 @@ minecraft {
     }
 }
 
+repositories {
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeModule 'maven.modrinth', 'jade'
+            includeModule 'maven.modrinth', 'the-one-probe'
+        }
+    }
+    maven {
+        url = 'https://maven2.bai.lol'
+        content { includeModule 'mcp.mobius.waila', 'wthit-api' }
+    }
+}
+
 dependencies {
+    compileOnly fg.deobf('maven.modrinth:jade:xJQHCmWJ')
+    compileOnly fg.deobf('mcp.mobius.waila:wthit-api:forge-8.21.1')
+    compileOnly fg.deobf('maven.modrinth:the-one-probe:e3jbQNls')
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 }
 tasks.withType(JavaCompile).configureEach {

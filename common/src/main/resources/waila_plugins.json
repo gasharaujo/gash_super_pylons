@@ -1,0 +1,8 @@
+{
+  "gash_super_pylons:storage": {
+    "entrypoints": {
+      "client": "net.gasharaujo.superpylons.compat.PylonWthitPlugin"
+    },
+    "side": "client"
+  }
+}

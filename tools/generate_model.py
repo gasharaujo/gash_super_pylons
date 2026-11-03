@@ -54,7 +54,10 @@ def main():
         "variants": {"": {"model": f"{MOD}:block/super_pylon"}}
     })
     for language in ["en_us", "pt_br"]:
-        write_json(assets / f"lang/{language}.json", {f"block.{MOD}.super_pylon": "Super Pylon"})
+        lang_path = assets / f"lang/{language}.json"
+        translations = json.loads(lang_path.read_text(encoding="utf-8")) if lang_path.exists() else {}
+        translations[f"block.{MOD}.super_pylon"] = "Super Pylon"
+        write_json(lang_path, translations)
 
     # Opaque pure-white RGBA, with enough space for the cube's unfolded UV map.
     def chunk(kind, data):
