@@ -7,6 +7,7 @@ import net.gasharaujo.superpylons.block.PylonFilterMenu;
 import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
 import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.gasharaujo.superpylons.block.PylonBreaker;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
@@ -19,6 +20,9 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -86,6 +90,8 @@ public final class SuperPylonsMod {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,
+            (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
         bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         bus.addListener(this::registerCapabilities);

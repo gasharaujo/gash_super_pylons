@@ -110,7 +110,7 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 - **Energy Wire, Item Wire e Fluid Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
 - **Wrench** seleciona um pylon com Enchanter ou Anvil usando Shift + botão direito. Clique com o botão direito em cada um dos dois auxiliares, com um bloco de ar entre cada auxiliar e o principal. No Enchanter, os auxiliares exibem livros. Com lápis-lazúli em um e XP no outro, enviam partículas ao principal. Na Anvil, orbes de XP giram em torno dos cores auxiliares. Os efeitos são visuais.
 - Shift + botão direito no ar limpa os dados salvos na Copy Paste Tool, na Paint Tool ou na Wrench.
-- **Break** está no Criativo como upgrade reservado.
+- **Break** minera o bloco diretamente abaixo no intervalo do Speed, com uma picareta virtual de netherita. Guarda apenas os drops exatamente iguais ao primeiro, respeitando o Filter e a capacidade. Os demais caem no local da quebra. Quando o armazenamento está cheio, o pylon pausa a mineração.
 
 ### Overlays opcionais
 

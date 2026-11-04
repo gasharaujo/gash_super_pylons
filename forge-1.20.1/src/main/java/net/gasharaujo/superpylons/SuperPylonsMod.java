@@ -7,6 +7,7 @@ import net.gasharaujo.superpylons.block.PylonFilterMenu;
 import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
 import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.gasharaujo.superpylons.block.PylonBreaker;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 
 import com.mojang.logging.LogUtils;
@@ -18,6 +19,9 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.gasharaujo.superpylons.block.SuperPylonBlockItem;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -85,6 +89,8 @@ public final class SuperPylonsMod {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
+        MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
+            (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
         bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);

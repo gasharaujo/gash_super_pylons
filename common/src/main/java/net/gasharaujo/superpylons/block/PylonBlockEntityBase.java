@@ -29,6 +29,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -385,10 +386,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     }
 
     private void install(Player player, ItemStack held, PylonUpgrade next) {
-        if (next == PylonUpgrade.BREAK) {
-            warn(player, "upgrade_disabled");
-            return;
-        }
         if (next.slot() == PylonUpgrade.Slot.PROCESSING && !canProcessWith(getSpecialty()) ||
             next.slot() == PylonUpgrade.Slot.SPECIALTY && getProcessing() != null && !canProcessWith(next)) {
             warn(player, "processing_incompatible");
@@ -425,7 +422,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         var next = new EnumMap<PylonUpgrade.Slot, PylonUpgrade>(PylonUpgrade.Slot.class);
         for (String id : saved.split(",")) {
             PylonUpgrade upgrade = PylonUpgrade.byId(id);
-            if (upgrade != null && upgrade != PylonUpgrade.BREAK) next.put(upgrade.slot(), upgrade);
+            if (upgrade != null) next.put(upgrade.slot(), upgrade);
         }
         if (upgrades.equals(next)) return;
 
@@ -601,6 +598,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         }
         if (specialty == PylonUpgrade.CLICKER) {
             clickBelow(server);
+            return;
+        }
+        if (specialty == PylonUpgrade.BREAK) {
+            breakBelow(server);
             return;
         }
         if (specialty == PylonUpgrade.MAGNET) {
@@ -842,6 +843,30 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     private static boolean mayWorkAt(ServerLevel server, ServerPlayer automation, BlockPos pos) {
         return server.getWorldBorder().isWithinBounds(pos) && server.mayInteract(automation, pos) &&
             !server.getServer().isUnderSpawnProtection(server, pos, automation);
+    }
+
+    private void breakBelow(ServerLevel server) {
+        long capacity = getItemCapacity();
+        BlockPos target = worldPosition.below();
+        if (contents.count() >= capacity || !server.hasChunkAt(target)) return;
+        BlockState state = server.getBlockState(target);
+        if (state.isAir() || state.getBlock() instanceof LiquidBlock || state.getDestroySpeed(server, target) < 0) return;
+        ServerPlayer automation = getAutomationPlayer(server, AUTOMATION_PROFILE);
+        if (!mayWorkAt(server, automation, target)) return;
+        var drops = PylonBreaker.breakBlock(server, target, automation);
+        if (isRemoved() || drops.isEmpty()) return;
+
+        ItemStack first = drops.get(0).getItem().copyWithCount(1);
+        if (!canStoreItem(first)) return;
+        long previousCount = contents.count();
+        for (ItemEntity drop : drops) {
+            ItemStack stack = drop.getItem().copy();
+            if (!PylonItemRules.exactlyEqual(first, stack)) continue;
+            if (contents.insert(stack, capacity) == 0) break;
+            if (stack.isEmpty()) drop.discard();
+            else drop.setItem(stack);
+        }
+        if (contents.count() != previousCount) sync();
     }
 
     private void clickBelow(ServerLevel server) {
