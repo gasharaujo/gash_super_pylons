@@ -1,27 +1,39 @@
 package net.gasharaujo.superpylons.block;
 
-import net.gasharaujo.superpylons.SuperPylonsMod;
 import com.mojang.authlib.GameProfile;
+import java.util.function.BiFunction;
+import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidUtil;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final PylonTank<FluidStack> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
+    private final IEnergyStorage energyInput = new EnergyPort(Direction.UP);
+    private final IEnergyStorage energyOutput = new EnergyPort(Direction.DOWN);
+    private final IEnergyStorage energyInternal = new EnergyPort(null);
 
     public IFluidHandler getFluidHandler() {
         return isTank() ? fluidHandler : null;
@@ -35,6 +47,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putString("upgrades", saveUpgrades());
+        if (getExperience() > 0) tag.putLong("experience", getExperience());
+        if (getEnergy() > 0) tag.putInt("energy", getEnergy());
+        if (!harvestBuffer.isEmpty()) {
+            ListTag harvest = new ListTag();
+            for (ItemStack stack : harvestBuffer) harvest.add(stack.save(registries));
+            tag.put("harvest", harvest);
+        }
         tag.putLong("stored_count", getStoredCount());
         tag.putLong("fluid_amount", tank.amount());
         if (getStoredCount() > 0) tag.put("stored_item", getStoredItem().save(registries));
@@ -45,6 +64,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadUpgrades(tag.getString("upgrades"));
+        loadSpecialtyAmounts(tag.getLong("experience"), tag.getInt("energy"));
+        harvestBuffer.clear();
+        ListTag harvest = tag.getList("harvest", Tag.TAG_COMPOUND);
+        for (int i = 0; i < harvest.size(); i++) {
+            ItemStack stack = ItemStack.parseOptional(registries, harvest.getCompound(i));
+            if (!stack.isEmpty()) harvestBuffer.add(stack);
+        }
         contents.restore(ItemStack.parseOptional(registries, tag.getCompound("stored_item")), tag.getLong("stored_count"), getItemCapacity());
         FluidStack resource = FluidStack.parseOptional(registries, tag.getCompound("fluid_template"));
         tank.restore(new PylonTank.State<>(resource.isEmpty() || !canFillFluid(resource.getFluid()) ? null : resource,
@@ -81,12 +107,12 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected void fluidModeChanged() {
+    protected void capabilitiesChanged() {
         if (level != null) level.invalidateCapabilities(worldPosition);
     }
 
     @Override
-    protected ServerPlayer getClickerPlayer(ServerLevel server, GameProfile profile) {
+    protected ServerPlayer getAutomationPlayer(ServerLevel server, GameProfile profile) {
         return FakePlayerFactory.get(server, profile);
     }
 
@@ -100,6 +126,84 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected void notifyPlayer(Player player, Component message) {
         player.displayClientMessage(message, true);
+    }
+
+    public IEnergyStorage getEnergyHandler(Direction side) {
+        if (!isEnergy()) return null;
+        if (side == null) return energyInternal;
+        if (side == Direction.UP) return energyInput;
+        return side == Direction.DOWN ? energyOutput : null;
+    }
+
+    @Override
+    protected long orbExperience(ExperienceOrb orb) {
+        return (long) orb.getValue() * Math.max(1, orb.saveWithoutId(new CompoundTag()).getInt("Count"));
+    }
+
+    @Override
+    protected BiFunction<ItemStack, Boolean, ItemStack> harvestOutput(ServerLevel server, BlockPos target) {
+        IItemHandler handler = server.getCapability(Capabilities.ItemHandler.BLOCK, target, Direction.UP);
+        return handler == null ? null : (stack, simulate) -> ItemHandlerHelper.insertItemStacked(handler, stack, simulate);
+    }
+
+    @Override
+    protected void transferEnergy(ServerLevel server) {
+        int inputLimit = energyLimit(true, Integer.MAX_VALUE);
+        if (inputLimit > 0) {
+            IEnergyStorage source = energyAt(server, worldPosition.above(), Direction.DOWN);
+            if (source != null) exchangeEnergy(true, source.extractEnergy(inputLimit, false), false);
+        }
+        int outputLimit = energyLimit(false, Integer.MAX_VALUE);
+        if (outputLimit > 0 && getStoredCount() == 1) {
+            ItemStack stack = getStoredItem();
+            IEnergyStorage item = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+            if (item != null) {
+                int accepted = item.receiveEnergy(outputLimit, false);
+                if (accepted > 0) {
+                    exchangeEnergy(false, accepted, false);
+                    contents.restore(stack, 1, getItemCapacity());
+                }
+            }
+        }
+        outputLimit = energyLimit(false, Integer.MAX_VALUE);
+        if (outputLimit > 0) {
+            IEnergyStorage target = energyAt(server, worldPosition.below(), Direction.UP);
+            if (target != null) exchangeEnergy(false, target.receiveEnergy(outputLimit, false), false);
+        }
+    }
+
+    private static IEnergyStorage energyAt(ServerLevel server, BlockPos pos, Direction side) {
+        return server.hasChunkAt(pos) ? server.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side) : null;
+    }
+
+    private final class EnergyPort implements IEnergyStorage {
+        private final Direction side;
+
+        private EnergyPort(Direction side) { this.side = side; }
+
+        @Override public boolean canReceive() { return isEnergy() && side != Direction.DOWN; }
+        @Override public boolean canExtract() { return isEnergy() && side != Direction.UP; }
+        @Override public int getEnergyStored() { return isEnergy() ? getEnergy() : 0; }
+        @Override public int getMaxEnergyStored() { return getEnergyCapacity(); }
+
+        @Override
+        public int receiveEnergy(int amount, boolean simulate) {
+            return canReceive() ? exchangeEnergy(true, amount, simulate) : 0;
+        }
+
+        @Override
+        public int extractEnergy(int amount, boolean simulate) {
+            return canExtract() ? exchangeEnergy(false, amount, simulate) : 0;
+        }
+    }
+
+    private int exchangeEnergy(boolean input, int requested, boolean simulate) {
+        int moved = energyLimit(input, requested);
+        if (moved > 0 && !simulate) {
+            energy.transfer(input, moved, level.getGameTime());
+            energyChanged();
+        }
+        return moved;
     }
 
     private final class TankHandler implements IFluidHandler {

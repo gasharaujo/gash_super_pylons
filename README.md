@@ -2,7 +2,7 @@
 
 Mod independente de Minecraft por **Gasharaujo**.
 
-O Super Pylon armazena **2.048 itens exatamente iguais** na configuração inicial e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco. A versão **0.5.0** adiciona upgrades de armazenamento, geradores, tanques e Clicker.
+O Super Pylon armazena **2.048 itens exatamente iguais** na configuração inicial e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco. A versão **0.6.0** adiciona XP Tank, Energy, Range, Fertilizer e Harvester.
 
 | Minecraft | Loader de compilação | Java | Módulo |
 | --- | --- | --- | --- |
@@ -41,7 +41,7 @@ Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A 
 
 ### Upgrades
 
-Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior substitui o anterior no mesmo slot e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é velocidade, quantidade, especialidade e armazenamento.
+Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é velocidade, quantidade, alcance, especialidade e armazenamento.
 
 | Tier | Intervalo em ticks | Produção por ciclo | Capacidade de armazenamento |
 | --- | ---: | ---: | ---: |
@@ -60,9 +60,28 @@ Os tanques aceitam baldes e automação de fluidos. A capacidade é de **1 B por
 
 Remover armazenamento exige que o conteúdo caiba na capacidade restante. Na quebra, volumes acima de 64 stacks são guardados no próprio pylon junto com os upgrades. Coloque o bloco novamente para recuperar esse estoque.
 
+#### XP, energia e agricultura
+
+Os novos upgrades usam o ícone do Upgrade Base como provisório. Eles estão disponíveis no Criativo e por comando.
+
+- **XP Tank** coleta orbes a até 2 blocos da estrutura e drena jogadores logo acima. O Speed define até quantos níveis são drenados ou entregues por jogador por tick. Sem Speed, a taxa é de 1 nível. A taxa nos tiers I–VI é de 2, 4, 8, 16, 32 e 64 níveis. O tanque guarda pontos de XP, para preservar a diferença de custo entre níveis. O jogador logo abaixo pode receber progresso parcial quando sobrarem poucos pontos.
+- **Energy** puxa FE pela face superior, carrega um item compatível no pedestal e passa a energia restante pela face inferior. A carga do item usa o mesmo orçamento de saída da face inferior. No modo Energy o pedestal comporta um item. Esvazie o XP Tank ou o Energy para retirar o upgrade. Quebrar o pylon com XP ou FE guarda o saldo no bloco junto com os upgrades.
+- **Range** define o raio horizontal de Fertilizer e Harvester. Ambos procuram alvos no nível do pylon e um bloco acima e abaixo. Sem Range, o raio é de 1 bloco. Ambos exigem um pylon vazio e bloqueiam depósitos manuais.
+- **Fertilizer** seleciona plantas ao acaso, sem repetir a mesma posição no tick. Speed I–VI aplica 1, 2, 3, 4, 5 ou 6 random ticks por planta. Quantity I–VI seleciona até 1, 2, 4, 8, 16 ou 32 plantas por tick. Sem esses upgrades, tenta um random tick em uma planta.
+- **Harvester** colhe até uma posição por ciclo de Speed, no mesmo intervalo dos geradores. Reinicia cultivos maduros, recolhe frutos de plantas como cacau e bagas e corta só a ponta de cana, cacto e bambu. Melões e abóboras com caule ligado são recolhidos, mantendo o caule. Troncos e copas ficam intactos. A colheita vai pela face superior do inventário abaixo. Se ele só aceitar parte, o pylon guarda o restante e pausa novas colheitas até entregá-lo.
+
+| Tier | Capacidade de Energy | Transferência por tick e sentido | Área de Range |
+| --- | ---: | ---: | ---: |
+| I | 1.000.000 FE | 1.000 FE | 3×3 |
+| II | 10.000.000 FE | 10.000 FE | 5×5 |
+| III | 40.000.000 FE | 40.000 FE | 7×7 |
+| IV | 100.000.000 FE | 100.000 FE | 9×9 |
+| V | 400.000.000 FE | 400.000 FE | 11×11 |
+| VI | 2.000.000.000 FE | Ilimitada | 13×13 |
+
 ### Overlays opcionais
 
-Jade, WTHIT (fork do Waila) e The One Probe mostram o conteúdo armazenado, a quantidade e a capacidade atual. Em modo tanque, mostram a quantidade em mB. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
+Jade, WTHIT (fork do Waila) e The One Probe mostram o conteúdo armazenado, a quantidade e a capacidade atual. Os modos especiais exibem o líquido em mB, o XP em pontos, a energia em FE ou o nome do modo agrícola. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
 
 Jade e WTHIT leem o conteúdo que o pylon sincroniza com o cliente. The One Probe usa sua consulta ao servidor, onde também precisa estar instalado em multijogador. Cada integração é ativada pelo overlay correspondente.
 

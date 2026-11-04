@@ -79,6 +79,8 @@ public final class SuperPylonsMod {
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, SUPER_PYLON_ENTITY.get(),
             (pylon, side) -> pylon.getFluidHandler());
+        event.registerBlockEntity(Capabilities.Energy.BLOCK, SUPER_PYLON_ENTITY.get(),
+            SuperPylonBlockEntity::getEnergyHandler);
     }
 
     private void addCreativeItem(BuildCreativeModeTabContentsEvent event) {

@@ -25,6 +25,12 @@ public enum PylonUpgrade {
     QUANTITY_4("quantity_upgrade_4", Slot.QUANTITY, 4, 16, null, null),
     QUANTITY_5("quantity_upgrade_5", Slot.QUANTITY, 5, 32, null, null),
     QUANTITY_6("quantity_upgrade_6", Slot.QUANTITY, 6, 64, null, null),
+    RANGE_1("range_upgrade_1", Slot.RANGE, 1, 1, null, null),
+    RANGE_2("range_upgrade_2", Slot.RANGE, 2, 2, null, null),
+    RANGE_3("range_upgrade_3", Slot.RANGE, 3, 3, null, null),
+    RANGE_4("range_upgrade_4", Slot.RANGE, 4, 4, null, null),
+    RANGE_5("range_upgrade_5", Slot.RANGE, 5, 5, null, null),
+    RANGE_6("range_upgrade_6", Slot.RANGE, 6, 6, null, null),
     COBBLESTONE_GENERATOR("cobblestone_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.COBBLESTONE, null),
     DEEPSLATE_GENERATOR("deepslate_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.DEEPSLATE, null),
     BLACKSTONE_GENERATOR("blackstone_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.BLACKSTONE, null),
@@ -36,10 +42,19 @@ public enum PylonUpgrade {
     LAVA_GENERATOR("lava_generator_upgrade", Slot.SPECIALTY, 1, 0, null, () -> Fluids.LAVA),
     ANVIL("anvil_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     ENCHANTING("enchanting_upgrade", Slot.SPECIALTY, 1, 0, null, null),
-    CLICKER("clicker_upgrade", Slot.SPECIALTY, 1, 0, null, null);
+    CLICKER("clicker_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    XP_TANK("xp_tank_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    ENERGY_1("energy_upgrade_1", Slot.SPECIALTY, 1, 1_000_000, null, null),
+    ENERGY_2("energy_upgrade_2", Slot.SPECIALTY, 2, 10_000_000, null, null),
+    ENERGY_3("energy_upgrade_3", Slot.SPECIALTY, 3, 40_000_000, null, null),
+    ENERGY_4("energy_upgrade_4", Slot.SPECIALTY, 4, 100_000_000, null, null),
+    ENERGY_5("energy_upgrade_5", Slot.SPECIALTY, 5, 400_000_000, null, null),
+    ENERGY_6("energy_upgrade_6", Slot.SPECIALTY, 6, 2_000_000_000, null, null),
+    FERTILIZER("fertilizer_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    HARVESTER("harvester_upgrade", Slot.SPECIALTY, 1, 0, null, null);
 
     // Iteration order is also the order used for removal.
-    public enum Slot { SPEED, QUANTITY, SPECIALTY, STORAGE }
+    public enum Slot { SPEED, QUANTITY, RANGE, SPECIALTY, STORAGE }
 
     private final String id;
     private final Slot slot;
@@ -65,7 +80,23 @@ public enum PylonUpgrade {
     public Fluid generatedFluid() { return fluid == null ? Fluids.EMPTY : fluid.get(); }
     public boolean generatesFluid() { return fluid != null; }
     public boolean isTank() { return this == FLUID_STORAGE || generatesFluid(); }
-    public boolean locksItems() { return isTank() || this == ANVIL || this == ENCHANTING; }
+    public boolean locksItems() {
+        return isTank() || this == ANVIL || this == ENCHANTING || this == FERTILIZER || this == HARVESTER;
+    }
+
+    public boolean isEnergy() { return energyTransfer() > 0; }
+
+    public int energyTransfer() {
+        return switch (this) {
+            case ENERGY_1 -> 1_000;
+            case ENERGY_2 -> 10_000;
+            case ENERGY_3 -> 40_000;
+            case ENERGY_4 -> 100_000;
+            case ENERGY_5 -> 400_000;
+            case ENERGY_6 -> Integer.MAX_VALUE;
+            default -> 0;
+        };
+    }
 
     public static PylonUpgrade byId(String id) {
         for (PylonUpgrade upgrade : values()) {

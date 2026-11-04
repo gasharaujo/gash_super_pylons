@@ -1,34 +1,49 @@
 package net.gasharaujo.superpylons.block;
 
-import net.gasharaujo.superpylons.SuperPylonsMod;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
-import net.minecraft.util.ProblemReporter;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.neoforged.neoforge.transfer.ResourceHandler;
-import net.neoforged.neoforge.transfer.fluid.FluidResource;
-import net.neoforged.neoforge.transfer.fluid.FluidUtil;
-import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
-import net.neoforged.neoforge.transfer.transaction.TransactionContext;
+import java.util.List;
+import java.util.function.BiFunction;
+import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.TransferPreconditions;
+import net.neoforged.neoforge.transfer.access.ItemAccess;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.energy.EnergyHandlerUtil;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.fluid.FluidUtil;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemUtil;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final PylonTank<FluidResource> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
+    private final EnergyJournal energyJournal = new EnergyJournal();
+    private final EnergyHandler energyInput = new EnergyPort(Direction.UP);
+    private final EnergyHandler energyOutput = new EnergyPort(Direction.DOWN);
+    private final EnergyHandler energyInternal = new EnergyPort(null);
 
     public ResourceHandler<FluidResource> getFluidHandler() {
         return isTank() ? fluidHandler : null;
@@ -42,6 +57,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putString("upgrades", saveUpgrades());
+        if (getExperience() > 0) output.putLong("experience", getExperience());
+        if (getEnergy() > 0) output.putInt("energy", getEnergy());
+        if (!harvestBuffer.isEmpty()) output.store("harvest", ItemStack.CODEC.listOf(), harvestBuffer);
         output.putLong("stored_count", getStoredCount());
         output.putLong("fluid_amount", tank.amount());
         if (getStoredCount() > 0) output.store("stored_item", ItemStack.CODEC, getStoredItem());
@@ -52,6 +70,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         loadUpgrades(input.getStringOr("upgrades", ""));
+        loadSpecialtyAmounts(input.getLongOr("experience", 0), input.getIntOr("energy", 0));
+        harvestBuffer.clear();
+        harvestBuffer.addAll(input.read("harvest", ItemStack.CODEC.listOf()).orElse(List.of()));
         contents.restore(input.read("stored_item", ItemStack.CODEC).orElse(ItemStack.EMPTY), input.getLongOr("stored_count", 0), getItemCapacity());
         FluidResource resource = input.read("fluid_template", FluidResource.CODEC).orElse(FluidResource.EMPTY);
         tank.restore(new PylonTank.State<>(resource.isEmpty() || !canFillFluid(resource.getFluid()) ? null : resource,
@@ -89,12 +110,12 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected void fluidModeChanged() {
+    protected void capabilitiesChanged() {
         if (level != null) level.invalidateCapabilities(worldPosition);
     }
 
     @Override
-    protected ServerPlayer getClickerPlayer(ServerLevel server, GameProfile profile) {
+    protected ServerPlayer getAutomationPlayer(ServerLevel server, GameProfile profile) {
         return FakePlayerFactory.get(server, profile);
     }
 
@@ -110,6 +131,86 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected void notifyPlayer(Player player, Component message) {
         player.sendOverlayMessage(message);
+    }
+
+    public EnergyHandler getEnergyHandler(Direction side) {
+        if (!isEnergy()) return null;
+        if (side == null) return energyInternal;
+        if (side == Direction.UP) return energyInput;
+        return side == Direction.DOWN ? energyOutput : null;
+    }
+
+    @Override
+    protected long orbExperience(ExperienceOrb orb) {
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, orb.registryAccess());
+        orb.saveWithoutId(output);
+        return (long) orb.getValue() * Math.max(1, output.buildResult().getIntOr("Count", 1));
+    }
+
+    @Override
+    protected BiFunction<ItemStack, Boolean, ItemStack> harvestOutput(ServerLevel server, BlockPos target) {
+        ResourceHandler<ItemResource> handler = server.getCapability(Capabilities.Item.BLOCK, target, Direction.UP);
+        return handler == null ? null : (stack, simulate) -> ItemUtil.insertItemReturnRemaining(handler, stack, simulate, null);
+    }
+
+    @Override
+    protected void transferEnergy(ServerLevel server) {
+        int inputLimit = energyLimit(true, Integer.MAX_VALUE);
+        if (inputLimit > 0) {
+            EnergyHandlerUtil.move(energyAt(server, worldPosition.above(), Direction.DOWN), energyInput, inputLimit, null);
+        }
+        int outputLimit = energyLimit(false, Integer.MAX_VALUE);
+        if (outputLimit > 0 && getStoredCount() == 1) {
+            ItemStack stack = getStoredItem();
+            EnergyHandler item = ItemAccess.forStack(stack).getCapability(Capabilities.Energy.ITEM);
+            if (EnergyHandlerUtil.move(energyOutput, item, outputLimit, null) > 0) {
+                contents.restore(stack, 1, getItemCapacity());
+            }
+        }
+        outputLimit = energyLimit(false, Integer.MAX_VALUE);
+        if (outputLimit > 0) {
+            EnergyHandlerUtil.move(energyOutput, energyAt(server, worldPosition.below(), Direction.UP), outputLimit, null);
+        }
+    }
+
+    private static EnergyHandler energyAt(ServerLevel server, BlockPos pos, Direction side) {
+        return server.hasChunkAt(pos) ? server.getCapability(Capabilities.Energy.BLOCK, pos, side) : null;
+    }
+
+    private final class EnergyPort implements EnergyHandler {
+        private final Direction side;
+
+        private EnergyPort(Direction side) { this.side = side; }
+
+        @Override public long getAmountAsLong() { return isEnergy() ? getEnergy() : 0; }
+        @Override public long getCapacityAsLong() { return getEnergyCapacity(); }
+
+        @Override
+        public int insert(int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonNegative(amount);
+            return side == Direction.DOWN ? 0 : energyJournal.exchange(true, amount, transaction);
+        }
+
+        @Override
+        public int extract(int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonNegative(amount);
+            return side == Direction.UP ? 0 : energyJournal.exchange(false, amount, transaction);
+        }
+    }
+
+    private final class EnergyJournal extends SnapshotJournal<PylonEnergy.State> {
+        int exchange(boolean input, int requested, TransactionContext transaction) {
+            int moved = energyLimit(input, requested);
+            if (moved > 0) {
+                updateSnapshots(transaction);
+                energy.transfer(input, moved, level.getGameTime());
+            }
+            return moved;
+        }
+
+        @Override protected PylonEnergy.State createSnapshot() { return energy.snapshot(); }
+        @Override protected void revertToSnapshot(PylonEnergy.State snapshot) { energy.restore(snapshot); }
+        @Override protected void onRootCommit(PylonEnergy.State original) { energyChanged(); }
     }
 
     private final class TankHandler extends SnapshotJournal<PylonTank.State<FluidResource>>

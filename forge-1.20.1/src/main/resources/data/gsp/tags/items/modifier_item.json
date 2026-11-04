@@ -7,8 +7,16 @@
     "gash_super_pylons:cobblestone_generator_upgrade",
     "gash_super_pylons:deepslate_generator_upgrade",
     "gash_super_pylons:enchanting_upgrade",
+    "gash_super_pylons:energy_upgrade_1",
+    "gash_super_pylons:energy_upgrade_2",
+    "gash_super_pylons:energy_upgrade_3",
+    "gash_super_pylons:energy_upgrade_4",
+    "gash_super_pylons:energy_upgrade_5",
+    "gash_super_pylons:energy_upgrade_6",
+    "gash_super_pylons:fertilizer_upgrade",
     "gash_super_pylons:fluid_storage_upgrade",
     "gash_super_pylons:glass_generator_upgrade",
+    "gash_super_pylons:harvester_upgrade",
     "gash_super_pylons:lava_generator_upgrade",
     "gash_super_pylons:netherrack_generator_upgrade",
     "gash_super_pylons:quantity_upgrade_1",
@@ -17,6 +25,12 @@
     "gash_super_pylons:quantity_upgrade_4",
     "gash_super_pylons:quantity_upgrade_5",
     "gash_super_pylons:quantity_upgrade_6",
+    "gash_super_pylons:range_upgrade_1",
+    "gash_super_pylons:range_upgrade_2",
+    "gash_super_pylons:range_upgrade_3",
+    "gash_super_pylons:range_upgrade_4",
+    "gash_super_pylons:range_upgrade_5",
+    "gash_super_pylons:range_upgrade_6",
     "gash_super_pylons:sand_generator_upgrade",
     "gash_super_pylons:speed_upgrade_1",
     "gash_super_pylons:speed_upgrade_2",
@@ -30,6 +44,7 @@
     "gash_super_pylons:storage_upgrade_4",
     "gash_super_pylons:storage_upgrade_5",
     "gash_super_pylons:storage_upgrade_6",
-    "gash_super_pylons:water_generator_upgrade"
+    "gash_super_pylons:water_generator_upgrade",
+    "gash_super_pylons:xp_tank_upgrade"
   ]
 }
