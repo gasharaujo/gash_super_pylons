@@ -16,6 +16,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                        MultiBufferSource buffers, int light, int overlay) {
         if (entity.getLevel() != null) {
             float ticks = PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
+            if (core.renderFluid(entity, pose, buffers, ticks, light, overlay)) return;
             ItemStack stored = entity.getStoredItem();
             if (stored.isEmpty()) {
                 core.render(pose, buffers, ticks, light, overlay);

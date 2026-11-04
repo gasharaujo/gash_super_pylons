@@ -22,7 +22,7 @@ Encontre o bloco na aba **Blocos funcionais** do Criativo ou use:
 /give @s gash_super_pylons:super_pylon
 ```
 
-O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**: 1,25 unidades do modelo, entre os extremos inferior e superior. O cubo permanece dentro do frame durante todo o ciclo.
+O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**: 1,25 unidades do modelo, entre os extremos inferior e superior. O cubo permanece dentro do frame durante todo o ciclo. Um tanque cheio ou parcialmente cheio usa a textura do fluido no cubo animado. Ao esvaziar, o core volta a ficar branco.
 
 A colisão segue as 12 barras do frame. O core não tem colisão; a área de seleção e clique cobre todo o frame. O bloco tem a dureza e os requisitos de ferramenta do bloco de ferro: use uma picareta de pedra ou superior para recuperá-lo. É imune a explosões.
 

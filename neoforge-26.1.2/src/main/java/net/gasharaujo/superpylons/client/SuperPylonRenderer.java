@@ -19,6 +19,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
 
     public static final class State extends BlockEntityRenderState {
         public float ticks;
+        @Nullable PylonFluidCore fluid;
         public final ItemStackRenderState storedItem = new ItemStackRenderState();
     }
 
@@ -31,13 +32,16 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         BlockEntityRenderer.super.extractRenderState(entity, state, partialTick, camera, breaking);
         state.ticks = entity.getLevel() == null ? 0 :
             PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
+        state.fluid = PylonCoreRenderer.extractFluid(entity, state.lightCoords);
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.storedItem,
             entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
     }
 
     @Override
     public void submit(State state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
-        if (state.storedItem.isEmpty()) {
+        if (state.fluid != null) {
+            core.submitFluid(state.fluid, pose, collector, state.ticks, OverlayTexture.NO_OVERLAY);
+        } else if (state.storedItem.isEmpty()) {
             core.submit(pose, collector, state.ticks, state.lightCoords, OverlayTexture.NO_OVERLAY,
                 0, state.breakProgress);
         } else {
