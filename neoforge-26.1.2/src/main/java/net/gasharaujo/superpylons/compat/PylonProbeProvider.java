@@ -33,7 +33,7 @@ public final class PylonProbeProvider implements IProbeInfoProvider {
                              BlockState state, IProbeHitData hit) {
         if (state.is(SuperPylonsMod.SUPER_PYLON.get()) &&
             level.getBlockEntity(hit.getPos()) instanceof SuperPylonBlockEntity pylon) {
-            info.text(PylonTooltip.storageLine(pylon));
+            PylonTooltip.append(pylon, info::text);
         }
     }
 }

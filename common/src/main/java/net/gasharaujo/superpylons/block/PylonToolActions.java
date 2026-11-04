@@ -12,16 +12,17 @@ import net.minecraft.world.item.ItemStack;
 
 public final class PylonToolActions {
     public enum Kind {
-        PAINT(null), COPY(null), ENERGY(PylonWire.Type.ENERGY), ITEM(PylonWire.Type.ITEM), FLUID(PylonWire.Type.FLUID);
+        PAINT(null), COPY(null), WRENCH(null), ENERGY(PylonWire.Type.ENERGY), ITEM(PylonWire.Type.ITEM), FLUID(PylonWire.Type.FLUID);
 
         private final PylonWire.Type wire;
 
         Kind(PylonWire.Type wire) { this.wire = wire; }
+        boolean isWire() { return wire != null; }
     }
 
     private PylonToolActions() {}
 
-    static void use(Kind kind, PylonBlockEntityBase pylon, Player player, String saved, Consumer<String> save) {
+    static void use(Kind kind, PylonBlockEntityBase pylon, Player player, ItemStack stack, String saved, Consumer<String> save) {
         if (!(pylon.getLevel() instanceof ServerLevel level)) return;
         switch (kind) {
             case PAINT -> {
@@ -41,12 +42,13 @@ public final class PylonToolActions {
                     pylon.applyUpgradeSetup(player, saved);
                 }
             }
-            default -> useWire(kind.wire, pylon, player, level, saved, save);
+            case WRENCH -> useWrench(pylon, player, level, saved, save);
+            default -> useWire(kind.wire, pylon, player, level, stack, saved, save);
         }
     }
 
     private static void useWire(PylonWire.Type type, PylonBlockEntityBase pylon, Player player, ServerLevel level,
-                                String saved, Consumer<String> save) {
+                                ItemStack stack, String saved, Consumer<String> save) {
         if (player.isShiftKeyDown()) {
             save.accept("");
             return;
@@ -61,10 +63,26 @@ public final class PylonToolActions {
         BlockPos start = wireStart(fields);
         if (start != null && fields[0].equals(level.dimension().toString()) && level.hasChunkAt(start) &&
             level.getBlockEntity(start) instanceof PylonBlockEntityBase source && source.wireId().toString().equals(fields[2])) {
-            source.toggleWire(type, pylon, player);
+            if (source.connectWire(type, pylon, player)) stack.shrink(1);
         } else {
             player.sendSystemMessage(Component.translatable("message.gash_super_pylons.wire_missing"));
         }
+    }
+
+    private static void useWrench(PylonBlockEntityBase pylon, Player player, ServerLevel level,
+                                  String saved, Consumer<String> save) {
+        if (player.isShiftKeyDown()) {
+            if (pylon.isWorkshop()) {
+                save.accept(level.dimension() + "|" + pylon.getBlockPos().asLong() + "|" + pylon.wireId());
+                player.sendSystemMessage(Component.translatable("message.gash_super_pylons.workshop_select"));
+            }
+            return;
+        }
+        String[] fields = saved.split("\\|", 3);
+        BlockPos start = wireStart(fields);
+        if (start != null && fields[0].equals(level.dimension().toString()) && level.hasChunkAt(start) &&
+            level.getBlockEntity(start) instanceof PylonBlockEntityBase source && source.wireId().toString().equals(fields[2]) &&
+            source.linkAuxiliary(pylon, player)) save.accept("");
     }
 
     private static BlockPos wireStart(String[] fields) {

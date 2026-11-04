@@ -2,13 +2,14 @@ package net.gasharaujo.superpylons.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.minecraft.world.phys.Vec3;
 
 /** Coordinates use the original Blockbench model, where one block is 16 units. */
 public final class PylonAnimation {
     public static final float ROTATION_TICKS = 160.0F;
     public static final float BOB_TICKS = 80.0F;
-    // Interior height = 12 - 2 = 10. Total travel is 10 / 8 = 1.25 model units.
-    public static final float BOB_AMPLITUDE = (10.0F / 8.0F / 2.0F) / 16.0F;
+    // The interior spans model units 2 to 14, and the core travels one eighth of that height.
+    public static final float BOB_AMPLITUDE = (12.0F / 8.0F / 2.0F) / 16.0F;
 
     private PylonAnimation() {}
 
@@ -35,6 +36,13 @@ public final class PylonAnimation {
     }
 
     static double coreHeight(float ticks) {
-        return 7.0 / 16.0 + Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
+        return 0.5 + Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
+    }
+
+    static Vec3 xpOrbit(float ticks, int orb) {
+        double angle = ticks * Math.PI * 2 / ROTATION_TICKS * (orb + 2) + orb * 2.4;
+        double radius = 0.22 + 0.055 * Math.sin(angle * 2 + orb);
+        return new Vec3(0.5 + Math.cos(angle) * radius,
+            coreHeight(ticks) + 0.14 * Math.sin(angle + orb), 0.5 + Math.sin(angle) * radius);
     }
 }

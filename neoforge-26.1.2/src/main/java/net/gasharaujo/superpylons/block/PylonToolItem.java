@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -22,8 +23,18 @@ public final class PylonToolItem extends Item {
     private final PylonToolActions.Kind kind;
 
     public PylonToolItem(PylonToolActions.Kind kind, Properties properties) {
-        super(properties.stacksTo(1));
+        super(properties.stacksTo(kind.isWire() ? 64 : 1));
         this.kind = kind;
+    }
+
+    @Override
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (kind.isWire() || hand != InteractionHand.MAIN_HAND || !player.isShiftKeyDown() || saved(stack).isEmpty()) {
+            return InteractionResult.PASS;
+        }
+        if (!level.isClientSide()) save(stack, "");
+        return InteractionResult.SUCCESS;
     }
 
     @Override
@@ -38,7 +49,7 @@ public final class PylonToolItem extends Item {
     boolean applyTo(PylonBlockEntityBase pylon, Player player, InteractionHand hand) {
         if (hand != InteractionHand.MAIN_HAND || player == null || player.isSpectator()) return false;
         ItemStack stack = player.getItemInHand(hand);
-        PylonToolActions.use(kind, pylon, player, saved(stack), value -> save(stack, value));
+        PylonToolActions.use(kind, pylon, player, stack, saved(stack), value -> save(stack, value));
         return true;
     }
 

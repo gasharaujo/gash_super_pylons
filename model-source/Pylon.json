@@ -30,9 +30,9 @@
 			}
 		},
 		{
-			"from": [0, 12, 0],
-			"to": [2, 14, 16],
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, 12, 0]},
+			"from": [0, 14, 0],
+			"to": [2, 16, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 14, 0]},
 			"color": 9,
 			"faces": {
 				"north": {"uv": [0, 0, 2, 2], "texture": "#missing"},
@@ -44,9 +44,9 @@
 			}
 		},
 		{
-			"from": [14, 12, 0],
-			"to": [16, 14, 16],
-			"rotation": {"angle": 0, "axis": "y", "origin": [14, 12, 0]},
+			"from": [14, 14, 0],
+			"to": [16, 16, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [14, 14, 0]},
 			"color": 9,
 			"faces": {
 				"north": {"uv": [0, 0, 2, 2], "texture": "#missing"},
@@ -59,7 +59,7 @@
 		},
 		{
 			"from": [0, 2, 0],
-			"to": [2, 12, 2],
+			"to": [2, 14, 2],
 			"rotation": {"angle": 0, "axis": "y", "origin": [0, 11, 0]},
 			"color": 9,
 			"faces": {
@@ -73,7 +73,7 @@
 		},
 		{
 			"from": [14, 2, 0],
-			"to": [16, 12, 2],
+			"to": [16, 14, 2],
 			"rotation": {"angle": 0, "axis": "y", "origin": [14, 11, 0]},
 			"color": 9,
 			"faces": {
@@ -87,7 +87,7 @@
 		},
 		{
 			"from": [0, 2, 14],
-			"to": [2, 12, 16],
+			"to": [2, 14, 16],
 			"rotation": {"angle": 0, "axis": "y", "origin": [0, 11, 14]},
 			"color": 9,
 			"faces": {
@@ -101,7 +101,7 @@
 		},
 		{
 			"from": [14, 2, 14],
-			"to": [16, 12, 16],
+			"to": [16, 14, 16],
 			"rotation": {"angle": 0, "axis": "y", "origin": [14, 11, 14]},
 			"color": 9,
 			"faces": {
@@ -142,9 +142,9 @@
 			}
 		},
 		{
-			"from": [2, 12, 0],
-			"to": [14, 14, 2],
-			"rotation": {"angle": 0, "axis": "y", "origin": [2, 21, 0]},
+			"from": [2, 14, 0],
+			"to": [14, 16, 2],
+			"rotation": {"angle": 0, "axis": "y", "origin": [2, 23, 0]},
 			"color": 9,
 			"faces": {
 				"north": {"uv": [0, 9, 12, 11], "texture": "#missing"},
@@ -156,9 +156,9 @@
 			}
 		},
 		{
-			"from": [2, 12, 14],
-			"to": [14, 14, 16],
-			"rotation": {"angle": 0, "axis": "y", "origin": [2, 21, 14]},
+			"from": [2, 14, 14],
+			"to": [14, 16, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [2, 23, 14]},
 			"color": 9,
 			"faces": {
 				"north": {"uv": [0, 9, 12, 11], "texture": "#missing"},

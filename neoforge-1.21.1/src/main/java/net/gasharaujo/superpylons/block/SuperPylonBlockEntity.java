@@ -55,6 +55,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         tag.putString("paint", savePaint());
         tag.putString("wire_id", saveWireId());
         tag.putString("wires", saveWires());
+        tag.putString("auxiliaries", saveAuxiliaries());
         if (hasFilter()) {
             CompoundTag filterData = new CompoundTag();
             filterData.putBoolean("allow_list", allowList);
@@ -79,12 +80,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadUpgrades(tag.getString("upgrades"));
+        loadAuxiliaries(tag.getString("auxiliaries"));
         loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
         CompoundTag filterData = tag.getCompound("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries, registries);
         loadFilter(filterEntries, filterData.getBoolean("allow_list"));
-        smeltFuel = getSpecialty() == PylonUpgrade.SMELT ? Math.max(0, tag.getLong("smelt_fuel")) : 0;
+        smeltFuel = Math.max(0, tag.getLong("smelt_fuel"));
         loadSpecialtyAmounts(tag.getLong("experience"), tag.getInt("energy"));
         outputBuffer.clear();
         ListTag harvest = tag.getList("harvest", Tag.TAG_COMPOUND);
@@ -169,13 +171,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
 
     @Override
-    protected SmeltingResult smeltingRecipe(ServerLevel server, ItemStack input) {
+    protected ItemStack smeltingRecipe(ServerLevel server, ItemStack input) {
         var recipeInput = new SingleRecipeInput(input);
         return server.getRecipeManager().getRecipeFor(RecipeType.SMELTING, recipeInput, server)
-            .map(found -> {
-                var recipe = found.value();
-                return new SmeltingResult(recipe.assemble(recipeInput, server.registryAccess()), recipe.getCookingTime());
-            }).orElse(null);
+            .map(found -> found.value().assemble(recipeInput, server.registryAccess()))
+            .orElse(ItemStack.EMPTY);
     }
 
     @Override

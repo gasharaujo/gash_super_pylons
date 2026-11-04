@@ -3,6 +3,8 @@ package net.gasharaujo.superpylons.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.gasharaujo.superpylons.block.PylonWire;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.minecraft.client.Minecraft;
@@ -24,9 +26,15 @@ import org.jspecify.annotations.Nullable;
 
 public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonBlockEntity, SuperPylonRenderer.State> {
     private final PylonCoreRenderer core = new PylonCoreRenderer();
+    private final PylonWorkshopRenderer workshop;
+
+    public SuperPylonRenderer(BlockEntityRendererProvider.Context context) {
+        workshop = new PylonWorkshopRenderer(context);
+    }
 
     public static final class State extends BlockEntityRenderState {
         public float ticks;
+        @Nullable PylonUpgrade auxiliary;
         @Nullable PylonFluidCore fluid;
         PylonDecorationRenderer.@Nullable Frame frame;
         List<PylonWire> wires = List.of();
@@ -44,6 +52,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         state.ticks = entity.getLevel() == null ? 0 :
             PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
         state.fluid = PylonCoreRenderer.extractFluid(entity, state.lightCoords);
+        state.auxiliary = entity.auxiliaryMode();
         state.frame = PylonDecorationRenderer.frame(entity);
         state.wires = entity.outgoingWires();
         var upgrades = entity.getInstalledUpgrades();
@@ -69,7 +78,10 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                     .setColor(-1).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light)
                     .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ())));
         }
-        if (state.fluid != null) {
+        if (state.auxiliary == PylonUpgrade.ANVIL) workshop.submitOrbs(state, pose, collector, camera);
+        if (state.auxiliary == PylonUpgrade.ENCHANTING) {
+            workshop.submitBook(state, pose, collector, camera);
+        } else if (state.fluid != null) {
             core.submitFluid(state.fluid, pose, collector, state.ticks, OverlayTexture.NO_OVERLAY);
         } else if (state.storedItem.isEmpty()) {
             core.submit(pose, collector, state.ticks, state.lightCoords, OverlayTexture.NO_OVERLAY,

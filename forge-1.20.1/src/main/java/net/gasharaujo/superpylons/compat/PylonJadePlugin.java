@@ -27,7 +27,7 @@ public final class PylonJadePlugin implements IWailaPlugin, IBlockComponentProvi
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         if (accessor.getBlockEntity() instanceof SuperPylonBlockEntity pylon) {
-            tooltip.add(PylonTooltip.storageLine(pylon));
+            PylonTooltip.append(pylon, tooltip::add);
         }
     }
 }

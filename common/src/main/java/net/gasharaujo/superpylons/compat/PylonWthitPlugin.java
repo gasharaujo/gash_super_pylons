@@ -18,7 +18,7 @@ public final class PylonWthitPlugin implements IWailaClientPlugin, IBlockCompone
     @Override
     public void appendBody(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
         if (accessor.getBlockEntity() instanceof SuperPylonBlockEntity pylon) {
-            tooltip.addLine(PylonTooltip.storageLine(pylon));
+            PylonTooltip.append(pylon, tooltip::addLine);
         }
     }
 }

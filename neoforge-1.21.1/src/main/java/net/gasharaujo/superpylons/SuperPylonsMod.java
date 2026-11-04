@@ -58,7 +58,7 @@ public final class SuperPylonsMod {
         () -> new MenuType<>(PylonFilterMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static final Supplier<? extends Item> WRENCH =
-        ITEMS.registerItem("wrench", properties -> new Item(properties.stacksTo(1)));
+        ITEMS.registerItem("wrench", properties -> new PylonToolItem(Kind.WRENCH, properties));
     public static final Supplier<? extends Item> PAINT_TOOL =
         ITEMS.registerItem("paint_tool", properties -> new PylonToolItem(Kind.PAINT, properties));
     public static final Supplier<? extends Item> COPY_PASTE_TOOL =

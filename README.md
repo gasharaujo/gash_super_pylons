@@ -2,7 +2,7 @@
 
 Mod independente de Minecraft por **Gasharaujo**.
 
-O Super Pylon armazena **2.048 itens exatamente iguais** na configuração inicial e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco. A versão **0.6.0** adiciona XP Tank, Energy, Range, Fertilizer e Harvester.
+O Super Pylon armazena **2.048 itens exatamente iguais** na configuração inicial e é imune a explosões. A estrutura de ferro usa o modelo fornecido no Blockbench, e o item armazenado substitui visualmente o core branco.
 
 | Minecraft | Loader de compilação | Java | Módulo |
 | --- | --- | --- | --- |
@@ -22,9 +22,9 @@ Encontre o bloco na aba **Blocos funcionais** do Criativo ou use:
 /give @s gash_super_pylons:super_pylon
 ```
 
-O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**: 1,25 unidades do modelo, entre os extremos inferior e superior. O cubo permanece dentro do frame durante todo o ciclo. Um tanque cheio ou parcialmente cheio usa a textura do fluido no cubo animado. Ao esvaziar, o core volta a ficar branco.
+O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**, o equivalente a 1,5 unidades do modelo. Um tanque cheio ou parcialmente cheio usa a textura do fluido no cubo animado. Ao esvaziar, o core volta a ficar branco.
 
-A colisão segue as 12 barras do frame. O core não tem colisão; a área de seleção e clique cobre todo o frame. O bloco tem a dureza e os requisitos de ferramenta do bloco de ferro: use uma picareta de pedra ou superior para recuperá-lo. É imune a explosões.
+A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e os requisitos de ferramenta do bloco de ferro. Use uma picareta de pedra ou superior para recuperá-lo.
 
 ### Receita e armazenamento
 
@@ -41,22 +41,23 @@ Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A 
 
 ### Upgrades
 
-Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, especialidade e armazenamento.
+Os upgrades estão na aba **Blocos funcionais** do Criativo. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, processamento, especialidade e armazenamento.
 
 Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
 
 | Tier | Intervalo em ticks | Produção por ciclo | Capacidade de armazenamento |
 | --- | ---: | ---: | ---: |
-| I | 40 | 1 | 2× |
+| 0 | 60 | 1 | 1× |
+| I | 40 | 2 | 2× |
 | II | 30 | 4 | 4× |
 | III | 20 | 8 | 8× |
 | IV | 10 | 16 | 16× |
 | V | 5 | 32 | 32× |
 | VI | 1 | 64 | Ilimitada |
 
-Um gerador começa com produção de 1 a cada 40 ticks. Os geradores de itens aceitam somente o produto que geram. O **Clicker** usa uma unidade do item armazenado para clicar com o botão direito na face superior do bloco abaixo, no intervalo de velocidade. O item volta ao pylon se o clique o deixar intacto. Um resultado alterado que não combine com o estoque sai como drop.
+Um gerador começa com produção de 1 a cada 60 ticks. Os geradores de itens aceitam somente o produto que geram. O **Clicker** usa uma unidade do item armazenado para clicar com o botão direito na face superior do bloco abaixo, no intervalo de velocidade. O item volta ao pylon se o clique o deixar intacto. Um resultado alterado que não combine com o estoque sai como drop.
 
-Fluid Storage, geradores de água e lava, bigorna e encantamento exigem o pylon sem itens e bloqueiam depósitos de itens. Bigorna e encantamento reservam o slot de especialidade para suas funções futuras.
+Fluid Storage, geradores de água e lava, Anvil e Enchanter exigem o pylon sem itens e bloqueiam depósitos de itens.
 
 Fluid Storage e os geradores de água e lava aceitam baldes e automação de fluidos. A capacidade inicial é de **32 baldes (32.000 mB)**. Com Storage I–VI, passa a 64, 128, 256, 512, 1.024 baldes e capacidade ilimitada. Tanques salvos acima do novo limite mantêm todo o líquido e voltam a aceitar fluido quando houver espaço. Os geradores produzem **100 mB por unidade** de produção e aceitam o próprio fluido. Fluid Storage só pode ser removido vazio. A remoção de um gerador com líquido pede um segundo clique em até 5 segundos para descartar seu conteúdo. Quebrar o pylon descarta o líquido.
 
@@ -68,35 +69,52 @@ Os upgrades estão disponíveis no Criativo e por comando.
 
 - **XP Tank** coleta orbes a até 2 blocos da estrutura e drena jogadores logo acima. O Speed define até quantos níveis são drenados ou entregues por jogador por tick. Sem Speed, a taxa é de 1 nível. A taxa nos tiers I–VI é de 2, 4, 8, 16, 32 e 64 níveis. O tanque guarda pontos de XP, para preservar a diferença de custo entre níveis. O jogador logo abaixo pode receber progresso parcial quando sobrarem poucos pontos.
 - **Energy** puxa FE pela face superior, carrega um item compatível no pedestal e passa a energia restante pela face inferior. A carga do item usa o mesmo orçamento de saída da face inferior. No modo Energy o pedestal comporta um item. Esvazie o XP Tank ou o Energy para retirar o upgrade. Quebrar o pylon com XP ou FE guarda o saldo no bloco junto com os upgrades.
-- **Range** define o raio horizontal de Fertilizer e Harvester. Ambos procuram alvos no nível do pylon e um bloco acima e abaixo. Sem Range, o raio é de 1 bloco. Ambos exigem um pylon vazio e bloqueiam depósitos manuais.
-- **Fertilizer** seleciona plantas ao acaso, sem repetir a mesma posição no ciclo. Speed I–VI define o intervalo de 40, 30, 20, 10, 5 ou 1 tick entre ciclos e aplica respectivamente 1, 2, 3, 4, 5 ou 6 random ticks por planta. Quantity I–VI seleciona até 1, 2, 4, 8, 16 ou 32 plantas por ciclo. Sem esses upgrades, tenta um random tick em uma planta a cada 40 ticks.
+- **Range** define o raio horizontal de Fertilizer, Harvester e Magnet. Eles procuram alvos no nível do pylon e um bloco acima e abaixo. Sem Range, o raio é de 1 bloco. Fertilizer e Harvester exigem um pylon vazio e bloqueiam depósitos manuais.
+- **Fertilizer** seleciona plantas ao acaso, sem repetir a mesma posição no ciclo. Speed I–VI define o intervalo de 40, 30, 20, 10, 5 ou 1 tick entre ciclos e aplica respectivamente 1, 2, 3, 4, 5 ou 6 random ticks por planta. Quantity I–VI seleciona até 2, 4, 8, 16, 32 ou 64 plantas por ciclo. Na configuração inicial, tenta um random tick em uma planta a cada 60 ticks.
 - **Harvester** colhe até uma posição por ciclo de Speed, no mesmo intervalo dos geradores. Reinicia cultivos maduros, recolhe frutos de plantas como cacau e bagas e corta só a ponta de cana, cacto e bambu. Melões e abóboras com caule ligado são recolhidos, mantendo o caule. Troncos e copas ficam intactos. A colheita vai pela face superior do inventário abaixo. Se ele só aceitar parte, o pylon guarda o restante e pausa novas colheitas até entregá-lo.
 
 | Tier | Capacidade de Energy | Transferência por tick e sentido | Área de Range |
 | --- | ---: | ---: | ---: |
-| I | 1.000.000 FE | 1.000 FE | 3×3 |
-| II | 10.000.000 FE | 10.000 FE | 5×5 |
-| III | 40.000.000 FE | 40.000 FE | 7×7 |
-| IV | 100.000.000 FE | 100.000 FE | 9×9 |
-| V | 400.000.000 FE | 400.000 FE | 11×11 |
-| VI | 2.000.000.000 FE | Ilimitada | 13×13 |
+| 0 | 0 FE | 0 FE | 3×3 |
+| I | 1.000.000 FE | 1.000 FE | 7×7 |
+| II | 10.000.000 FE | 10.000 FE | 9×9 |
+| III | 40.000.000 FE | 40.000 FE | 11×11 |
+| IV | 100.000.000 FE | 100.000 FE | 13×13 |
+| V | 400.000.000 FE | 400.000 FE | 15×15 |
+| VI | 2.000.000.000 FE | Ilimitada | 17×17 |
 
-#### Filtro, ímã e fundição
+#### Filtro, ímã e processamento
 
 - **Filter** abre com botão direito e as mãos vazias. Use um item no cursor para marcar um dos 27 slots e botão direito para limpar a marca. O filtro começa no modo de bloqueio e pode alternar para a lista de permissão. Ele compara o item e seus dados exatos tanto nos depósitos manuais quanto na coleta do Magnet.
-- **Magnet** coleta itens caídos em uma área inicial de 3×3, com o pylon no centro. Range I–VI define áreas de 3×3, 5×5, 7×7, 9×9, 11×11 e 13×13. A coleta abrange o nível do pylon e um bloco acima e abaixo. Começa com um item a cada 40 ticks e segue os valores de Speed e Quantity. Os itens entram no armazenamento do pylon e seguem o limite e a regra de correspondência exata.
-- **Smelt** usa receitas de fornalha e envia o resultado ao inventário imediatamente abaixo. Processa um item por ciclo de Speed. Usa o saldo de combustível já consumido, 1.000 FE de um pylon Energy lateral ou combustível de um inventário lateral, nessa ordem. O combustível rende o mesmo total de ticks de uma fornalha, e itens como baldes retornam ao inventário de origem quando há espaço.
-- **Pulverize** e **Wrench** estão disponíveis no Criativo como itens reservados. A conversão planejada para o Pulverize é de 2, 4 ou 6 pós de `c:dust` por minério, respectivamente sem Quantity, com Quantity IV ou com Quantity VI.
+- **Magnet** coleta itens caídos em uma área inicial de 3×3, com o pylon no centro. Começa com um item a cada 60 ticks e segue os valores de Speed, Quantity e Range. Os itens entram no armazenamento e seguem o filtro e a regra de correspondência exata.
+- **Smelt** usa receitas de fornalha. **Pulverize** tritura cobbles em cascalho, cascalho em areia e sílex, terracota em areia vermelha e pedras nas variantes quebradas disponíveis. Também processa blocos de minério e usa os pós equivalentes de `c:dust` quando disponíveis.
+- No Pulverize, blocos de minério rendem 2, 3, 4 ou 5 unidades de minério bruto ou gema nos tiers Quantity 0, II, IV e VI. Redstone e lápis-lazúli rendem seis vezes esse valor. Lingotes e gemas rendem um pó. Minério bruto rende 2, 4 ou 6 pós nos tiers 0, IV e VI. O tier intermediário mantém o rendimento do tier anterior.
+- O processamento envia os resultados para o inventário abaixo e funciona com geradores de itens quando existe uma receita para o produto gerado. Speed define o intervalo e Quantity define o máximo de itens processados por ciclo. Cada item custa um uso do saldo de combustível, 1.000 FE de um pylon Energy lateral ou combustível de um inventário lateral. Um carvão rende 8 usos. O saldo só diminui ao processar.
+
+O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.json`. Uma receita de datapack tem prioridade sobre as regras padrão. Use IDs de itens ou tags com prefixo `#`. `count` e `chance` aceitam um número ou uma lista na ordem Quantity 0 a VI. A chance é percentual e os valores padrão são 1 item e 100%.
+
+```json
+{
+  "ingredient": "minecraft:gravel",
+  "results": [
+    {"item": "minecraft:sand"},
+    {"item": "minecraft:flint", "chance": [30, 40, 50, 60, 80, 90, 100]}
+  ]
+}
+```
 
 #### Ferramentas e cabos
 
 - **Paint Tool** aplica ao frame a textura do bloco da mão secundária sem gastar o bloco. Sem um bloco na mão secundária, Shift + botão direito copia a pintura e botão direito aplica a pintura salva. Uma textura indisponível usa o ferro padrão.
 - **Copy Paste Tool** copia os tipos e tiers de upgrades com Shift + botão direito. Botão direito aplica o setup completo se todos os upgrades faltantes estiverem no inventário. Os upgrades retirados voltam ao jogador. Se faltar algum, o chat lista o que falta. Paint Tool e Copy Paste Tool ganham brilho e tooltip quando guardam dados.
-- **Energy Wire, Item Wire e Fluid Wire** são reutilizáveis. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Repita a seleção para desconectar ou use Shift + botão direito para cancelar uma seleção. Os cabos conectam os cores e a transferência segue da origem para o destino. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
+- **Energy Wire, Item Wire e Fluid Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
+- **Wrench** seleciona um pylon com Enchanter ou Anvil usando Shift + botão direito. Clique com o botão direito em cada um dos dois auxiliares, com um bloco de ar entre cada auxiliar e o principal. No Enchanter, os auxiliares exibem livros. Com lápis-lazúli em um e XP no outro, enviam partículas ao principal. Na Anvil, orbes de XP giram em torno dos cores auxiliares. Os efeitos são visuais.
+- Shift + botão direito no ar limpa os dados salvos na Copy Paste Tool, na Paint Tool ou na Wrench.
+- **Break** está no Criativo como upgrade reservado.
 
 ### Overlays opcionais
 
-Jade, WTHIT (fork do Waila) e The One Probe mostram o conteúdo armazenado, a quantidade e a capacidade atual. Os modos especiais exibem o líquido em mB, o XP em pontos, a energia em FE ou o nome do modo agrícola. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
+Jade, WTHIT (fork do Waila) e The One Probe mostram o conteúdo, a quantidade, a capacidade e os upgrades instalados. Quando há combustível armazenado no processador, mostram o saldo em usos. As três integrações estão disponíveis em Forge 1.20.1, NeoForge 1.21.1 e NeoForge 26.1.2.
 
 Jade e WTHIT leem o conteúdo que o pylon sincroniza com o cliente. The One Probe usa sua consulta ao servidor, onde também precisa estar instalado em multijogador. Cada integração é ativada pelo overlay correspondente.
 

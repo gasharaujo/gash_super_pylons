@@ -2,6 +2,8 @@ package net.gasharaujo.superpylons.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -14,6 +16,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 
 public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonBlockEntity> {
     private final PylonCoreRenderer core = new PylonCoreRenderer();
+    private final PylonWorkshopRenderer workshop;
+
+    public SuperPylonRenderer(BlockEntityRendererProvider.Context context) {
+        workshop = new PylonWorkshopRenderer(context);
+    }
 
     @Override
     public void render(SuperPylonBlockEntity entity, float partialTick, PoseStack pose,
@@ -22,6 +29,12 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
             float ticks = PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
             PylonDecorationRenderer.render(entity, ticks, pose, buffers, light, overlay);
             renderStamps(entity, pose, buffers, light, overlay);
+            PylonUpgrade auxiliary = entity.auxiliaryMode();
+            if (auxiliary == PylonUpgrade.ENCHANTING) {
+                workshop.renderBook(ticks, partialTick, pose, buffers, light, overlay);
+                return;
+            }
+            if (auxiliary == PylonUpgrade.ANVIL) workshop.renderOrbs(ticks, pose, buffers, light, overlay);
             if (core.renderFluid(entity, pose, buffers, ticks, light, overlay)) return;
             ItemStack stored = entity.getStoredItem();
             if (stored.isEmpty()) {

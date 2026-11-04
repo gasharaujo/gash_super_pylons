@@ -21,6 +21,7 @@
     "gash_super_pylons:fluid_wire",
     "gash_super_pylons:glass_generator_upgrade",
     "gash_super_pylons:harvester_upgrade",
+    "gash_super_pylons:break_upgrade",
     "gash_super_pylons:item_wire",
     "gash_super_pylons:lava_generator_upgrade",
     "gash_super_pylons:magnet_upgrade",
