@@ -106,5 +106,6 @@
   "tooltip.gash_super_pylons.transfer_info": "%s (%s FE/t)",
   "tooltip.gash_super_pylons.fuel_uses": "Fuel remaining: %s uses",
   "tooltip.gash_super_pylons.item_storage_locked": "Item storage locked",
-  "item.gash_super_pylons.break_upgrade": "Break Upgrade"
+  "item.gash_super_pylons.break_upgrade": "Break Upgrade",
+  "tooltip.gash_super_pylons.break_tool": "Mining tool: %s"
 }

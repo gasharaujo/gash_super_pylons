@@ -8,6 +8,13 @@ public final class PylonContents {
     private ItemStack item = ItemStack.EMPTY;
     private long count;
 
+    record State(ItemStack item, long count) {}
+    State snapshot() { return new State(item, count); }
+    void restore(State state) {
+        item = state.item();
+        count = state.count();
+    }
+
     public long count() { return count; }
     public ItemStack displayItem() { return item.copy(); }
 
@@ -25,12 +32,17 @@ public final class PylonContents {
     }
 
     int add(ItemStack template, int amount, long capacity) {
-        if (template.isEmpty() || amount <= 0 || count >= capacity ||
-            (count > 0 && !PylonItemRules.exactlyEqual(item, template))) return 0;
-        int accepted = (int) Math.min(amount, capacity - count);
+        int accepted = insertLimit(template, amount, capacity);
+        if (accepted == 0) return 0;
         if (count == 0) item = template.copyWithCount(1);
         count += accepted;
         return accepted;
+    }
+
+    int insertLimit(ItemStack template, int amount, long capacity) {
+        if (template.isEmpty() || amount <= 0 || count >= capacity ||
+            (count > 0 && !PylonItemRules.exactlyEqual(item, template))) return 0;
+        return (int) Math.min(amount, capacity - count);
     }
 
     long moveTo(PylonContents target, long maximum, long capacity) {
@@ -46,12 +58,19 @@ public final class PylonContents {
     }
 
     public ItemStack extract(int requested) {
-        if (count == 0 || requested <= 0) return ItemStack.EMPTY;
-        int taken = (int) Math.min(Math.min(requested, item.getMaxStackSize()), count);
-        ItemStack result = item.copyWithCount(taken);
-        count -= taken;
-        if (count == 0) item = ItemStack.EMPTY;
+        ItemStack result = peek(requested);
+        remove(result.getCount());
         return result;
+    }
+
+    void remove(int amount) {
+        count -= amount;
+        if (count == 0) item = ItemStack.EMPTY;
+    }
+
+    ItemStack peek(int requested) {
+        if (count == 0 || requested <= 0) return ItemStack.EMPTY;
+        return item.copyWithCount((int) Math.min(Math.min(requested, item.getMaxStackSize()), count));
     }
 
     public void restore(ItemStack savedItem, long savedCount) {

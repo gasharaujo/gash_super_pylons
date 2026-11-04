@@ -39,6 +39,8 @@ Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloc
 
 Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A tag inclui os upgrades e pode ser estendida por datapacks. Inserir transfere os itens da mão também no Criativo.
 
+Funis e cabos de itens podem inserir e extrair do estoque por qualquer face. A entrada respeita o Filter, a capacidade, o modo do pylon e a correspondência exata do item.
+
 ### Upgrades
 
 Os upgrades estão na aba **Blocos funcionais** do Criativo. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, processamento, especialidade e armazenamento.
@@ -110,7 +112,7 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 - **Energy Wire, Item Wire e Fluid Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
 - **Wrench** seleciona um pylon com Enchanter ou Anvil usando Shift + botão direito. Clique com o botão direito em cada um dos dois auxiliares, com um bloco de ar entre cada auxiliar e o principal. No Enchanter, os auxiliares exibem livros. Com lápis-lazúli em um e XP no outro, enviam partículas ao principal. Na Anvil, orbes de XP giram em torno dos cores auxiliares. Os efeitos são visuais.
 - Shift + botão direito no ar limpa os dados salvos na Copy Paste Tool, na Paint Tool ou na Wrench.
-- **Break** minera o bloco diretamente abaixo no intervalo do Speed, com uma picareta virtual de netherita. Guarda apenas os drops exatamente iguais ao primeiro, respeitando o Filter e a capacidade. Os demais caem no local da quebra. Quando o armazenamento está cheio, o pylon pausa a mineração.
+- **Break** minera o bloco diretamente abaixo no intervalo do Speed. Usa uma picareta virtual de diamante por padrão. Shift + botão direito com uma ferramenta de mineração na mão principal instala a ferramenta real, com seus encantamentos e desgaste. Ela aparece na ponta direita da barra e sai antes dos upgrades com Shift + botão direito de mão vazia. Quando ela é retirada ou quebra, a mineração volta a usar a picareta virtual. O Break guarda os drops iguais ao primeiro e deixa os demais no chão. Com o armazenamento cheio, a mineração pausa.
 
 ### Overlays opcionais
 

@@ -23,6 +23,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.minecraft.world.InteractionResult;
+import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -92,10 +95,21 @@ public final class SuperPylonsMod {
         MENUS.register(bus);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
         bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         bus.addListener(this::registerCapabilities);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
+    }
+
+    private void installBreakTool(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getUseBlock() == TriState.FALSE || event.getUseItem() == TriState.FALSE) return;
+        var level = event.getLevel();
+        if (level.getBlockEntity(event.getPos()) instanceof SuperPylonBlockEntity pylon &&
+            pylon.tryInstallBreakTool(event.getEntity(), event.getHand())) {
+            event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
+            event.setCanceled(true);
+        }
     }
 
     private void enqueueIntegrations(InterModEnqueueEvent event) {
@@ -105,6 +119,8 @@ public final class SuperPylonsMod {
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, SUPER_PYLON_ENTITY.get(),
+            (pylon, side) -> pylon.getItemHandler());
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, SUPER_PYLON_ENTITY.get(),
             (pylon, side) -> pylon.getFluidHandler());
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, SUPER_PYLON_ENTITY.get(),

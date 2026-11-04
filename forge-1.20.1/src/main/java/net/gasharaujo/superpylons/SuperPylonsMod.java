@@ -22,6 +22,9 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraft.world.InteractionResult;
+import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -91,9 +94,20 @@ public final class SuperPylonsMod {
         MENUS.register(bus);
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
+        MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
         bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
+    }
+
+    private void installBreakTool(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getUseBlock() == Result.DENY || event.getUseItem() == Result.DENY) return;
+        var level = event.getLevel();
+        if (level.getBlockEntity(event.getPos()) instanceof SuperPylonBlockEntity pylon &&
+            pylon.tryInstallBreakTool(event.getEntity(), event.getHand())) {
+            event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
+            event.setCanceled(true);
+        }
     }
 
     private void enqueueIntegrations(InterModEnqueueEvent event) {

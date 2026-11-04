@@ -36,6 +36,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
+    private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidStack> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
     private final EnergyPort energyInput = new EnergyPort(Direction.UP);
@@ -45,6 +46,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private LazyOptional<IEnergyStorage> outputCapability = LazyOptional.of(() -> energyOutput);
     private LazyOptional<IEnergyStorage> internalCapability = LazyOptional.of(() -> energyInternal);
     private LazyOptional<IFluidHandler> tankCapability = LazyOptional.of(() -> fluidHandler);
+    private LazyOptional<IItemHandler> itemCapability = LazyOptional.of(() -> itemPort);
 
     public IFluidHandler getFluidHandler() {
         return isTank() ? fluidHandler : null;
@@ -58,6 +60,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putString("upgrades", saveUpgrades());
+        if (!getBreakTool().isEmpty()) tag.put("break_tool", getBreakTool().save(new CompoundTag()));
         tag.putString("paint", savePaint());
         tag.putString("wire_id", saveWireId());
         tag.putString("wires", saveWires());
@@ -86,6 +89,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public void load(CompoundTag tag) {
         super.load(tag);
         loadUpgrades(tag.getString("upgrades"));
+        loadBreakTool(ItemStack.of(tag.getCompound("break_tool")));
         loadAuxiliaries(tag.getString("auxiliaries"));
         loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
         CompoundTag filterData = tag.getCompound("filter");
@@ -160,6 +164,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+        if (cap == ForgeCapabilities.ITEM_HANDLER && !isRemoved()) return itemCapability.cast();
         if (cap == ForgeCapabilities.FLUID_HANDLER && isTank() && !isRemoved()) return tankCapability.cast();
         if (cap == ForgeCapabilities.ENERGY && isEnergy() && !isRemoved()) {
             if (side == null) return internalCapability.cast();
@@ -182,6 +187,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     private void invalidatePylonCapabilities() {
+        itemCapability.invalidate();
         tankCapability.invalidate();
         inputCapability.invalidate();
         outputCapability.invalidate();
@@ -189,6 +195,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     private void createPylonCapabilities() {
+        itemCapability = LazyOptional.of(() -> itemPort);
         tankCapability = LazyOptional.of(() -> fluidHandler);
         inputCapability = LazyOptional.of(() -> energyInput);
         outputCapability = LazyOptional.of(() -> energyOutput);
@@ -276,6 +283,23 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private static IEnergyStorage energyAt(ServerLevel server, BlockPos pos, Direction side) {
         var entity = server.hasChunkAt(pos) ? server.getBlockEntity(pos) : null;
         return entity == null ? null : entity.getCapability(ForgeCapabilities.ENERGY, side).orElse(null);
+    }
+
+    private final class ItemPort implements IItemHandler {
+        @Override public int getSlots() { return 1; }
+        @Override public ItemStack getStackInSlot(int slot) {
+            return slot == 0 && hasItemStorage() ? contents.peek(Integer.MAX_VALUE) : ItemStack.EMPTY;
+        }
+        @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return slot == 0 ? insertAutomation(stack, simulate) : stack;
+        }
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return slot == 0 ? extractAutomation(amount, simulate) : ItemStack.EMPTY;
+        }
+        @Override public int getSlotLimit(int slot) {
+            return slot == 0 && hasItemStorage() ? (int) Math.min(Integer.MAX_VALUE, getItemCapacity()) : 0;
+        }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return slot == 0 && canStoreItem(stack); }
     }
 
     private final class EnergyPort implements IEnergyStorage {

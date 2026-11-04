@@ -1,5 +1,7 @@
 package net.gasharaujo.superpylons.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import java.util.List;
 import java.util.function.Function;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
@@ -23,7 +25,7 @@ final class PylonUpgradeStamps {
         }).toList();
     }
 
-    static void draw(List<TextureAtlasSprite> sprites, VertexSink sink) {
+    static void draw(List<TextureAtlasSprite> sprites, boolean hasTool, VertexSink sink) {
         for (Direction normal : Direction.Plane.HORIZONTAL) {
             float faceX = 0.5F + normal.getStepX() * FACE_DEPTH;
             float faceZ = 0.5F + normal.getStepZ() * FACE_DEPTH;
@@ -32,7 +34,7 @@ final class PylonUpgradeStamps {
             int rightZ = -normal.getStepX();
             for (int i = 0; i < sprites.size(); i++) {
                 TextureAtlasSprite sprite = sprites.get(i);
-                float right = START_RIGHT - i * SPACING;
+                float right = START_RIGHT - (i + (hasTool ? 1 : 0)) * SPACING;
                 float left = right - HEIGHT;
                 float x0 = faceX + left * rightX;
                 float x1 = faceX + right * rightX;
@@ -44,6 +46,15 @@ final class PylonUpgradeStamps {
                 sink.vertex(x0, HEIGHT, z0, normal, sprite.getU0(), sprite.getV0());
             }
         }
+    }
+
+    static void placeTool(PoseStack pose, Direction face) {
+        float right = START_RIGHT - HEIGHT / 2;
+        float depth = FACE_DEPTH + 1.0F / 128;
+        pose.translate(0.5F + face.getStepX() * depth + face.getStepZ() * right, HEIGHT / 2,
+            0.5F + face.getStepZ() * depth - face.getStepX() * right);
+        pose.mulPose(Axis.YP.rotationDegrees(-face.toYRot()));
+        pose.scale(HEIGHT, HEIGHT, HEIGHT);
     }
 
     @FunctionalInterface

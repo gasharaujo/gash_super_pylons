@@ -13,6 +13,8 @@ final class PylonTooltip {
         lines.accept(storageLine(pylon));
         var upgrades = pylon.getInstalledUpgrades();
         if (!upgrades.isEmpty()) lines.accept(Component.translatable("tooltip.gash_super_pylons.upgrades"));
+        var tool = pylon.getBreakTool();
+        if (!tool.isEmpty()) lines.accept(Component.translatable("tooltip.gash_super_pylons.break_tool", tool.getHoverName()));
         for (PylonUpgrade upgrade : upgrades) {
             Component name = Component.translatable("item.gash_super_pylons." + upgrade.id()).withStyle(ChatFormatting.BLUE);
             Component info = switch (upgrade.slot()) {

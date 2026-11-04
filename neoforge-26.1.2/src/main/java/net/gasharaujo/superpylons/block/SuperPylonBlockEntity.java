@@ -44,6 +44,7 @@ import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
+    private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidResource> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
     private final EnergyJournal energyJournal = new EnergyJournal();
@@ -55,6 +56,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return isTank() ? fluidHandler : null;
     }
 
+    public ResourceHandler<ItemResource> getItemHandler() { return isRemoved() ? null : itemPort; }
+
     public SuperPylonBlockEntity(BlockPos pos, BlockState state) {
         super(SuperPylonsMod.SUPER_PYLON_ENTITY.get(), pos, state);
     }
@@ -63,6 +66,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putString("upgrades", saveUpgrades());
+        if (!getBreakTool().isEmpty()) output.store("break_tool", ItemStack.CODEC, getBreakTool());
         output.putString("paint", savePaint());
         output.putString("wire_id", saveWireId());
         output.putString("wires", saveWires());
@@ -86,6 +90,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         loadUpgrades(input.getStringOr("upgrades", ""));
+        loadBreakTool(input.read("break_tool", ItemStack.CODEC).orElse(ItemStack.EMPTY));
         loadAuxiliaries(input.getStringOr("auxiliaries", ""));
         loadDecorations(input.getStringOr("paint", ""), input.getStringOr("wire_id", ""), input.getStringOr("wires", ""));
         ValueInput filterData = input.childOrEmpty("filter");
@@ -237,6 +242,49 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     private static EnergyHandler energyAt(ServerLevel server, BlockPos pos, Direction side) {
         return server.hasChunkAt(pos) ? server.getCapability(Capabilities.Energy.BLOCK, pos, side) : null;
+    }
+
+    private final class ItemPort extends SnapshotJournal<PylonContents.State> implements ResourceHandler<ItemResource> {
+        @Override public int size() { return 1; }
+        @Override public ItemResource getResource(int index) {
+            return index == 0 && hasItemStorage() ? ItemResource.of(getStoredItem()) : ItemResource.EMPTY;
+        }
+        @Override public long getAmountAsLong(int index) { return index == 0 && hasItemStorage() ? getStoredCount() : 0; }
+        @Override public long getCapacityAsLong(int index, ItemResource resource) {
+            if (resource.isEmpty()) return index == 0 && hasItemStorage() ? getItemCapacity() : 0;
+            return isValid(index, resource) ? getItemCapacity() : 0;
+        }
+        @Override public boolean isValid(int index, ItemResource resource) {
+            return index == 0 && !resource.isEmpty() && canStoreItem(resource.toStack(1));
+        }
+
+        @Override
+        public int insert(int index, ItemResource resource, int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonNegative(amount);
+            if (!(level instanceof ServerLevel) || index != 0 || resource.isEmpty()) return 0;
+            ItemStack stack = resource.toStack(1);
+            if (!canStoreItem(stack)) return 0;
+            int accepted = contents.insertLimit(stack, amount, getItemCapacity());
+            if (accepted == 0) return 0;
+            updateSnapshots(transaction);
+            return contents.add(stack, accepted, getItemCapacity());
+        }
+
+        @Override
+        public int extract(int index, ItemResource resource, int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonNegative(amount);
+            if (!(level instanceof ServerLevel) || index != 0 || !hasItemStorage() ||
+                resource.isEmpty() || !resource.equals(getResource(index))) return 0;
+            int extracted = (int) Math.min(amount, getStoredCount());
+            if (extracted == 0) return 0;
+            updateSnapshots(transaction);
+            contents.remove(extracted);
+            return extracted;
+        }
+
+        @Override protected PylonContents.State createSnapshot() { return contents.snapshot(); }
+        @Override protected void revertToSnapshot(PylonContents.State snapshot) { contents.restore(snapshot); }
+        @Override protected void onRootCommit(PylonContents.State original) { sync(); }
     }
 
     private final class EnergyPort implements EnergyHandler {

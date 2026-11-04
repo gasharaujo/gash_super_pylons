@@ -34,6 +34,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
+    private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidStack> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
     private final IEnergyStorage energyInput = new EnergyPort(Direction.UP);
@@ -44,6 +45,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return isTank() ? fluidHandler : null;
     }
 
+    public IItemHandler getItemHandler() { return isRemoved() ? null : itemPort; }
+
     public SuperPylonBlockEntity(BlockPos pos, BlockState state) {
         super(SuperPylonsMod.SUPER_PYLON_ENTITY.get(), pos, state);
     }
@@ -52,6 +55,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putString("upgrades", saveUpgrades());
+        if (!getBreakTool().isEmpty()) tag.put("break_tool", getBreakTool().save(registries));
         tag.putString("paint", savePaint());
         tag.putString("wire_id", saveWireId());
         tag.putString("wires", saveWires());
@@ -80,6 +84,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadUpgrades(tag.getString("upgrades"));
+        loadBreakTool(ItemStack.parseOptional(registries, tag.getCompound("break_tool")));
         loadAuxiliaries(tag.getString("auxiliaries"));
         loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
         CompoundTag filterData = tag.getCompound("filter");
@@ -233,6 +238,23 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     private static IEnergyStorage energyAt(ServerLevel server, BlockPos pos, Direction side) {
         return server.hasChunkAt(pos) ? server.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side) : null;
+    }
+
+    private final class ItemPort implements IItemHandler {
+        @Override public int getSlots() { return 1; }
+        @Override public ItemStack getStackInSlot(int slot) {
+            return slot == 0 && hasItemStorage() ? contents.peek(Integer.MAX_VALUE) : ItemStack.EMPTY;
+        }
+        @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return slot == 0 ? insertAutomation(stack, simulate) : stack;
+        }
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return slot == 0 ? extractAutomation(amount, simulate) : ItemStack.EMPTY;
+        }
+        @Override public int getSlotLimit(int slot) {
+            return slot == 0 && hasItemStorage() ? (int) Math.min(Integer.MAX_VALUE, getItemCapacity()) : 0;
+        }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return slot == 0 && canStoreItem(stack); }
     }
 
     private final class EnergyPort implements IEnergyStorage {

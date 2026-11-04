@@ -8,6 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShearsItem;
+import net.minecraft.core.component.DataComponents;
 
 public final class PylonItemRules {
     public static final TagKey<Item> MODIFIER_ITEM = TagKey.create(Registries.ITEM,
@@ -16,6 +18,10 @@ public final class PylonItemRules {
     private PylonItemRules() {}
 
     public static boolean isModifier(ItemStack stack) { return stack.is(MODIFIER_ITEM); }
+
+    static boolean isMiningTool(ItemStack stack) {
+        return !stack.isEmpty() && (stack.getItem() instanceof ShearsItem || stack.has(DataComponents.TOOL));
+    }
 
     static boolean matches(ItemStack stack, String selector) {
         if (!selector.startsWith("#")) return itemId(stack).equals(selector);

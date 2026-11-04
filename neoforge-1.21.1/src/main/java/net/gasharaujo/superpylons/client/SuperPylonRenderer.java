@@ -6,6 +6,7 @@ import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Direction;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -59,12 +60,22 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                                      int light, int overlay) {
         var upgrades = entity.getInstalledUpgrades();
         if (upgrades.isEmpty()) return;
+        ItemStack tool = entity.getBreakTool();
         var atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
         var sprites = PylonUpgradeStamps.sprites(upgrades, id -> atlas.apply(ResourceLocation.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "item/" + id)));
         var buffer = buffers.getBuffer(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
         var matrix = pose.last();
-        PylonUpgradeStamps.draw(sprites, (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
+        PylonUpgradeStamps.draw(sprites, !tool.isEmpty(), (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
             .setColor(-1).setUv(u, v).setOverlay(overlay).setLight(light)
             .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ()));
+        if (!tool.isEmpty()) {
+            for (Direction face : Direction.Plane.HORIZONTAL) {
+                pose.pushPose();
+                PylonUpgradeStamps.placeTool(pose, face);
+                Minecraft.getInstance().getItemRenderer().renderStatic(tool, ItemDisplayContext.GUI,
+                    light, overlay, pose, buffers, entity.getLevel(), (int) entity.getBlockPos().asLong());
+                pose.popPose();
+            }
+        }
     }
 }

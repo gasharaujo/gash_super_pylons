@@ -60,6 +60,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     private Block paint = Blocks.IRON_BLOCK;
     private UUID wireId = UUID.randomUUID();
     private final List<PylonWire> wires = new ArrayList<>();
+    private ItemStack breakTool = ItemStack.EMPTY;
     private final List<Auxiliary> auxiliaries = new ArrayList<>(2);
     private final EnumMap<PylonUpgrade.Slot, PylonUpgrade> upgrades = new EnumMap<>(PylonUpgrade.Slot.class);
     private long experience;
@@ -84,6 +85,12 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     public double getFuelUses() { return (double) smeltFuel / FURNACE_TICKS_PER_ITEM; }
 
     public List<PylonUpgrade> getInstalledUpgrades() { return List.copyOf(upgrades.values()); }
+    public ItemStack getBreakTool() { return breakTool.copy(); }
+
+    protected void loadBreakTool(ItemStack tool) {
+        breakTool = getSpecialty() == PylonUpgrade.BREAK && PylonItemRules.isMiningTool(tool) ?
+            tool.copyWithCount(1) : ItemStack.EMPTY;
+    }
 
     public Block framePaint() { return paint; }
     public List<PylonWire> outgoingWires() { return List.copyOf(wires); }
@@ -255,7 +262,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         return switch (type) {
             case ENERGY -> isEnergy();
             case FLUID -> isTank();
-            case ITEM -> getSpecialty() == null || !getSpecialty().locksItems();
+            case ITEM -> hasItemStorage();
         };
     }
 
@@ -342,10 +349,33 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         return inserted;
     }
 
-    private boolean canStoreItem(ItemStack input) {
+    protected ItemStack insertAutomation(ItemStack stack, boolean simulate) {
+        if (!(level instanceof ServerLevel) || !canStoreItem(stack)) return stack;
+        int inserted = contents.insertLimit(stack, stack.getCount(), getItemCapacity());
+        if (inserted == 0) return stack;
+        if (!simulate) {
+            contents.add(stack, inserted, getItemCapacity());
+            sync();
+        }
+        return stack.copyWithCount(stack.getCount() - inserted);
+    }
+
+    protected ItemStack extractAutomation(int amount, boolean simulate) {
+        if (!(level instanceof ServerLevel) || !hasItemStorage()) return ItemStack.EMPTY;
+        if (simulate) return contents.peek(amount);
+        ItemStack extracted = contents.extract(amount);
+        if (!extracted.isEmpty()) sync();
+        return extracted;
+    }
+
+    protected boolean hasItemStorage() {
         PylonUpgrade specialty = getSpecialty();
-        if (input.isEmpty() || PylonItemRules.isModifier(input) || !allowsItem(input) ||
-            (specialty != null && specialty.locksItems())) return false;
+        return !isRemoved() && (specialty == null || !specialty.locksItems());
+    }
+
+    protected boolean canStoreItem(ItemStack input) {
+        if (input.isEmpty() || input.getItem() instanceof PylonUpgradeItem || PylonItemRules.isModifier(input) ||
+            !hasItemStorage() || !allowsItem(input)) return false;
         Item output = generatedItem();
         return output == Items.AIR || PylonItemRules.exactlyEqual(new ItemStack(output), input);
     }
@@ -381,6 +411,21 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         if (level instanceof ServerLevel) {
             if (isTank()) interactWithTank(player, hand);
             else insertFrom(held);
+        }
+        return true;
+    }
+
+    public boolean tryInstallBreakTool(Player player, InteractionHand hand) {
+        if (getSpecialty() != PylonUpgrade.BREAK || player.isSpectator() ||
+            hand != InteractionHand.MAIN_HAND || !player.isShiftKeyDown()) return false;
+        ItemStack held = player.getMainHandItem();
+        if (!PylonItemRules.isMiningTool(held)) return false;
+        if (level instanceof ServerLevel) {
+            ItemStack previous = breakTool;
+            breakTool = held.copyWithCount(1);
+            held.shrink(1);
+            if (!previous.isEmpty()) player.getInventory().placeItemBackInInventory(previous);
+            sync();
         }
         return true;
     }
@@ -488,6 +533,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             .filter(upgrade -> next.get(upgrade.slot()) != upgrade).toList();
         upgrades.clear();
         upgrades.putAll(next);
+        if (specialty != PylonUpgrade.BREAK) giveBackBreakTool(player);
         if (previousSpecialty != specialty) auxiliaries.clear();
         if (!hasFilter()) {
             filter.clearContent();
@@ -500,6 +546,13 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     }
 
     private boolean tryRemoveUpgrade(Player player) {
+        if (!breakTool.isEmpty()) {
+            if (level instanceof ServerLevel) {
+                giveBackBreakTool(player);
+                sync();
+            }
+            return true;
+        }
         PylonUpgrade upgrade = upgrades.values().stream().findFirst().orElse(null);
         if (upgrade == null) return false;
         if (!(level instanceof ServerLevel)) return true;
@@ -540,6 +593,13 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         sync();
         giveUpgrade(player, upgrade);
         return true;
+    }
+
+    private void giveBackBreakTool(Player player) {
+        if (breakTool.isEmpty()) return;
+        ItemStack removed = breakTool;
+        breakTool = ItemStack.EMPTY;
+        player.getInventory().placeItemBackInInventory(removed);
     }
 
     private void warn(Player player, String key) {
@@ -853,11 +913,27 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         if (state.isAir() || state.getBlock() instanceof LiquidBlock || state.getDestroySpeed(server, target) < 0) return;
         ServerPlayer automation = getAutomationPlayer(server, AUTOMATION_PROFILE);
         if (!mayWorkAt(server, automation, target)) return;
-        var drops = PylonBreaker.breakBlock(server, target, automation);
-        if (isRemoved() || drops.isEmpty()) return;
+        ItemStack installed = breakTool;
+        ItemStack used = installed.isEmpty() ? new ItemStack(Items.DIAMOND_PICKAXE) : installed.copy();
+        var result = PylonBreaker.breakBlock(server, target, automation, used);
+        if (isRemoved()) return;
+        boolean toolChanged = !installed.isEmpty() && breakTool == installed &&
+            !PylonItemRules.exactlyEqual(installed, result.tool());
+        if (toolChanged) {
+            if (!result.tool().isEmpty() && !PylonItemRules.isMiningTool(result.tool())) {
+                Block.popResource(server, worldPosition, result.tool());
+                breakTool = ItemStack.EMPTY;
+            } else {
+                breakTool = result.tool().copy();
+            }
+        }
+        if (collectBreakDrops(result.drops(), capacity) || toolChanged) sync();
+    }
 
+    private boolean collectBreakDrops(List<ItemEntity> drops, long capacity) {
+        if (drops.isEmpty()) return false;
         ItemStack first = drops.get(0).getItem().copyWithCount(1);
-        if (!canStoreItem(first)) return;
+        if (!canStoreItem(first)) return false;
         long previousCount = contents.count();
         for (ItemEntity drop : drops) {
             ItemStack stack = drop.getItem().copy();
@@ -866,7 +942,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             if (stack.isEmpty()) drop.discard();
             else drop.setItem(stack);
         }
-        if (contents.count() != previousCount) sync();
+        return contents.count() != previousCount;
     }
 
     private void clickBelow(ServerLevel server) {
@@ -931,6 +1007,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             Block.popResource(level, worldPosition, createPackedDrop());
             contents.restore(ItemStack.EMPTY, 0);
         } else {
+            Block.popResource(level, worldPosition, breakTool);
             while (contents.count() > 0) {
                 Block.popResource(level, worldPosition, contents.extract(Integer.MAX_VALUE));
             }
@@ -938,6 +1015,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
                 Block.popResource(level, worldPosition, upgradeStack(upgrade));
             }
         }
+        breakTool = ItemStack.EMPTY;
         upgrades.clear();
     }
 
