@@ -29,9 +29,12 @@ public final class PylonAnimation {
     }
 
     public static void applyOrbit(PoseStack pose, float ticks) {
-        double bob = Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
-        pose.translate(0.5, 7.0 / 16.0 + bob, 0.5);
+        pose.translate(0.5, coreHeight(ticks), 0.5);
         // Positive Y rotation is counterclockwise when viewed from above.
         pose.mulPose(Axis.YP.rotationDegrees(ticks * 360.0F / ROTATION_TICKS));
+    }
+
+    static double coreHeight(float ticks) {
+        return 7.0 / 16.0 + Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
     }
 }

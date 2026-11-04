@@ -52,6 +52,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putString("upgrades", saveUpgrades());
+        tag.putString("paint", savePaint());
+        tag.putString("wire_id", saveWireId());
+        tag.putString("wires", saveWires());
         if (hasFilter()) {
             CompoundTag filterData = new CompoundTag();
             filterData.putBoolean("allow_list", allowList);
@@ -76,6 +79,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadUpgrades(tag.getString("upgrades"));
+        loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
         CompoundTag filterData = tag.getCompound("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries, registries);
@@ -192,6 +196,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             return burnTime;
         }
         return 0;
+    }
+
+    @Override
+    protected long transferFluidTo(PylonBlockEntityBase target, long limit) {
+        var resource = tank.resource();
+        if (resource == null || !(target instanceof SuperPylonBlockEntity other) || !other.canFillFluid(resource.getFluid())) return 0;
+        return tank.moveTo(other.tank, limit, other.getFluidCapacity(), FluidStack::isSameFluidSameComponents);
     }
 
     @Override

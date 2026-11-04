@@ -72,5 +72,20 @@
   "menu.gash_super_pylons.filter.allow": "Permitir lista",
   "menu.gash_super_pylons.filter.block": "Bloquear lista",
   "menu.gash_super_pylons.filter.help": "Use o cursor para marcar um slot. Clique com o botão direito para limpar. Este botão alterna entre permitir e bloquear os itens marcados.",
-  "message.gash_super_pylons.upgrade_disabled": "Este upgrade está reservado para uma versão futura."
+  "message.gash_super_pylons.upgrade_disabled": "Este upgrade está reservado para uma versão futura.",
+  "item.gash_super_pylons.copy_paste_tool": "Ferramenta de Copiar e Colar",
+  "item.gash_super_pylons.energy_wire": "Cabo de Energia",
+  "item.gash_super_pylons.item_wire": "Cabo de Itens",
+  "item.gash_super_pylons.fluid_wire": "Cabo de Fluidos",
+  "tooltip.gash_super_pylons.paint": "Textura salva: %s",
+  "tooltip.gash_super_pylons.setup": "Upgrades salvos",
+  "tooltip.gash_super_pylons.setup_empty": "Setup vazio",
+  "tooltip.gash_super_pylons.wire": "Pylon de origem em %s, %s, %s",
+  "message.gash_super_pylons.setup_missing": "Upgrades faltando: %s",
+  "message.gash_super_pylons.wire_select": "Origem selecionada. Clique com o botão direito no pylon de destino.",
+  "message.gash_super_pylons.wire_missing": "O pylon de origem está indisponível. Selecione uma nova origem.",
+  "message.gash_super_pylons.wire_distance": "Selecione dois pylons diferentes a até 32 blocos.",
+  "message.gash_super_pylons.wire_incompatible": "Estes pylons não podem transferir este recurso.",
+  "message.gash_super_pylons.wire_connected": "Cabo conectado.",
+  "message.gash_super_pylons.wire_removed": "Cabo desconectado."
 }

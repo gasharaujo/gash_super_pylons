@@ -72,5 +72,20 @@
   "menu.gash_super_pylons.filter.allow": "Allow list",
   "menu.gash_super_pylons.filter.block": "Block list",
   "menu.gash_super_pylons.filter.help": "Use the cursor to mark a slot. Right-click a slot to clear it. This button switches between allowing and blocking the marked items.",
-  "message.gash_super_pylons.upgrade_disabled": "This upgrade is reserved for a future version."
+  "message.gash_super_pylons.upgrade_disabled": "This upgrade is reserved for a future version.",
+  "item.gash_super_pylons.copy_paste_tool": "Copy Paste Tool",
+  "item.gash_super_pylons.energy_wire": "Energy Wire",
+  "item.gash_super_pylons.item_wire": "Item Wire",
+  "item.gash_super_pylons.fluid_wire": "Fluid Wire",
+  "tooltip.gash_super_pylons.paint": "Saved texture: %s",
+  "tooltip.gash_super_pylons.setup": "Saved upgrades",
+  "tooltip.gash_super_pylons.setup_empty": "Empty setup",
+  "tooltip.gash_super_pylons.wire": "Source pylon at %s, %s, %s",
+  "message.gash_super_pylons.setup_missing": "Missing upgrades: %s",
+  "message.gash_super_pylons.wire_select": "Source selected. Right-click the destination pylon.",
+  "message.gash_super_pylons.wire_missing": "The source pylon is unavailable. Select a new source.",
+  "message.gash_super_pylons.wire_distance": "Select two different pylons within 32 blocks.",
+  "message.gash_super_pylons.wire_incompatible": "These pylons cannot transfer this resource.",
+  "message.gash_super_pylons.wire_connected": "Wire connected.",
+  "message.gash_super_pylons.wire_removed": "Wire disconnected."
 }

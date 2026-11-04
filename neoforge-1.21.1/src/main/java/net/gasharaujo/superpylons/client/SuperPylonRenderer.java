@@ -20,6 +20,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                        MultiBufferSource buffers, int light, int overlay) {
         if (entity.getLevel() != null) {
             float ticks = PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
+            PylonDecorationRenderer.render(entity, ticks, pose, buffers, light, overlay);
             renderStamps(entity, pose, buffers, light, overlay);
             if (core.renderFluid(entity, pose, buffers, ticks, light, overlay)) return;
             ItemStack stored = entity.getStoredItem();
@@ -34,6 +35,11 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                 pose.popPose();
             }
         }
+    }
+
+    @Override
+    public boolean shouldRenderOffScreen(SuperPylonBlockEntity entity) {
+        return !entity.outgoingWires().isEmpty();
     }
 
     private static void renderStamps(SuperPylonBlockEntity entity, PoseStack pose, MultiBufferSource buffers,

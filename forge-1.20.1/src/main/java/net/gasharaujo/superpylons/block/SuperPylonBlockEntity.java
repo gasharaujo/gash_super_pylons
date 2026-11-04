@@ -58,6 +58,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putString("upgrades", saveUpgrades());
+        tag.putString("paint", savePaint());
+        tag.putString("wire_id", saveWireId());
+        tag.putString("wires", saveWires());
         if (hasFilter()) {
             CompoundTag filterData = new CompoundTag();
             filterData.putBoolean("allow_list", allowList);
@@ -82,6 +85,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public void load(CompoundTag tag) {
         super.load(tag);
         loadUpgrades(tag.getString("upgrades"));
+        loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
         CompoundTag filterData = tag.getCompound("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries);
@@ -234,6 +238,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private static IItemHandler itemHandlerAt(ServerLevel server, BlockPos pos, Direction side) {
         var entity = server.getBlockEntity(pos);
         return entity == null ? null : entity.getCapability(ForgeCapabilities.ITEM_HANDLER, side).orElse(null);
+    }
+
+    @Override
+    protected long transferFluidTo(PylonBlockEntityBase target, long limit) {
+        var resource = tank.resource();
+        if (resource == null || !(target instanceof SuperPylonBlockEntity other) || !other.canFillFluid(resource.getFluid())) return 0;
+        return tank.moveTo(other.tank, limit, other.getFluidCapacity(), FluidStack::isFluidEqual);
     }
 
     @Override

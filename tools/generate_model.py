@@ -51,7 +51,14 @@ def main():
         "elements": bars,
     })
     write_json(assets / "blockstates/super_pylon.json", {
-        "variants": {"": {"model": f"{MOD}:block/super_pylon"}}
+        "variants": {
+            "painted=false": {"model": f"{MOD}:block/super_pylon"},
+            "painted=true": {"model": f"{MOD}:block/super_pylon_painted"}
+        }
+    })
+    write_json(assets / "models/block/super_pylon_painted.json", {
+        "textures": {"particle": "minecraft:block/iron_block"},
+        "elements": []
     })
     for language in ["en_us", "pt_br"]:
         lang_path = assets / f"lang/{language}.json"

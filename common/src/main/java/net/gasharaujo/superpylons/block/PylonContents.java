@@ -33,6 +33,18 @@ public final class PylonContents {
         return accepted;
     }
 
+    long moveTo(PylonContents target, long maximum, long capacity) {
+        if (count == 0 || target.count >= capacity ||
+            (target.count > 0 && !PylonItemRules.exactlyEqual(item, target.item))) return 0;
+        long moved = Math.min(maximum, Math.min(count, capacity - target.count));
+        if (moved <= 0) return 0;
+        if (target.count == 0) target.item = item;
+        target.count += moved;
+        count -= moved;
+        if (count == 0) item = ItemStack.EMPTY;
+        return moved;
+    }
+
     public ItemStack extract(int requested) {
         if (count == 0 || requested <= 0) return ItemStack.EMPTY;
         int taken = (int) Math.min(Math.min(requested, item.getMaxStackSize()), count);

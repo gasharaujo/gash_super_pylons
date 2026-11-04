@@ -25,23 +25,21 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class SuperPylonBlock extends BaseEntityBlock {
     public static final MapCodec<SuperPylonBlock> CODEC = simpleCodec(SuperPylonBlock::new);
-    // The twelve bars from the supplied model. The floating core has no collision.
-    private static final VoxelShape FRAME = Shapes.or(
-        Block.box(0, 0, 0, 2, 2, 16), Block.box(14, 0, 0, 16, 2, 16),
-        Block.box(0, 12, 0, 2, 14, 16), Block.box(14, 12, 0, 16, 14, 16),
-        Block.box(0, 2, 0, 2, 12, 2), Block.box(14, 2, 0, 16, 12, 2),
-        Block.box(0, 2, 14, 2, 12, 16), Block.box(14, 2, 14, 16, 12, 16),
-        Block.box(2, 0, 0, 14, 2, 2), Block.box(2, 0, 14, 14, 2, 16),
-        Block.box(2, 12, 0, 14, 14, 2), Block.box(2, 12, 14, 14, 14, 16)
-    );
+    public SuperPylonBlock(Properties properties) {
+        super(properties);
+        registerDefaultState(stateDefinition.any().setValue(PylonFrame.PAINTED, false));
+    }
 
-    public SuperPylonBlock(Properties properties) { super(properties); }
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(PylonFrame.PAINTED);
+    }
 
     @Override
     public InteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
@@ -53,7 +51,7 @@ public final class SuperPylonBlock extends BaseEntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (player.getMainHandItem().isEmpty() && player.isShiftKeyDown() &&
+        if (player.getMainHandItem().isEmpty() &&
             level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon && pylon.use(player, InteractionHand.MAIN_HAND)) {
             return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
         }
@@ -114,6 +112,6 @@ public final class SuperPylonBlock extends BaseEntityBlock {
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return FRAME;
+        return PylonFrame.COLLISION;
     }
 }

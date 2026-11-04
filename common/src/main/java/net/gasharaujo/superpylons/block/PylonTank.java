@@ -31,5 +31,15 @@ final class PylonTank<T> {
         return extracted;
     }
 
+    long moveTo(PylonTank<T> target, long maximum, long capacity, BiPredicate<T, T> matches) {
+        if (amount() == 0 || target.amount() >= capacity ||
+            (target.amount() > 0 && !matches.test(resource(), target.resource()))) return 0;
+        long moved = Math.min(maximum, Math.min(amount(), capacity - target.amount()));
+        if (moved <= 0) return 0;
+        target.state = new State<>(resource(), target.amount() + moved);
+        restore(new State<>(resource(), amount() - moved));
+        return moved;
+    }
+
     void clear() { restore(new State<>(null, 0)); }
 }

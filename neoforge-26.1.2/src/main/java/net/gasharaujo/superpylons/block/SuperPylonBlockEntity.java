@@ -63,6 +63,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putString("upgrades", saveUpgrades());
+        output.putString("paint", savePaint());
+        output.putString("wire_id", saveWireId());
+        output.putString("wires", saveWires());
         if (hasFilter()) {
             ValueOutput filterData = output.child("filter");
             filterData.putBoolean("allow_list", allowList);
@@ -82,6 +85,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         loadUpgrades(input.getStringOr("upgrades", ""));
+        loadDecorations(input.getStringOr("paint", ""), input.getStringOr("wire_id", ""), input.getStringOr("wires", ""));
         ValueInput filterData = input.childOrEmpty("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries);
@@ -200,6 +204,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             return burnTime;
         }
         return 0;
+    }
+
+    @Override
+    protected long transferFluidTo(PylonBlockEntityBase target, long limit) {
+        var resource = tank.resource();
+        if (resource == null || !(target instanceof SuperPylonBlockEntity other) || !other.canFillFluid(resource.getFluid())) return 0;
+        return tank.moveTo(other.tank, limit, other.getFluidCapacity(), FluidResource::equals);
     }
 
     @Override

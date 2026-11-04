@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "painted=false": {
       "model": "gash_super_pylons:block/super_pylon"
+    },
+    "painted=true": {
+      "model": "gash_super_pylons:block/super_pylon_painted"
     }
   }
 }

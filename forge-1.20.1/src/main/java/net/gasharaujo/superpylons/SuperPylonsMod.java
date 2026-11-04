@@ -4,6 +4,8 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.gasharaujo.superpylons.block.PylonFilterMenu;
+import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
+import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 
@@ -56,7 +58,15 @@ public final class SuperPylonsMod {
     public static final Supplier<? extends Item> WRENCH =
         ITEMS.register("wrench", () -> new Item(new Item.Properties().stacksTo(1)));
     public static final Supplier<? extends Item> PAINT_TOOL =
-        ITEMS.register("paint_tool", () -> new Item(new Item.Properties().stacksTo(1)));
+        ITEMS.register("paint_tool", () -> new PylonToolItem(Kind.PAINT, new Item.Properties()));
+    public static final Supplier<? extends Item> COPY_PASTE_TOOL =
+        ITEMS.register("copy_paste_tool", () -> new PylonToolItem(Kind.COPY, new Item.Properties()));
+    public static final Supplier<? extends Item> ENERGY_WIRE =
+        ITEMS.register("energy_wire", () -> new PylonToolItem(Kind.ENERGY, new Item.Properties()));
+    public static final Supplier<? extends Item> ITEM_WIRE =
+        ITEMS.register("item_wire", () -> new PylonToolItem(Kind.ITEM, new Item.Properties()));
+    public static final Supplier<? extends Item> FLUID_WIRE =
+        ITEMS.register("fluid_wire", () -> new PylonToolItem(Kind.FLUID, new Item.Properties()));
     public static final Supplier<? extends Item> UPGRADE_BASE =
         ITEMS.register("upgrade_base", () -> new Item(new Item.Properties()));
     public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
@@ -93,6 +103,10 @@ public final class SuperPylonsMod {
             event.accept(UPGRADE_BASE.get());
             event.accept(WRENCH.get());
             event.accept(PAINT_TOOL.get());
+            event.accept(COPY_PASTE_TOOL.get());
+            event.accept(ENERGY_WIRE.get());
+            event.accept(ITEM_WIRE.get());
+            event.accept(FLUID_WIRE.get());
             UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
         }
     }

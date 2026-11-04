@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.block.PylonWire;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -27,6 +28,8 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
     public static final class State extends BlockEntityRenderState {
         public float ticks;
         @Nullable PylonFluidCore fluid;
+        PylonDecorationRenderer.@Nullable Frame frame;
+        List<PylonWire> wires = List.of();
         List<TextureAtlasSprite> stamps = List.of();
         public final ItemStackRenderState storedItem = new ItemStackRenderState();
     }
@@ -41,6 +44,8 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         state.ticks = entity.getLevel() == null ? 0 :
             PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
         state.fluid = PylonCoreRenderer.extractFluid(entity, state.lightCoords);
+        state.frame = PylonDecorationRenderer.frame(entity);
+        state.wires = entity.outgoingWires();
         var upgrades = entity.getInstalledUpgrades();
         if (upgrades.isEmpty()) {
             state.stamps = List.of();
@@ -55,6 +60,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
 
     @Override
     public void submit(State state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
+        PylonDecorationRenderer.submit(state.frame, state.wires, state.blockPos, state.ticks, pose, collector, state.lightCoords);
         if (!state.stamps.isEmpty()) {
             var stamps = state.stamps;
             int light = state.lightCoords;

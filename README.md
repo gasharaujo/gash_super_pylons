@@ -86,7 +86,13 @@ Os upgrades estão disponíveis no Criativo e por comando.
 - **Filter** abre com botão direito e as mãos vazias. Use um item no cursor para marcar um dos 27 slots e botão direito para limpar a marca. O filtro começa no modo de bloqueio e pode alternar para a lista de permissão. Ele compara o item e seus dados exatos tanto nos depósitos manuais quanto na coleta do Magnet.
 - **Magnet** coleta itens caídos em uma área inicial de 3×3, com o pylon no centro. Range I–VI define áreas de 3×3, 5×5, 7×7, 9×9, 11×11 e 13×13. A coleta abrange o nível do pylon e um bloco acima e abaixo. Começa com um item a cada 40 ticks e segue os valores de Speed e Quantity. Os itens entram no armazenamento do pylon e seguem o limite e a regra de correspondência exata.
 - **Smelt** usa receitas de fornalha e envia o resultado ao inventário imediatamente abaixo. Processa um item por ciclo de Speed. Usa o saldo de combustível já consumido, 1.000 FE de um pylon Energy lateral ou combustível de um inventário lateral, nessa ordem. O combustível rende o mesmo total de ticks de uma fornalha, e itens como baldes retornam ao inventário de origem quando há espaço.
-- **Pulverize**, **Wrench** e **Paint Tool** estão disponíveis no Criativo como itens reservados. A conversão planejada para o Pulverize é de 2, 4 ou 6 pós de `c:dust` por minério, respectivamente sem Quantity, com Quantity IV ou com Quantity VI.
+- **Pulverize** e **Wrench** estão disponíveis no Criativo como itens reservados. A conversão planejada para o Pulverize é de 2, 4 ou 6 pós de `c:dust` por minério, respectivamente sem Quantity, com Quantity IV ou com Quantity VI.
+
+#### Ferramentas e cabos
+
+- **Paint Tool** aplica ao frame a textura do bloco da mão secundária sem gastar o bloco. Sem um bloco na mão secundária, Shift + botão direito copia a pintura e botão direito aplica a pintura salva. Uma textura indisponível usa o ferro padrão.
+- **Copy Paste Tool** copia os tipos e tiers de upgrades com Shift + botão direito. Botão direito aplica o setup completo se todos os upgrades faltantes estiverem no inventário. Os upgrades retirados voltam ao jogador. Se faltar algum, o chat lista o que falta. Paint Tool e Copy Paste Tool ganham brilho e tooltip quando guardam dados.
+- **Energy Wire, Item Wire e Fluid Wire** são reutilizáveis. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Repita a seleção para desconectar ou use Shift + botão direito para cancelar uma seleção. Os cabos conectam os cores e a transferência segue da origem para o destino. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
 
 ### Overlays opcionais
 
