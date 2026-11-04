@@ -42,6 +42,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         PylonDecorationRenderer.@Nullable Frame frame;
         List<PylonWire> wires = List.of();
         List<TextureAtlasSprite> stamps = List.of();
+        int toolSlot = -1;
         public final ItemStackRenderState storedItem = new ItemStackRenderState();
         public final ItemStackRenderState breakTool = new ItemStackRenderState();
         final ItemStackRenderState superStar = new ItemStackRenderState();
@@ -72,6 +73,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
             entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.breakTool,
             entity.getBreakTool(), ItemDisplayContext.GUI, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
+        state.toolSlot = PylonUpgradeStamps.toolSlot(!state.breakTool.isEmpty(), entity.hasSuperUpgrade());
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.superStar,
             entity.hasSuperUpgrade() ? new ItemStack(Items.NETHER_STAR) : ItemStack.EMPTY,
             ItemDisplayContext.FIXED, entity.getLevel(), null, 0);
@@ -84,14 +86,14 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
             var stamps = state.stamps;
             int light = state.lightCoords;
             collector.submitCustomGeometry(pose, RenderTypes.entityCutout(TextureAtlas.LOCATION_ITEMS), (matrix, buffer) ->
-                PylonUpgradeStamps.draw(stamps, !state.breakTool.isEmpty(), (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
+                PylonUpgradeStamps.draw(stamps, state.toolSlot, (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
                     .setColor(-1).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light)
                     .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ())));
         }
         if (!state.breakTool.isEmpty()) {
             for (Direction face : Direction.Plane.HORIZONTAL) {
                 pose.pushPose();
-                PylonUpgradeStamps.placeTool(pose, face, state.stamps.size());
+                PylonUpgradeStamps.placeTool(pose, face, state.stamps.size(), state.toolSlot);
                 state.breakTool.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
                 pose.popPose();
             }

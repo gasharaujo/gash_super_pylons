@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "#forge:seeds",
+    "minecraft:torchflower_seeds",
+    "minecraft:pitcher_pod"
+  ]
+}

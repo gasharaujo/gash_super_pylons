@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "H",
+    "M"
+  ],
+  "key": {
+    "M": {
+      "item": "minecraft:chest"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    }
+  },
+  "result": {
+    "id": "gash_super_pylons:extract_item_upgrade",
+    "count": 1
+  }
+}

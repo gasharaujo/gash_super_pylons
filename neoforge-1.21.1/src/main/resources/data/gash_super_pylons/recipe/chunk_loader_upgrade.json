@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LCL",
+    "CNC",
+    "LCL"
+  ],
+  "key": {
+    "N": {
+      "item": "gash_super_pylons:upgrade_base"
+    },
+    "L": {
+      "item": "minecraft:lodestone"
+    },
+    "C": {
+      "item": "minecraft:crying_obsidian"
+    }
+  },
+  "result": {
+    "id": "gash_super_pylons:chunk_loader_upgrade",
+    "count": 1
+  }
+}

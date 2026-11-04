@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:copper_ingot"
+    },
+    "M": {
+      "item": "minecraft:chest"
+    },
+    "N": {
+      "item": "gash_super_pylons:upgrade_base"
+    }
+  },
+  "result": {
+    "item": "gash_super_pylons:storage_upgrade_1",
+    "count": 1
+  }
+}

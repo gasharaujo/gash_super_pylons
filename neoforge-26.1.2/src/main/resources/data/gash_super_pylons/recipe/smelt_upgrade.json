@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:furnace",
+    "minecraft:furnace"
+  ],
+  "result": {
+    "id": "gash_super_pylons:smelt_upgrade",
+    "count": 1
+  }
+}

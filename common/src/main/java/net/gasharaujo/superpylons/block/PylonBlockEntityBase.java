@@ -819,7 +819,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private boolean tryRemoveUpgrade(Player player) {
-        if (!breakTool.isEmpty()) {
+        if (!hasSuperUpgrade() && !breakTool.isEmpty()) {
             if (level instanceof ServerLevel) {
                 giveBackBreakTool(player);
                 sync();

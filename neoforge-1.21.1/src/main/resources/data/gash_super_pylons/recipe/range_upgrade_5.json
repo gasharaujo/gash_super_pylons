@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:emerald_block"
+    },
+    "M": {
+      "item": "minecraft:spyglass"
+    },
+    "N": {
+      "item": "gash_super_pylons:range_upgrade_4"
+    }
+  },
+  "result": {
+    "id": "gash_super_pylons:range_upgrade_5",
+    "count": 1
+  }
+}

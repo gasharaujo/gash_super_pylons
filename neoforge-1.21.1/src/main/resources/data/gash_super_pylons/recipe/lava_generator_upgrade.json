@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LMW",
+    "MNM",
+    "WML"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:lava_bucket"
+    },
+    "L": {
+      "item": "minecraft:lava_bucket"
+    },
+    "M": {
+      "item": "minecraft:bucket"
+    },
+    "N": {
+      "item": "gash_super_pylons:upgrade_base"
+    }
+  },
+  "result": {
+    "id": "gash_super_pylons:lava_generator_upgrade",
+    "count": 1
+  }
+}

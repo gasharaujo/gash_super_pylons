@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:iron_ingot"
+    },
+    "M": {
+      "item": "minecraft:lapis_lazuli"
+    },
+    "N": {
+      "item": "gash_super_pylons:quantity_upgrade_1"
+    }
+  },
+  "result": {
+    "id": "gash_super_pylons:quantity_upgrade_2",
+    "count": 1
+  }
+}

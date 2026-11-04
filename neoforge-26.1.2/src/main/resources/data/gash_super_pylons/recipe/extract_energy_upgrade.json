@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "H",
+    "M"
+  ],
+  "key": {
+    "M": "minecraft:redstone_block",
+    "H": "minecraft:hopper"
+  },
+  "result": {
+    "id": "gash_super_pylons:extract_energy_upgrade",
+    "count": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:dispenser",
+    "minecraft:dispenser"
+  ],
+  "result": {
+    "id": "gash_super_pylons:clicker_upgrade",
+    "count": 1
+  }
+}

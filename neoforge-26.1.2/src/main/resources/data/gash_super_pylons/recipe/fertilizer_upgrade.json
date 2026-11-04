@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:bone_block",
+    "minecraft:bone_block"
+  ],
+  "result": {
+    "id": "gash_super_pylons:fertilizer_upgrade",
+    "count": 1
+  }
+}

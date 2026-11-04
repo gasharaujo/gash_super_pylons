@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "M": {
+      "item": "minecraft:blue_ice"
+    },
+    "N": {
+      "item": "gash_super_pylons:speed_upgrade_5"
+    }
+  },
+  "result": {
+    "item": "gash_super_pylons:speed_upgrade_6",
+    "count": 1
+  }
+}

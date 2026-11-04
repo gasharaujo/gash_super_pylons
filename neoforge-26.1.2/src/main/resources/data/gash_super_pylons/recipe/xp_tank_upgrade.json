@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:experience_bottle",
+    "minecraft:experience_bottle"
+  ],
+  "result": {
+    "id": "gash_super_pylons:xp_tank_upgrade",
+    "count": 1
+  }
+}

@@ -77,17 +77,18 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         var upgrades = entity.getInstalledUpgrades();
         if (upgrades.isEmpty()) return;
         ItemStack tool = entity.getBreakTool();
+        int toolSlot = PylonUpgradeStamps.toolSlot(!tool.isEmpty(), entity.hasSuperUpgrade());
         var atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
         var sprites = PylonUpgradeStamps.sprites(upgrades, id -> atlas.apply(ResourceLocation.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "item/" + id)));
         var buffer = buffers.getBuffer(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
         var matrix = pose.last();
-        PylonUpgradeStamps.draw(sprites, !tool.isEmpty(), (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
+        PylonUpgradeStamps.draw(sprites, toolSlot, (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
             .setColor(-1).setUv(u, v).setOverlay(overlay).setLight(light)
             .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ()));
         if (!tool.isEmpty()) {
             for (Direction face : Direction.Plane.HORIZONTAL) {
                 pose.pushPose();
-                PylonUpgradeStamps.placeTool(pose, face, sprites.size());
+                PylonUpgradeStamps.placeTool(pose, face, sprites.size(), toolSlot);
                 Minecraft.getInstance().getItemRenderer().renderStatic(tool, ItemDisplayContext.GUI,
                     light, overlay, pose, buffers, entity.getLevel(), (int) entity.getBlockPos().asLong());
                 pose.popPose();

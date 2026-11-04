@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "H",
+    "M"
+  ],
+  "key": {
+    "M": "minecraft:emerald",
+    "H": "minecraft:hopper"
+  },
+  "result": {
+    "id": "gash_super_pylons:extract_xp_upgrade",
+    "count": 1
+  }
+}

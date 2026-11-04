@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:stonecutter",
+    "minecraft:stonecutter"
+  ],
+  "result": {
+    "id": "gash_super_pylons:pulverize_upgrade",
+    "count": 1
+  }
+}

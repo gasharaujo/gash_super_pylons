@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "gash_super_pylons:insert_xp_upgrade"
+    }
+  ],
+  "result": {
+    "item": "gash_super_pylons:extract_xp_upgrade",
+    "count": 1
+  }
+}

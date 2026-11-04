@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:enchanting_table",
+    "minecraft:enchanting_table"
+  ],
+  "result": {
+    "id": "gash_super_pylons:enchanting_upgrade",
+    "count": 1
+  }
+}

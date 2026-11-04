@@ -30,6 +30,8 @@ A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e
 
 Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloco de tijolos de pedra talhados** (`minecraft:chiseled_stone_bricks`), produzindo 1 Super Pylon.
 
+O Upgrade Base usa cinco pedregulhos em cruz. Nos upgrades de tier, o centro recebe o Upgrade Base no tier I e o tier anterior nos demais. Receitas de geradores devolvem um balde vazio por balde de água ou lava usado. Cada receita de Wire produz 16 cabos. Coloque um Insert ou Extract sozinho na bancada para convertê-lo na versão oposta do mesmo recurso.
+
 - **Botão direito com um item:** deposita os itens da mão até o limite atual. O item aparece girando e flutuando no lugar do core.
 - **Correspondência exata:** item, nome, encantamentos, dano e NBT/componentes precisam ser iguais. A quantidade da stack não faz parte dessa comparação.
 - **Botão esquerdo:** retira 1 item. **Shift + botão esquerdo:** retira até uma stack normal do item (64, 16 ou 1, conforme o item).
@@ -67,7 +69,7 @@ Remover armazenamento exige que o conteúdo caiba na capacidade restante. Na que
 
 #### XP, energia e agricultura
 
-Os upgrades estão disponíveis no Criativo e por comando.
+Os upgrades com receita também aparecem no JEI quando o mod está instalado.
 
 - **XP Tank** coleta orbes a até 2 blocos da estrutura e drena jogadores logo acima. O Speed define até quantos níveis são drenados ou entregues por jogador por tick. Sem Speed, a taxa é de 1 nível. A taxa nos tiers I–VI é de 2, 4, 8, 16, 32 e 64 níveis. A capacidade inicial é de 32.000 pontos de XP, ampliada pelo Storage. Estoques antigos acima do limite ficam guardados e voltam a aceitar XP assim que houver espaço. O jogador logo abaixo pode receber progresso parcial quando sobrarem poucos pontos.
 - O **XP Tank** exige o estoque de itens vazio na instalação. Um frasco de experiência vira sete pontos de XP e devolve o frasco de vidro. Um frasco de vidro consome sete pontos para virar um frasco de experiência. O tanque se conecta aos fluidos de XP líquido do Just Dire Things, Ender IO e Mob Grinding Utils presentes no modpack. Cada ponto equivale a 20 mB, com suporte a frações.
@@ -78,7 +80,7 @@ Os upgrades estão disponíveis no Criativo e por comando.
 - **Planter** planta sementes e mudas do estoque em espaços válidos na área de Range. Speed define o intervalo e Quantity define quantas plantas cabem em cada ciclo.
 - **Placer** coloca um bloco do estoque no lado de trabalho por ciclo de Speed.
 - **Dropper** solta itens armazenados no centro do bloco do lado de trabalho, sem espalhar. Começa com um item a cada 60 ticks. Quantity define quantos itens saem por ciclo, Speed define o intervalo e cada tier de Range estende a distância em um bloco. Se o espaço de saída estiver bloqueado, os itens ficam no pylon.
-- **Super** faz quatro Nether Stars orbitarem o núcleo. O upgrade tem slot próprio e pode acompanhar outros upgrades.
+- **Super** faz quatro Nether Stars orbitarem o núcleo. Tem slot próprio e sai primeiro ao remover upgrades.
 - **Void** descarta itens, fluidos, FE e XP recebidos.
 - **Chunk Loader** mantém os chunks ativos em um quadrado centrado no chunk do pylon. Começa com raio de um chunk e usa o raio do upgrade de Range quando instalado.
 
@@ -121,7 +123,7 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 - **Wrench** alterna entre os modos Vincular e Direção com Shift + rolagem. No modo Vincular, selecione Enchanter ou Anvil com Shift + botão direito. Clique em cada auxiliar, deixando um bloco de ar entre ele e o principal. Enchanter usa livros e partículas. Anvil mostra oito orbes que circulam os núcleos auxiliares.
 - No modo Direção, Shift + botão direito no ar alterna entre os seis lados. Botão direito no pylon aplica o lado selecionado. O padrão é baixo.
 - Shift + botão direito no ar limpa os dados da Copy Paste Tool, da Paint Tool e da Wrench no modo Vincular.
-- **Break** minera o bloco no lado de trabalho no intervalo do Speed. Usa uma picareta virtual de diamante por padrão. Shift + botão direito com uma ferramenta de mineração na mão principal instala a ferramenta real, com seus encantamentos e desgaste. Ela aparece na ponta direita da barra e sai antes dos upgrades com Shift + botão direito de mão vazia. Quando ela é retirada ou quebra, a mineração volta a usar a picareta virtual. O Break guarda os drops iguais ao primeiro e deixa os demais no chão. Com o armazenamento cheio, a mineração pausa.
+- **Break** minera o bloco no lado de trabalho no intervalo do Speed. Usa uma picareta virtual de diamante por padrão. Shift + botão direito com uma ferramenta de mineração na mão principal instala a ferramenta real, com seus encantamentos e desgaste. Ela aparece na barra na ordem de remoção, logo depois do Super quando instalado. Quando ela é retirada ou quebra, a mineração volta a usar a picareta virtual. O Break guarda os drops iguais ao primeiro e deixa os demais no chão. Com o armazenamento cheio, a mineração pausa.
 
 ### Wiki dentro do jogo
 

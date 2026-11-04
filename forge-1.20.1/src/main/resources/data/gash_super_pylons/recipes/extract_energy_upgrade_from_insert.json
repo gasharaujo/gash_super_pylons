@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "gash_super_pylons:insert_energy_upgrade"
+    }
+  ],
+  "result": {
+    "item": "gash_super_pylons:extract_energy_upgrade",
+    "count": 1
+  }
+}

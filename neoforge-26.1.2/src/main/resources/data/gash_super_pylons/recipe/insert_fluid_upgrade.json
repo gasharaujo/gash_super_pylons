@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "M",
+    "H"
+  ],
+  "key": {
+    "M": "minecraft:bucket",
+    "H": "minecraft:hopper"
+  },
+  "result": {
+    "id": "gash_super_pylons:insert_fluid_upgrade",
+    "count": 1
+  }
+}

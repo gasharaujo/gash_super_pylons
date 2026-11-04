@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " M ",
+    "MNM",
+    "DDD"
+  ],
+  "key": {
+    "M": {
+      "item": "minecraft:anvil"
+    },
+    "N": {
+      "item": "gash_super_pylons:upgrade_base"
+    },
+    "D": {
+      "item": "minecraft:ancient_debris"
+    }
+  },
+  "result": {
+    "item": "gash_super_pylons:anvil_upgrade",
+    "count": 1
+  }
+}

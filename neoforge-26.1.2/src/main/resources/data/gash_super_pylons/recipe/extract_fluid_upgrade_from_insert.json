@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:insert_fluid_upgrade"
+  ],
+  "result": {
+    "id": "gash_super_pylons:extract_fluid_upgrade",
+    "count": 1
+  }
+}

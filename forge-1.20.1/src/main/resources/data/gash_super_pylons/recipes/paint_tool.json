@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:brush"
+    },
+    {
+      "item": "gash_super_pylons:upgrade_base"
+    }
+  ],
+  "result": {
+    "item": "gash_super_pylons:paint_tool",
+    "count": 1
+  }
+}

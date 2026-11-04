@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LMW",
+    "MNM",
+    "WML"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:lava_bucket"
+    },
+    "L": {
+      "item": "minecraft:lava_bucket"
+    },
+    "M": {
+      "item": "minecraft:glass"
+    },
+    "N": {
+      "item": "gash_super_pylons:sand_generator_upgrade"
+    }
+  },
+  "result": {
+    "item": "gash_super_pylons:glass_generator_upgrade",
+    "count": 1
+  }
+}

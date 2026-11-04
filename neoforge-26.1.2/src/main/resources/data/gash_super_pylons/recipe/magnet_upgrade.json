@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:iron_ingot",
+    "minecraft:gold_ingot"
+  ],
+  "result": {
+    "id": "gash_super_pylons:magnet_upgrade",
+    "count": 1
+  }
+}

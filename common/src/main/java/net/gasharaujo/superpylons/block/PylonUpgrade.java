@@ -74,8 +74,8 @@ public enum PylonUpgrade {
 
     // Default removal order. Generators are removed before processing.
     public enum Slot {
-        FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
-        CHUNK_LOADER, SUPER, PROCESSING, SPECIALTY, STORAGE
+        SUPER, FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
+        CHUNK_LOADER, PROCESSING, SPECIALTY, STORAGE
     }
 
     private final String id;

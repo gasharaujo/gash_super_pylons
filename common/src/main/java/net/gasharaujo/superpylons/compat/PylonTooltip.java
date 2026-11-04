@@ -14,7 +14,8 @@ final class PylonTooltip {
         var upgrades = pylon.getInstalledUpgrades();
         if (!upgrades.isEmpty()) lines.accept(Component.translatable("tooltip.gash_super_pylons.upgrades"));
         var tool = pylon.getBreakTool();
-        if (!tool.isEmpty()) lines.accept(Component.translatable("tooltip.gash_super_pylons.break_tool", tool.getHoverName()));
+        var toolLine = tool.isEmpty() ? null : Component.translatable("tooltip.gash_super_pylons.break_tool", tool.getHoverName());
+        if (toolLine != null && !pylon.hasSuperUpgrade()) lines.accept(toolLine);
         for (PylonUpgrade upgrade : upgrades) {
             Component name = Component.translatable("item.gash_super_pylons." + upgrade.id()).withStyle(ChatFormatting.BLUE);
             Component info = switch (upgrade.slot()) {
@@ -30,6 +31,7 @@ final class PylonTooltip {
                 default -> name;
             };
             lines.accept(info);
+            if (upgrade == PylonUpgrade.SUPER && toolLine != null) lines.accept(toolLine);
         }
         if (pylon.getProcessing() != null && pylon.getFuelUses() > 0) {
             double uses = pylon.getFuelUses();
