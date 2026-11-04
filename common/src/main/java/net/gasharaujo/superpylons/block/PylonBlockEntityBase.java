@@ -243,10 +243,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             warn(player, "wire_distance");
             return false;
         }
-        if (hasWireTo(target) || target.hasWireTo(this)) {
-            warn(player, "wire_already_connected");
-            return false;
-        }
         if (!supportsTransfer(type, false) || !target.supportsTransfer(type, true)) {
             warn(player, "wire_incompatible");
             return false;
@@ -258,8 +254,20 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         return true;
     }
 
-    private boolean hasWireTo(PylonBlockEntityBase target) {
-        return wires.stream().anyMatch(wire -> wire.target().equals(target.worldPosition) && wire.targetId().equals(target.wireId));
+    boolean disconnectWire(PylonBlockEntityBase target, Player player) {
+        boolean removedOutgoing = removeWiresTo(target);
+        boolean removedIncoming = target.removeWiresTo(this);
+        if (!removedOutgoing && !removedIncoming) return false;
+        warn(player, "wire_removed");
+        return true;
+    }
+
+    private boolean removeWiresTo(PylonBlockEntityBase target) {
+        if (!wires.removeIf(wire -> wire.target().equals(target.worldPosition) && wire.targetId().equals(target.wireId))) {
+            return false;
+        }
+        sync();
+        return true;
     }
 
     private boolean supportsTransfer(PylonWire.Type type, boolean input) {

@@ -1,4 +1,5 @@
 {
+  "item_group.gash_super_pylons.main": "Gash's Super Pylons",
   "block.gash_super_pylons.super_pylon": "Super Pylon",
   "tooltip.gash_super_pylons.storage": "Armazenado: %s (%s / %s)",
   "tooltip.gash_super_pylons.empty": "Armazenamento vazio (0 / %s)",
@@ -87,7 +88,7 @@
   "message.gash_super_pylons.wire_distance": "Selecione dois pylons diferentes a até 32 blocos.",
   "message.gash_super_pylons.wire_incompatible": "Estes pylons não podem transferir este recurso.",
   "message.gash_super_pylons.wire_connected": "Cabo conectado.",
-  "message.gash_super_pylons.wire_already_connected": "Estes pylons já estão conectados por um cabo.",
+  "message.gash_super_pylons.wire_removed": "Cabo desconectado.",
   "message.gash_super_pylons.workshop_select": "Pylon principal selecionado. Clique com o botão direito em até dois pylons auxiliares.",
   "message.gash_super_pylons.workshop_invalid": "Selecione um pylon auxiliar com um bloco de ar entre ele e o pylon principal.",
   "message.gash_super_pylons.workshop_full": "O pylon principal já tem dois auxiliares ou este pylon já é auxiliar de outro.",

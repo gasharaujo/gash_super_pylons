@@ -16,7 +16,7 @@ Pacote Java: `net.gasharaujo.superpylons`
 
 ## Super Pylon
 
-Encontre o bloco na aba **Blocos funcionais** do Criativo ou use:
+Encontre o bloco na aba **Gash's Super Pylons** do Criativo ou use:
 
 ```text
 /give @s gash_super_pylons:super_pylon
@@ -43,7 +43,7 @@ Funis e cabos de itens podem inserir e extrair do estoque por qualquer face. Lei
 
 ### Upgrades
 
-Os upgrades estão na aba **Blocos funcionais** do Criativo. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, processamento, especialidade e armazenamento.
+Os upgrades, ferramentas e cabos estão na aba **Gash's Super Pylons** do Criativo, identificada pelo ícone do Super Pylon. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, processamento, especialidade e armazenamento.
 
 Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
 
@@ -110,7 +110,7 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 
 - **Paint Tool** aplica ao frame a textura do bloco da mão secundária sem gastar o bloco. Sem um bloco na mão secundária, Shift + botão direito copia a pintura e botão direito aplica a pintura salva. Uma textura indisponível usa o ferro padrão.
 - **Copy Paste Tool** copia os tipos e tiers de upgrades com Shift + botão direito. Botão direito aplica o setup completo se todos os upgrades faltantes estiverem no inventário. Os upgrades retirados voltam ao jogador. Se faltar algum, o chat lista o que falta. Paint Tool e Copy Paste Tool ganham brilho e tooltip quando guardam dados.
-- **Energy Wire, Item Wire, Fluid Wire e XP Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos e o upgrade de transferência desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
+- **Energy Wire, Item Wire, Fluid Wire e XP Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Para desconectar, selecione os dois pylons em qualquer ordem com qualquer tipo de Wire, sem gastar outro cabo. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos e o upgrade de transferência desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
 - **Insert** puxa do bloco diretamente abaixo. **Extract** envia ao bloco diretamente abaixo. Há uma versão de cada para itens, fluidos, energia e XP. Cada recurso tem um slot para definir o sentido, e o limite por tick usa 10% da capacidade do pylon equipado. As portas funcionam com outros pylons e com blocos que expõem a interface compatível. Os upgrades de energia assumem a transferência ativa da face inferior quando instalados.
 - **Wrench** seleciona um pylon com Enchanter ou Anvil usando Shift + botão direito. Clique com o botão direito em cada um dos dois auxiliares, com um bloco de ar entre cada auxiliar e o principal. No Enchanter, os auxiliares exibem livros. Com lápis-lazúli em um e XP no outro, enviam partículas ao principal. Na Anvil, orbes de XP giram em torno dos cores auxiliares. Os efeitos são visuais.
 - Shift + botão direito no ar limpa os dados salvos na Copy Paste Tool, na Paint Tool ou na Wrench.

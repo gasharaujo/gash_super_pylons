@@ -18,7 +18,8 @@ import net.gasharaujo.superpylons.compat.PylonProbeProvider;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.gasharaujo.superpylons.block.SuperPylonBlockItem;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.common.MinecraftForge;
@@ -38,8 +39,9 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -87,6 +89,14 @@ public final class SuperPylonsMod {
         ITEMS.register("upgrade_base", () -> new Item(new Item.Properties()));
     public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
 
+    private static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
+        DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
+    public static final Supplier<CreativeModeTab> CREATIVE_TAB = CREATIVE_TABS.register("main", () -> CreativeModeTab.builder()
+        .title(Component.translatable("item_group.gash_super_pylons.main"))
+        .icon(() -> new ItemStack(SUPER_PYLON_ITEM.get()))
+        .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> output.accept(item.get())))
+        .build());
+
     private static Map<PylonUpgrade, Supplier<? extends Item>> registerUpgrades() {
         Map<PylonUpgrade, Supplier<? extends Item>> items = new EnumMap<>(PylonUpgrade.class);
         for (PylonUpgrade upgrade : PylonUpgrade.values()) {
@@ -101,11 +111,11 @@ public final class SuperPylonsMod {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
+        CREATIVE_TABS.register(bus);
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(PylonExperienceStorage.class));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
-        bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
     }
@@ -123,22 +133,6 @@ public final class SuperPylonsMod {
     private void enqueueIntegrations(InterModEnqueueEvent event) {
         if (ModList.get().isLoaded("theoneprobe")) {
             PylonProbeProvider.enqueueRegistration();
-        }
-    }
-
-
-    private void addCreativeItem(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
-            event.accept(SUPER_PYLON_ITEM.get());
-            event.accept(UPGRADE_BASE.get());
-            event.accept(WRENCH.get());
-            event.accept(PAINT_TOOL.get());
-            event.accept(COPY_PASTE_TOOL.get());
-            event.accept(ENERGY_WIRE.get());
-            event.accept(ITEM_WIRE.get());
-            event.accept(FLUID_WIRE.get());
-            event.accept(XP_WIRE.get());
-            UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
         }
     }
 }

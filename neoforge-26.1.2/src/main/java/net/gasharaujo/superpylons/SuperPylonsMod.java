@@ -31,7 +31,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.util.TriState;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -39,8 +39,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -88,6 +89,14 @@ public final class SuperPylonsMod {
         ITEMS.registerSimpleItem("upgrade_base");
     public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
 
+    private static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
+        DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
+    public static final Supplier<CreativeModeTab> CREATIVE_TAB = CREATIVE_TABS.register("main", () -> CreativeModeTab.builder()
+        .title(Component.translatable("item_group.gash_super_pylons.main"))
+        .icon(() -> new ItemStack(SUPER_PYLON_ITEM.get()))
+        .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> output.accept(item.get())))
+        .build());
+
     private static Map<PylonUpgrade, Supplier<? extends Item>> registerUpgrades() {
         Map<PylonUpgrade, Supplier<? extends Item>> items = new EnumMap<>(PylonUpgrade.class);
         for (PylonUpgrade upgrade : PylonUpgrade.values()) {
@@ -101,10 +110,10 @@ public final class SuperPylonsMod {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
+        CREATIVE_TABS.register(bus);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
-        bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         bus.addListener(this::registerCapabilities);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
@@ -134,20 +143,5 @@ public final class SuperPylonsMod {
             (pylon, side) -> pylon.getFluidHandler());
         event.registerBlockEntity(Capabilities.Energy.BLOCK, SUPER_PYLON_ENTITY.get(),
             SuperPylonBlockEntity::getEnergyHandler);
-    }
-
-    private void addCreativeItem(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
-            event.accept(SUPER_PYLON_ITEM.get());
-            event.accept(UPGRADE_BASE.get());
-            event.accept(WRENCH.get());
-            event.accept(PAINT_TOOL.get());
-            event.accept(COPY_PASTE_TOOL.get());
-            event.accept(ENERGY_WIRE.get());
-            event.accept(ITEM_WIRE.get());
-            event.accept(FLUID_WIRE.get());
-            event.accept(XP_WIRE.get());
-            UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
-        }
     }
 }

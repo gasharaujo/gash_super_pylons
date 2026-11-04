@@ -64,7 +64,7 @@ public final class PylonToolActions {
         BlockPos start = wireStart(fields);
         if (start != null && fields[0].equals(level.dimension().toString()) && level.hasChunkAt(start) &&
             level.getBlockEntity(start) instanceof PylonBlockEntityBase source && source.wireId().toString().equals(fields[2])) {
-            if (source.connectWire(type, pylon, player)) stack.shrink(1);
+            if (!source.disconnectWire(pylon, player) && source.connectWire(type, pylon, player)) stack.shrink(1);
         } else {
             player.sendSystemMessage(Component.translatable("message.gash_super_pylons.wire_missing"));
         }
