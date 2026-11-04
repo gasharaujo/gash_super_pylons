@@ -138,8 +138,12 @@ final class PylonContentsTest {
 
     @Test
     void tanksKeepOneFluidAndDoNotConsumeDuringSimulation(MinecraftServer server) {
+        var state = SuperPylonsMod.SUPER_PYLON.get().defaultBlockState();
+        var pylon = new SuperPylonBlockEntity(BlockPos.ZERO, state);
+        pylon.loadUpgrades(PylonUpgrade.FLUID_STORAGE.id());
+        long capacity = pylon.getFluidCapacity();
+        assertEquals(32_000, capacity);
         PylonTank<String> tank = new PylonTank<>();
-        long capacity = 2_048_000L;
         assertEquals(6400, tank.insert("water", 6400, capacity, String::equals, true));
         assertEquals(0, tank.amount());
         assertEquals(6400, tank.insert("water", 6400, capacity, String::equals, false));

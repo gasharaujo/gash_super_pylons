@@ -79,7 +79,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         contents.restore(ItemStack.of(tag.getCompound("stored_item")), tag.getLong("stored_count"), getItemCapacity());
         FluidStack resource = FluidStack.loadFluidStackFromNBT(tag.getCompound("fluid_template"));
         tank.restore(new PylonTank.State<>(resource.isEmpty() || !canFillFluid(resource.getFluid()) ? null : resource,
-            Math.min(getFluidCapacity(), tag.getLong("fluid_amount"))));
+            tag.getLong("fluid_amount")));
     }
 
     @Override

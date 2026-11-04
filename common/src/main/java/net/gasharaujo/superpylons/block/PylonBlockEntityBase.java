@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec3;
 public abstract class PylonBlockEntityBase extends BlockEntity {
     private static final GameProfile AUTOMATION_PROFILE =
         new GameProfile(UUID.fromString("507ad2bf-5600-42ed-9fc4-4b7076fc34b5"), "[Super Pylon]");
-    private static final int BUCKET_MB = 1000;
+    private static final int BASE_FLUID_CAPACITY_MB = 32_000;
     private static final int CONFIRM_TICKS = 100;
     private static final int MAX_LOOSE_STACKS = 64;
 
@@ -90,10 +90,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         return specialty != null && specialty.isTank();
     }
 
-    public long getFluidCapacity() { return isTank() ? fluidCapacity(getItemCapacity()) : 0; }
-
-    private static long fluidCapacity(long itemCapacity) {
-        return itemCapacity > Long.MAX_VALUE / BUCKET_MB ? Long.MAX_VALUE : itemCapacity * BUCKET_MB;
+    public long getFluidCapacity() {
+        return isTank() ? PylonUpgrade.storageCapacity(BASE_FLUID_CAPACITY_MB, upgrades.get(PylonUpgrade.Slot.STORAGE)) : 0;
     }
 
     public boolean canFillFluid(Fluid fluid) {
@@ -193,7 +191,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             return true;
         }
         if (upgrade.slot() == PylonUpgrade.Slot.STORAGE &&
-            (getStoredCount() > PylonContents.CAPACITY || getFluidAmount() > fluidCapacity(PylonContents.CAPACITY))) {
+            (getStoredCount() > PylonContents.CAPACITY || getFluidAmount() > BASE_FLUID_CAPACITY_MB)) {
             warn(player, "storage_over_capacity");
             return true;
         }

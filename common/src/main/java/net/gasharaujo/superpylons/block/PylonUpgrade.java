@@ -106,7 +106,11 @@ public enum PylonUpgrade {
     }
 
     public static long itemCapacity(PylonUpgrade storage) {
+        return storageCapacity(PylonContents.CAPACITY, storage);
+    }
+
+    static long storageCapacity(int baseCapacity, PylonUpgrade storage) {
         if (storage == STORAGE_6) return Long.MAX_VALUE;
-        return (long) PylonContents.CAPACITY * (storage == null ? 1 : storage.value);
+        return (long) baseCapacity * (storage == null ? 1 : storage.value);
     }
 }

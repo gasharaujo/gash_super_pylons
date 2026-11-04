@@ -56,7 +56,7 @@ Um gerador começa com produção de 1 a cada 40 ticks. Os geradores de itens ac
 
 Fluid Storage, geradores de água e lava, bigorna e encantamento exigem o pylon sem itens e bloqueiam depósitos de itens. Bigorna e encantamento reservam o slot de especialidade para suas funções futuras.
 
-Os tanques aceitam baldes e automação de fluidos. A capacidade é de **1 B por item** da capacidade correspondente. Os geradores de água e lava produzem **100 mB por unidade** de produção e aceitam o próprio fluido. Fluid Storage só pode ser removido vazio. A remoção de um gerador com líquido pede um segundo clique em até 5 segundos para descartar seu conteúdo. Quebrar o pylon descarta o líquido.
+Fluid Storage e os geradores de água e lava aceitam baldes e automação de fluidos. A capacidade inicial é de **32 baldes (32.000 mB)**. Com Storage I–VI, passa a 64, 128, 256, 512, 1.024 baldes e capacidade ilimitada. Tanques salvos acima do novo limite mantêm todo o líquido e voltam a aceitar fluido quando houver espaço. Os geradores produzem **100 mB por unidade** de produção e aceitam o próprio fluido. Fluid Storage só pode ser removido vazio. A remoção de um gerador com líquido pede um segundo clique em até 5 segundos para descartar seu conteúdo. Quebrar o pylon descarta o líquido.
 
 Remover armazenamento exige que o conteúdo caiba na capacidade restante. Na quebra, volumes acima de 64 stacks são guardados no próprio pylon junto com os upgrades. Coloque o bloco novamente para recuperar esse estoque.
 
