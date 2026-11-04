@@ -36,14 +36,16 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-public abstract class PylonBlockEntityBase extends BlockEntity {
+public abstract class PylonBlockEntityBase extends BlockEntity implements PylonExperienceStorage {
     private static final GameProfile AUTOMATION_PROFILE =
         new GameProfile(UUID.fromString("507ad2bf-5600-42ed-9fc4-4b7076fc34b5"), "[Super Pylon]");
     private static final int BASE_FLUID_CAPACITY_MB = 32_000;
+    private static final int BASE_XP_CAPACITY = 32_000;
     private static final int CONFIRM_TICKS = 100;
     private static final int MAX_LOOSE_STACKS = 64;
     private static final int SMELT_ENERGY_COST = 1000;
@@ -64,6 +66,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     private final List<Auxiliary> auxiliaries = new ArrayList<>(2);
     private final EnumMap<PylonUpgrade.Slot, PylonUpgrade> upgrades = new EnumMap<>(PylonUpgrade.Slot.class);
     private long experience;
+    private int experienceRemainder;
+    private String experienceFluid = "";
     private boolean energyUpdatePending;
     private UUID warnedPlayer;
     private long warningExpires;
@@ -263,6 +267,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             case ENERGY -> isEnergy();
             case FLUID -> isTank();
             case ITEM -> hasItemStorage();
+            case XP -> getSpecialty() == PylonUpgrade.XP_TANK;
         };
     }
 
@@ -282,6 +287,107 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     }
 
     public long getExperience() { return experience; }
+
+    public long getExperienceCapacity() {
+        return getSpecialty() == PylonUpgrade.XP_TANK ?
+            PylonUpgrade.storageCapacity(BASE_XP_CAPACITY, upgrades.get(PylonUpgrade.Slot.STORAGE)) : 0;
+    }
+
+    public boolean isXpTank() { return getSpecialty() == PylonUpgrade.XP_TANK; }
+
+    private boolean hasExperience() { return experience > 0 || experienceRemainder > 0; }
+
+    private long experienceSpace() { return Math.max(0, getExperienceCapacity() - experience); }
+
+    private long wholeExperienceSpace() {
+        return Math.max(0, experienceSpace() - (experienceRemainder > 0 ? 1 : 0));
+    }
+
+    protected record XpFluidState(long points, int remainder, String fluidId) {}
+
+    protected XpFluidState xpFluidSnapshot() { return new XpFluidState(experience, experienceRemainder, experienceFluid); }
+
+    protected void restoreXpFluid(XpFluidState state) {
+        experience = state.points();
+        experienceRemainder = state.remainder();
+        experienceFluid = state.fluidId();
+    }
+
+    protected void loadXpFluid(int remainder, String fluidId) {
+        experienceRemainder = isXpTank() ? Math.max(0, Math.min(PylonXpFluids.MILLIBUCKETS_PER_POINT - 1, remainder)) : 0;
+        experienceFluid = isXpTank() ? fluidId : "";
+    }
+
+    protected Fluid preferredXpFluid() {
+        var fluids = PylonXpFluids.available();
+        for (Fluid fluid : fluids) if (PylonXpFluids.id(fluid).equals(experienceFluid)) return fluid;
+        return fluids.isEmpty() ? Fluids.EMPTY : fluids.get(0);
+    }
+
+    protected long xpFluidCapacity() { return PylonXpFluids.millibuckets(getExperienceCapacity()); }
+
+    protected long xpFluidAmount() {
+        long whole = PylonXpFluids.millibuckets(experience);
+        return whole > Long.MAX_VALUE - experienceRemainder ? Long.MAX_VALUE : whole + experienceRemainder;
+    }
+
+    protected int xpFluidLimit(boolean input, Fluid fluid, int requested) {
+        if (!(level instanceof ServerLevel) || isRemoved() || !isXpTank() || requested <= 0 || !PylonXpFluids.supports(fluid)) return 0;
+        long available = input ? Math.max(0, PylonXpFluids.millibuckets(experienceSpace()) - experienceRemainder) : xpFluidAmount();
+        return (int) Math.min(requested, available);
+    }
+
+    protected void moveXpFluid(boolean input, Fluid fluid, int amount) {
+        int ratio = PylonXpFluids.MILLIBUCKETS_PER_POINT;
+        if (input) {
+            if (!hasExperience() || experienceFluid.isEmpty()) experienceFluid = PylonXpFluids.id(fluid);
+            int remainder = experienceRemainder + amount % ratio;
+            experience += amount / ratio + remainder / ratio;
+            experienceRemainder = remainder % ratio;
+        } else {
+            int remainder = experienceRemainder - amount % ratio;
+            experience -= amount / ratio + (remainder < 0 ? 1 : 0);
+            experienceRemainder = Math.floorMod(remainder, ratio);
+        }
+    }
+
+    @Override
+    public long receiveExperience(long points, boolean simulate) {
+        if (!(level instanceof ServerLevel) || isRemoved() || points <= 0) return 0;
+        long accepted = Math.min(points, wholeExperienceSpace());
+        if (!simulate && accepted > 0) {
+            experience += accepted;
+            sync();
+        }
+        return accepted;
+    }
+
+    @Override
+    public long extractExperience(long points, boolean simulate) {
+        if (!(level instanceof ServerLevel) || isRemoved() || points <= 0) return 0;
+        long taken = Math.min(points, experience);
+        if (!simulate && taken > 0) {
+            experience -= taken;
+            sync();
+        }
+        return taken;
+    }
+
+    public int comparatorSignal() {
+        long amount = getStoredCount();
+        long capacity = getItemCapacity();
+        if (isEnergy()) {
+            amount = getEnergy();
+            capacity = getEnergyCapacity();
+        } else if (isTank()) {
+            amount = getFluidAmount();
+            capacity = getFluidCapacity();
+        } else if (getSpecialty() == PylonUpgrade.XP_TANK) {
+            amount = xpFluidAmount();
+            capacity = xpFluidCapacity();
+        }
+        return amount == 0 || capacity == 0 ? 0 : 1 + (int) Math.floor(14 * Math.min(1, (double) amount / capacity));
+    }
     public boolean isEnergy() { return getEnergyCapacity() > 0; }
     public int getEnergy() { return energy.amount(); }
 
@@ -336,6 +442,9 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     protected abstract ItemStack smeltingRecipe(ServerLevel server, ItemStack input);
     protected abstract int takeSmeltingFuel(ServerLevel server, BlockPos pos, Direction side);
     protected abstract long transferFluidTo(PylonBlockEntityBase target, long limit);
+    protected abstract long transferAdjacentExternal(ServerLevel server, BlockPos neighbor, PylonWire.Type type,
+                                                     boolean importing, long limit);
+    protected abstract PylonExperienceStorage experienceAt(ServerLevel server, BlockPos pos);
 
     private Item generatedItem() {
         PylonUpgrade specialty = getSpecialty();
@@ -458,7 +567,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         held.shrink(1);
         upgrades.put(next.slot(), next);
         warnedPlayer = null;
-        if (next.isTank() || next.isEnergy()) capabilitiesChanged();
+        if (next.isTank() || next.isEnergy() || next == PylonUpgrade.XP_TANK) capabilitiesChanged();
         sync();
         if (previous != null) giveUpgrade(player, previous);
     }
@@ -503,7 +612,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             warn(player, "processing_incompatible");
             return;
         }
-        if ((previousSpecialty != specialty && (getExperience() > 0 || getFluidAmount() > 0)) ||
+        if ((previousSpecialty != specialty && (hasExperience() || getFluidAmount() > 0)) ||
             ((previousSpecialty != specialty || getProcessing() != processor) && !outputBuffer.isEmpty())) {
             warn(player, "specialty_needs_empty");
             return;
@@ -511,7 +620,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         long energyCapacity = specialty != null && specialty.isEnergy() ? specialty.value() : 0;
         if (getEnergy() > energyCapacity || getStoredCount() > (energyCapacity > 0 ? 1 : PylonUpgrade.itemCapacity(storage)) ||
             (storage != upgrades.get(PylonUpgrade.Slot.STORAGE) &&
-                getFluidAmount() > PylonUpgrade.storageCapacity(BASE_FLUID_CAPACITY_MB, storage))) {
+                (getFluidAmount() > PylonUpgrade.storageCapacity(BASE_FLUID_CAPACITY_MB, storage) ||
+                 xpFluidAmount() > PylonXpFluids.millibuckets(PylonUpgrade.storageCapacity(BASE_XP_CAPACITY, storage))))) {
             warn(player, "storage_over_capacity");
             return;
         }
@@ -561,14 +671,15 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             warn(player, "tank_needs_empty");
             return true;
         }
-        if ((upgrade == PylonUpgrade.XP_TANK && getExperience() > 0) ||
+        if ((upgrade == PylonUpgrade.XP_TANK && hasExperience()) ||
             (upgrade.isEnergy() && getEnergy() > 0) ||
             ((upgrade == PylonUpgrade.HARVESTER || upgrade.slot() == PylonUpgrade.Slot.PROCESSING) && !outputBuffer.isEmpty())) {
             warn(player, "specialty_needs_empty");
             return true;
         }
         if (upgrade.slot() == PylonUpgrade.Slot.STORAGE &&
-            (getStoredCount() > PylonContents.CAPACITY || getFluidAmount() > BASE_FLUID_CAPACITY_MB)) {
+            (getStoredCount() > PylonContents.CAPACITY || getFluidAmount() > BASE_FLUID_CAPACITY_MB ||
+             xpFluidAmount() > PylonXpFluids.millibuckets(BASE_XP_CAPACITY))) {
             warn(player, "storage_over_capacity");
             return true;
         }
@@ -589,7 +700,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             allowList = false;
         }
         warnedPlayer = null;
-        if (upgrade.isTank() || upgrade.isEnergy()) capabilitiesChanged();
+        if (upgrade.isTank() || upgrade.isEnergy() || upgrade == PylonUpgrade.XP_TANK) capabilitiesChanged();
         sync();
         giveUpgrade(player, upgrade);
         return true;
@@ -624,7 +735,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
 
     public void tick(ServerLevel server) {
         updatePaintedState();
-        tickWires(server);
+        tickTransfers(server);
         PylonUpgrade specialty = getSpecialty();
         PylonUpgrade processor = getProcessing();
         if (specialty == null && processor == null) return;
@@ -676,9 +787,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         if (processor != null) process(server, processor, amount, quantity == null ? 0 : quantity.tier());
     }
 
-    private void tickWires(ServerLevel server) {
-        if (wires.isEmpty()) return;
-        long[] budget = { getEnergyCapacity() / 10L, getItemCapacity() / 10, getFluidCapacity() / 10 };
+    private void tickTransfers(ServerLevel server) {
+        if (wires.isEmpty() && upgrades.values().stream().noneMatch(upgrade -> upgrade.transferType() != null)) return;
+        long[] budget = { getEnergyCapacity() / 10L, getItemCapacity() / 10, getFluidCapacity() / 10,
+            getExperienceCapacity() / 10 };
         boolean removed = false;
         for (Iterator<PylonWire> it = wires.iterator(); it.hasNext();) {
             PylonWire wire = it.next();
@@ -691,18 +803,77 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             }
             int slot = wire.type().ordinal();
             if (budget[slot] <= 0 || !supportsWire(wire.type()) || !target.supportsWire(wire.type())) continue;
-            long moved = switch (wire.type()) {
-                case ENERGY -> moveWireEnergy(server, target, (int) budget[slot]);
-                case ITEM -> target.canStoreItem(getStoredItem()) ? contents.moveTo(target.contents, budget[slot], target.getItemCapacity()) : 0;
-                case FLUID -> transferFluidTo(target, budget[slot]);
-            };
-            budget[slot] -= moved;
-            if (moved > 0 && wire.type() != PylonWire.Type.ENERGY) {
-                sync();
-                target.sync();
-            }
+            budget[slot] -= moveToPylon(server, wire.type(), target, budget[slot]);
         }
         if (removed) sync();
+        BlockPos below = worldPosition.below();
+        if (!server.hasChunkAt(below)) return;
+        var neighbor = server.getBlockEntity(below);
+        for (PylonUpgrade upgrade : upgrades.values()) {
+            PylonWire.Type type = upgrade.transferType();
+            if (type == null || !supportsWire(type) || budget[type.ordinal()] == 0) continue;
+            boolean importing = upgrade.importsResource();
+            long limit = budget[type.ordinal()];
+            if (neighbor instanceof PylonBlockEntityBase pylon && pylon.supportsWire(type)) {
+                if (importing) pylon.moveToPylon(server, type, this, limit);
+                else moveToPylon(server, type, pylon, limit);
+            } else if (type == PylonWire.Type.XP) {
+                var storage = experienceAt(server, below);
+                if (storage != null && storage.getExperienceCapacity() > 0) {
+                    if (importing) moveExperience(storage, this, limit);
+                    else moveExperience(this, storage, limit);
+                } else {
+                    transferAdjacentExternal(server, below, type, importing, limit);
+                }
+            } else {
+                transferAdjacentExternal(server, below, type, importing, limit);
+            }
+        }
+    }
+
+    private long moveToPylon(ServerLevel server, PylonWire.Type type, PylonBlockEntityBase target, long limit) {
+        long moved = switch (type) {
+            case ENERGY -> moveWireEnergy(server, target, (int) limit);
+            case ITEM -> target.canStoreItem(getStoredItem()) ? contents.moveTo(target.contents, limit, target.getItemCapacity()) : 0;
+            case FLUID -> transferFluidTo(target, limit);
+            case XP -> {
+                long points = Math.min(limit, Math.min(experience, target.wholeExperienceSpace()));
+                experience -= points;
+                target.experience += points;
+                yield points;
+            }
+        };
+        if (moved > 0 && type != PylonWire.Type.ENERGY) {
+            sync();
+            target.sync();
+        }
+        return moved;
+    }
+
+    private static long moveExperience(PylonExperienceStorage source, PylonExperienceStorage target, long limit) {
+        long offered = source.extractExperience(limit, true);
+        long accepted = target.receiveExperience(offered, true);
+        long extracted = source.extractExperience(accepted, false);
+        long inserted = target.receiveExperience(extracted, false);
+        if (inserted < extracted) {
+            long remainder = extracted - inserted;
+            if (source instanceof PylonBlockEntityBase pylon) {
+                pylon.experience += remainder;
+                pylon.sync();
+            } else {
+                source.receiveExperience(remainder, false);
+            }
+        }
+        return inserted;
+    }
+
+    protected boolean allowsAutomaticEnergyOutput() {
+        return !upgrades.containsKey(PylonUpgrade.Slot.ENERGY_TRANSFER);
+    }
+
+    protected boolean allowsAutomaticEnergyInput(ServerLevel server, BlockPos above) {
+        return !server.hasChunkAt(above) || !(server.getBlockEntity(above) instanceof PylonBlockEntityBase source) ||
+            source.allowsAutomaticEnergyOutput();
     }
 
     private int moveWireEnergy(ServerLevel server, PylonBlockEntityBase target, int limit) {
@@ -810,13 +981,13 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         for (ExperienceOrb orb : server.getEntitiesOfClass(ExperienceOrb.class, block.inflate(2),
                 orb -> orb.isAlive() && block.distanceToSqr(orb.position()) <= 4)) {
             long points = orbExperience(orb);
-            if (points > 0 && points <= Long.MAX_VALUE - experience) {
+            if (points > 0 && points <= wholeExperienceSpace()) {
                 experience += points;
                 orb.discard();
             }
         }
         for (ServerPlayer player : playersInColumn(server, block, center.y + 0.5, center.y + 1.5)) {
-            experience += PylonExperience.collect(player, levels, Long.MAX_VALUE - experience);
+            experience += PylonExperience.collect(player, levels, wholeExperienceSpace());
         }
         if (experience > 0) {
             for (ServerPlayer player : playersInColumn(server, block, center.y - 2.5, center.y - 0.5)) {
@@ -990,7 +1161,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     }
 
     public boolean hasPackedDrop() {
-        return packedDrop || experience > 0 || energy.amount() > 0 || smeltFuel > 0 || (getStoredCount() > 0 &&
+        return packedDrop || hasExperience() || energy.amount() > 0 || smeltFuel > 0 || (getStoredCount() > 0 &&
             getStoredCount() > (long) MAX_LOOSE_STACKS * getStoredItem().getMaxStackSize());
     }
 

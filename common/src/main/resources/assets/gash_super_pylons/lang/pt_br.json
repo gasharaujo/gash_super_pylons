@@ -60,7 +60,7 @@
   "item.gash_super_pylons.xp_tank_upgrade": "Upgrade de Tanque de XP",
   "message.gash_super_pylons.energy_needs_single_item": "Deixe no máximo um item no pylon antes de instalar Energia.",
   "message.gash_super_pylons.specialty_needs_empty": "Esvazie o conteúdo deste upgrade antes de removê-lo.",
-  "tooltip.gash_super_pylons.experience": "XP armazenado: %s pontos",
+  "tooltip.gash_super_pylons.experience": "XP armazenado: %s / %s pontos",
   "tooltip.gash_super_pylons.energy": "Energia armazenada: %s / %s FE",
   "item.gash_super_pylons.filter_upgrade": "Upgrade de Filtro",
   "item.gash_super_pylons.magnet_upgrade": "Upgrade de Ímã",
@@ -107,5 +107,14 @@
   "tooltip.gash_super_pylons.fuel_uses": "Combustível restante: %s usos",
   "tooltip.gash_super_pylons.item_storage_locked": "Armazenamento de itens bloqueado",
   "item.gash_super_pylons.break_upgrade": "Upgrade de Quebra",
-  "tooltip.gash_super_pylons.break_tool": "Ferramenta de mineração: %s"
+  "tooltip.gash_super_pylons.break_tool": "Ferramenta de mineração: %s",
+  "item.gash_super_pylons.xp_wire": "Cabo de XP",
+  "item.gash_super_pylons.insert_item_upgrade": "Inserir Itens",
+  "item.gash_super_pylons.extract_item_upgrade": "Extrair Itens",
+  "item.gash_super_pylons.insert_fluid_upgrade": "Inserir Fluidos",
+  "item.gash_super_pylons.extract_fluid_upgrade": "Extrair Fluidos",
+  "item.gash_super_pylons.insert_energy_upgrade": "Inserir Energia",
+  "item.gash_super_pylons.extract_energy_upgrade": "Extrair Energia",
+  "item.gash_super_pylons.insert_xp_upgrade": "Inserir XP",
+  "item.gash_super_pylons.extract_xp_upgrade": "Extrair XP"
 }

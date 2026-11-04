@@ -85,7 +85,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         if (!state.breakTool.isEmpty()) {
             for (Direction face : Direction.Plane.HORIZONTAL) {
                 pose.pushPose();
-                PylonUpgradeStamps.placeTool(pose, face);
+                PylonUpgradeStamps.placeTool(pose, face, state.stamps.size());
                 state.breakTool.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
                 pose.popPose();
             }

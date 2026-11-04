@@ -7,6 +7,7 @@ import net.gasharaujo.superpylons.block.PylonFilterMenu;
 import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
 import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.gasharaujo.superpylons.block.PylonExperienceStorage;
 import net.gasharaujo.superpylons.block.PylonBreaker;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 
@@ -21,6 +22,10 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraft.world.InteractionResult;
@@ -43,6 +48,8 @@ import org.slf4j.Logger;
 
 @Mod(SuperPylonsMod.MOD_ID)
 public final class SuperPylonsMod {
+    public static final Capability<PylonExperienceStorage> EXPERIENCE =
+        CapabilityManager.get(new CapabilityToken<>() {});
     public static final String MOD_ID = "gash_super_pylons";
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -74,6 +81,8 @@ public final class SuperPylonsMod {
         ITEMS.register("item_wire", () -> new PylonToolItem(Kind.ITEM, new Item.Properties()));
     public static final Supplier<? extends Item> FLUID_WIRE =
         ITEMS.register("fluid_wire", () -> new PylonToolItem(Kind.FLUID, new Item.Properties()));
+    public static final Supplier<? extends Item> XP_WIRE =
+        ITEMS.register("xp_wire", () -> new PylonToolItem(Kind.XP, new Item.Properties()));
     public static final Supplier<? extends Item> UPGRADE_BASE =
         ITEMS.register("upgrade_base", () -> new Item(new Item.Properties()));
     public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
@@ -92,6 +101,7 @@ public final class SuperPylonsMod {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
+        bus.addListener((RegisterCapabilitiesEvent event) -> event.register(PylonExperienceStorage.class));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
@@ -127,6 +137,7 @@ public final class SuperPylonsMod {
             event.accept(ENERGY_WIRE.get());
             event.accept(ITEM_WIRE.get());
             event.accept(FLUID_WIRE.get());
+            event.accept(XP_WIRE.get());
             UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
         }
     }

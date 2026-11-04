@@ -12,7 +12,8 @@ import net.minecraft.world.item.ItemStack;
 
 public final class PylonToolActions {
     public enum Kind {
-        PAINT(null), COPY(null), WRENCH(null), ENERGY(PylonWire.Type.ENERGY), ITEM(PylonWire.Type.ITEM), FLUID(PylonWire.Type.FLUID);
+        PAINT(null), COPY(null), WRENCH(null), ENERGY(PylonWire.Type.ENERGY), ITEM(PylonWire.Type.ITEM),
+        FLUID(PylonWire.Type.FLUID), XP(PylonWire.Type.XP);
 
         private final PylonWire.Type wire;
 

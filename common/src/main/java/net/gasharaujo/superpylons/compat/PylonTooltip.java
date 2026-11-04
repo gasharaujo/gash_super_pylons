@@ -38,7 +38,8 @@ final class PylonTooltip {
     static Component storageLine(PylonBlockEntityBase pylon) {
         PylonUpgrade specialty = pylon.getSpecialty();
         if (specialty == PylonUpgrade.XP_TANK) {
-            return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.experience", pylon.getExperience()));
+            return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.experience",
+                pylon.getExperience(), capacityLabel(pylon.getExperienceCapacity())));
         }
         if (pylon.isEnergy()) {
             return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.energy",

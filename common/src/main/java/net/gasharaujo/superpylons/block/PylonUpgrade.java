@@ -56,10 +56,21 @@ public enum PylonUpgrade {
     FILTER("filter_upgrade", Slot.FILTER, 1, 0, null, null),
     MAGNET("magnet_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     SMELT("smelt_upgrade", Slot.PROCESSING, 1, 0, null, null),
-    PULVERIZE("pulverize_upgrade", Slot.PROCESSING, 1, 0, null, null);
+    PULVERIZE("pulverize_upgrade", Slot.PROCESSING, 1, 0, null, null),
+    INSERT_ITEM("insert_item_upgrade", Slot.ITEM_TRANSFER, PylonWire.Type.ITEM, true),
+    EXTRACT_ITEM("extract_item_upgrade", Slot.ITEM_TRANSFER, PylonWire.Type.ITEM, false),
+    INSERT_FLUID("insert_fluid_upgrade", Slot.FLUID_TRANSFER, PylonWire.Type.FLUID, true),
+    EXTRACT_FLUID("extract_fluid_upgrade", Slot.FLUID_TRANSFER, PylonWire.Type.FLUID, false),
+    INSERT_ENERGY("insert_energy_upgrade", Slot.ENERGY_TRANSFER, PylonWire.Type.ENERGY, true),
+    EXTRACT_ENERGY("extract_energy_upgrade", Slot.ENERGY_TRANSFER, PylonWire.Type.ENERGY, false),
+    INSERT_XP("insert_xp_upgrade", Slot.XP_TRANSFER, PylonWire.Type.XP, true),
+    EXTRACT_XP("extract_xp_upgrade", Slot.XP_TRANSFER, PylonWire.Type.XP, false);
 
     // Iteration order is also the order used for removal.
-    public enum Slot { FILTER, SPEED, QUANTITY, RANGE, PROCESSING, SPECIALTY, STORAGE }
+    public enum Slot {
+        FILTER, SPEED, QUANTITY, RANGE, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
+        PROCESSING, SPECIALTY, STORAGE
+    }
 
     private final String id;
     private final Slot slot;
@@ -67,25 +78,40 @@ public enum PylonUpgrade {
     private final int value;
     private final Supplier<Item> item;
     private final Supplier<Fluid> fluid;
+    private final PylonWire.Type transferType;
+    private final boolean insert;
 
     PylonUpgrade(String id, Slot slot, int tier, int value, Supplier<Item> item, Supplier<Fluid> fluid) {
+        this(id, slot, tier, value, item, fluid, null, false);
+    }
+
+    PylonUpgrade(String id, Slot slot, PylonWire.Type transferType, boolean insert) {
+        this(id, slot, 1, 0, null, null, transferType, insert);
+    }
+
+    PylonUpgrade(String id, Slot slot, int tier, int value, Supplier<Item> item, Supplier<Fluid> fluid,
+                 PylonWire.Type transferType, boolean insert) {
         this.id = id;
         this.slot = slot;
         this.tier = tier;
         this.value = value;
         this.item = item;
         this.fluid = fluid;
+        this.transferType = transferType;
+        this.insert = insert;
     }
 
     public String id() { return id; }
     public Slot slot() { return slot; }
     public int tier() { return tier; }
     public int value() { return value; }
+    public PylonWire.Type transferType() { return transferType; }
+    public boolean importsResource() { return insert; }
     public String category() {
         return switch (slot) {
             case STORAGE, SPEED, QUANTITY, RANGE -> "modifier";
             case PROCESSING -> "processing";
-            case FILTER -> "utility";
+            case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER -> "utility";
             case SPECIALTY -> {
                 if (isEnergy()) yield "modifier";
                 if (item != null || fluid != null) yield "generator";

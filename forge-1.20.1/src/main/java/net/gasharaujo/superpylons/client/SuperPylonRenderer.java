@@ -71,7 +71,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         if (!tool.isEmpty()) {
             for (Direction face : Direction.Plane.HORIZONTAL) {
                 pose.pushPose();
-                PylonUpgradeStamps.placeTool(pose, face);
+                PylonUpgradeStamps.placeTool(pose, face, sprites.size());
                 Minecraft.getInstance().getItemRenderer().renderStatic(tool, ItemDisplayContext.GUI,
                     light, overlay, pose, buffers, entity.getLevel(), (int) entity.getBlockPos().asLong());
                 pose.popPose();

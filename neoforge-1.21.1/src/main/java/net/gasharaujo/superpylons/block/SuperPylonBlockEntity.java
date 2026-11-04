@@ -37,12 +37,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidStack> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
+    private final XpFluidPort xpFluidPort = new XpFluidPort();
     private final IEnergyStorage energyInput = new EnergyPort(Direction.UP);
     private final IEnergyStorage energyOutput = new EnergyPort(Direction.DOWN);
     private final IEnergyStorage energyInternal = new EnergyPort(null);
 
     public IFluidHandler getFluidHandler() {
-        return isTank() ? fluidHandler : null;
+        return isTank() ? fluidHandler : isXpTank() ? xpFluidPort : null;
     }
 
     public IItemHandler getItemHandler() { return isRemoved() ? null : itemPort; }
@@ -68,6 +69,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         }
         if (smeltFuel > 0) tag.putLong("smelt_fuel", smeltFuel);
         if (getExperience() > 0) tag.putLong("experience", getExperience());
+        if (isXpTank()) {
+            var xp = xpFluidSnapshot();
+            tag.putInt("xp_fluid_remainder", xp.remainder());
+            tag.putString("xp_fluid_id", xp.fluidId());
+        }
         if (getEnergy() > 0) tag.putInt("energy", getEnergy());
         if (!outputBuffer.isEmpty()) {
             ListTag harvest = new ListTag();
@@ -93,6 +99,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadFilter(filterEntries, filterData.getBoolean("allow_list"));
         smeltFuel = Math.max(0, tag.getLong("smelt_fuel"));
         loadSpecialtyAmounts(tag.getLong("experience"), tag.getInt("energy"));
+        loadXpFluid(tag.getInt("xp_fluid_remainder"), tag.getString("xp_fluid_id"));
         outputBuffer.clear();
         ListTag harvest = tag.getList("harvest", Tag.TAG_COMPOUND);
         for (int i = 0; i < harvest.size(); i++) {
@@ -211,9 +218,114 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
+    protected PylonExperienceStorage experienceAt(ServerLevel server, BlockPos pos) {
+        return server.getCapability(SuperPylonsMod.EXPERIENCE, pos, Direction.UP);
+    }
+
+    @Override
+    protected long transferAdjacentExternal(ServerLevel server, BlockPos neighbor, PylonWire.Type type,
+                                            boolean importing, long limit) {
+        int maximum = (int) Math.min(Integer.MAX_VALUE, limit);
+        return switch (type) {
+            case ITEM -> moveItems(server, neighbor, importing, maximum);
+            case FLUID -> {
+                var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, Direction.UP);
+                yield moveFluid(importing ? other : fluidHandler, importing ? fluidHandler : other, maximum);
+            }
+            case ENERGY -> {
+                var other = energyAt(server, neighbor, Direction.UP);
+                yield moveEnergy(importing ? other : energyInternal, importing ? energyInternal : other, maximum);
+            }
+            case XP -> moveLiquidXp(server, neighbor, importing,
+                (int) Math.min(Integer.MAX_VALUE, PylonXpFluids.millibuckets(limit)));
+        };
+    }
+
+    private int moveLiquidXp(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
+        var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, Direction.UP);
+        if (other == null) return 0;
+        if (importing) return moveFluid(other, xpFluidPort, limit);
+        Fluid preferred = preferredXpFluid();
+        int moved = moveFluid(xpFluidPort, other, new FluidStack(preferred, limit));
+        if (moved > 0) return moved;
+        for (Fluid fluid : PylonXpFluids.available()) {
+            if (fluid == preferred) continue;
+            moved = moveFluid(xpFluidPort, other, new FluidStack(fluid, limit));
+            if (moved > 0) return moved;
+        }
+        return 0;
+    }
+
+    private int moveItems(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
+        var handler = server.getCapability(Capabilities.ItemHandler.BLOCK, neighbor, Direction.UP);
+        if (handler == null) return 0;
+        int moved = 0;
+        for (int slot = 0; slot < handler.getSlots() && moved < limit; slot++) {
+            if (importing) {
+                ItemStack offered = handler.extractItem(slot, limit - moved, true);
+                int wanted = offered.getCount() - insertAutomation(offered, true).getCount();
+                if (wanted == 0) continue;
+                ItemStack extracted = handler.extractItem(slot, wanted, false);
+                ItemStack remaining = insertAutomation(extracted, false);
+                moved += extracted.getCount() - remaining.getCount();
+                if (!remaining.isEmpty()) {
+                    Block.popResource(server, neighbor, ItemHandlerHelper.insertItemStacked(handler, remaining, false));
+                }
+            } else {
+                ItemStack offered = extractAutomation(limit - moved, true);
+                if (offered.isEmpty()) break;
+                int wanted = offered.getCount() - handler.insertItem(slot, offered, true).getCount();
+                if (wanted == 0) continue;
+                ItemStack extracted = extractAutomation(wanted, false);
+                ItemStack remaining = handler.insertItem(slot, extracted, false);
+                moved += extracted.getCount() - remaining.getCount();
+                if (!remaining.isEmpty()) Block.popResource(server, worldPosition, insertAutomation(remaining, false));
+            }
+        }
+        return moved;
+    }
+
+    private static int moveFluid(IFluidHandler source, IFluidHandler target, int limit) {
+        if (source == null || target == null) return 0;
+        for (int slot = 0; slot < source.getTanks(); slot++) {
+            FluidStack available = source.getFluidInTank(slot).copy();
+            available.setAmount(Math.min(available.getAmount(), limit));
+            int moved = moveFluid(source, target, available);
+            if (moved > 0) return moved;
+        }
+        return 0;
+    }
+
+    private static int moveFluid(IFluidHandler source, IFluidHandler target, FluidStack request) {
+        if (request.isEmpty()) return 0;
+        FluidStack offered = source.drain(request, IFluidHandler.FluidAction.SIMULATE);
+        int accepted = target.fill(offered, IFluidHandler.FluidAction.SIMULATE);
+        if (accepted <= 0) return 0;
+        offered.setAmount(Math.min(accepted, offered.getAmount()));
+        FluidStack extracted = source.drain(offered, IFluidHandler.FluidAction.EXECUTE);
+        int moved = target.fill(extracted, IFluidHandler.FluidAction.EXECUTE);
+        if (moved < extracted.getAmount()) {
+            extracted.shrink(moved);
+            source.fill(extracted, IFluidHandler.FluidAction.EXECUTE);
+        }
+        return moved;
+    }
+
+    private static int moveEnergy(IEnergyStorage source, IEnergyStorage target, int limit) {
+        if (source == null || target == null) return 0;
+        int offered = source.extractEnergy(limit, true);
+        int accepted = target.receiveEnergy(offered, true);
+        if (accepted == 0) return 0;
+        int extracted = source.extractEnergy(accepted, false);
+        int moved = target.receiveEnergy(extracted, false);
+        if (moved < extracted) source.receiveEnergy(extracted - moved, false);
+        return moved;
+    }
+
+    @Override
     protected void transferEnergy(ServerLevel server) {
         int inputLimit = energyLimit(true, Integer.MAX_VALUE);
-        if (inputLimit > 0) {
+        if (inputLimit > 0 && allowsAutomaticEnergyInput(server, worldPosition.above())) {
             IEnergyStorage source = energyAt(server, worldPosition.above(), Direction.DOWN);
             if (source != null) exchangeEnergy(true, source.extractEnergy(inputLimit, false), false);
         }
@@ -230,7 +342,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             }
         }
         outputLimit = energyLimit(false, Integer.MAX_VALUE);
-        if (outputLimit > 0) {
+        if (outputLimit > 0 && allowsAutomaticEnergyOutput()) {
             IEnergyStorage target = energyAt(server, worldPosition.below(), Direction.UP);
             if (target != null) exchangeEnergy(false, target.receiveEnergy(outputLimit, false), false);
         }
@@ -243,7 +355,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final class ItemPort implements IItemHandler {
         @Override public int getSlots() { return 1; }
         @Override public ItemStack getStackInSlot(int slot) {
-            return slot == 0 && hasItemStorage() ? contents.peek(Integer.MAX_VALUE) : ItemStack.EMPTY;
+            return slot == 0 && hasItemStorage() ?
+                getStoredItem().copyWithCount((int) Math.min(Integer.MAX_VALUE, getStoredCount())) : ItemStack.EMPTY;
         }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             return slot == 0 ? insertAutomation(stack, simulate) : stack;
@@ -285,6 +398,41 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             energyChanged();
         }
         return moved;
+    }
+
+    private final class XpFluidPort implements IFluidHandler {
+        @Override public int getTanks() { return 1; }
+        @Override public FluidStack getFluidInTank(int tank) {
+            return tank == 0 && isXpTank() && !PylonXpFluids.available().isEmpty() ?
+                new FluidStack(preferredXpFluid(), (int) Math.min(Integer.MAX_VALUE, xpFluidAmount())) : FluidStack.EMPTY;
+        }
+        @Override public int getTankCapacity(int tank) {
+            return tank == 0 ? (int) Math.min(Integer.MAX_VALUE, xpFluidCapacity()) : 0;
+        }
+        @Override public boolean isFluidValid(int tank, FluidStack stack) {
+            return tank == 0 && isXpTank() && !stack.isEmpty() && PylonXpFluids.supports(stack.getFluid());
+        }
+        @Override public int fill(FluidStack stack, FluidAction action) {
+            return isFluidValid(0, stack) ? exchange(true, stack.getFluid(), stack.getAmount(), action) : 0;
+        }
+        @Override public FluidStack drain(FluidStack stack, FluidAction action) {
+            return isFluidValid(0, stack) ? drain(stack.getFluid(), stack.getAmount(), action) : FluidStack.EMPTY;
+        }
+        @Override public FluidStack drain(int amount, FluidAction action) {
+            return drain(preferredXpFluid(), amount, action);
+        }
+        private FluidStack drain(Fluid fluid, int requested, FluidAction action) {
+            int moved = exchange(false, fluid, requested, action);
+            return moved == 0 ? FluidStack.EMPTY : new FluidStack(fluid, moved);
+        }
+        private int exchange(boolean input, Fluid fluid, int amount, FluidAction action) {
+            int moved = xpFluidLimit(input, fluid, amount);
+            if (moved > 0 && action.execute()) {
+                moveXpFluid(input, fluid, moved);
+                sync();
+            }
+            return moved;
+        }
     }
 
     private final class TankHandler implements IFluidHandler {

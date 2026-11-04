@@ -9,7 +9,8 @@ public record PylonWire(Type type, BlockPos target, UUID targetId) {
     public enum Type {
         ENERGY("energy_wire", 0xFFFFAA22),
         ITEM("item_wire", 0xFFB5D788),
-        FLUID("fluid_wire", 0xFF48ABF5);
+        FLUID("fluid_wire", 0xFF48ABF5),
+        XP("xp_wire", 0xFF85EF3C);
 
         private final String id;
         private final int color;

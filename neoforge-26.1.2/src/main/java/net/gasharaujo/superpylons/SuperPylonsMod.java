@@ -7,9 +7,13 @@ import net.gasharaujo.superpylons.block.PylonFilterMenu;
 import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
 import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.gasharaujo.superpylons.block.PylonExperienceStorage;
 import net.gasharaujo.superpylons.block.PylonBreaker;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 import com.mojang.logging.LogUtils;
@@ -46,6 +50,8 @@ import org.slf4j.Logger;
 @Mod(SuperPylonsMod.MOD_ID)
 public final class SuperPylonsMod {
     public static final String MOD_ID = "gash_super_pylons";
+    public static final BlockCapability<PylonExperienceStorage, Direction> EXPERIENCE = BlockCapability.createSided(
+        Identifier.fromNamespaceAndPath(MOD_ID, "experience"), PylonExperienceStorage.class);
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
@@ -76,6 +82,8 @@ public final class SuperPylonsMod {
         ITEMS.registerItem("item_wire", properties -> new PylonToolItem(Kind.ITEM, properties));
     public static final Supplier<? extends Item> FLUID_WIRE =
         ITEMS.registerItem("fluid_wire", properties -> new PylonToolItem(Kind.FLUID, properties));
+    public static final Supplier<? extends Item> XP_WIRE =
+        ITEMS.registerItem("xp_wire", properties -> new PylonToolItem(Kind.XP, properties));
     public static final Supplier<? extends Item> UPGRADE_BASE =
         ITEMS.registerSimpleItem("upgrade_base");
     public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
@@ -119,6 +127,7 @@ public final class SuperPylonsMod {
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(EXPERIENCE, SUPER_PYLON_ENTITY.get(), (pylon, side) -> pylon);
         event.registerBlockEntity(Capabilities.Item.BLOCK, SUPER_PYLON_ENTITY.get(),
             (pylon, side) -> pylon.getItemHandler());
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, SUPER_PYLON_ENTITY.get(),
@@ -137,6 +146,7 @@ public final class SuperPylonsMod {
             event.accept(ENERGY_WIRE.get());
             event.accept(ITEM_WIRE.get());
             event.accept(FLUID_WIRE.get());
+            event.accept(XP_WIRE.get());
             UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
         }
     }
