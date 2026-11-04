@@ -36,14 +36,18 @@ final class PylonTooltip {
     }
 
     static Component storageLine(PylonBlockEntityBase pylon) {
+        Component storage = primaryStorage(pylon);
+        if (!pylon.isEnergy() || pylon.isVoid()) return storage;
+        return Component.empty().append(storage).append(" | ").append(Component.translatable("tooltip.gash_super_pylons.energy",
+            pylon.getEnergy(), pylon.getEnergyCapacity()));
+    }
+
+    private static Component primaryStorage(PylonBlockEntityBase pylon) {
         PylonUpgrade specialty = pylon.getSpecialty();
+        if (pylon.isVoid()) return Component.translatable("tooltip.gash_super_pylons.void");
         if (specialty == PylonUpgrade.XP_TANK) {
             return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.experience",
                 pylon.getExperience(), capacityLabel(pylon.getExperienceCapacity())));
-        }
-        if (pylon.isEnergy()) {
-            return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.energy",
-                pylon.getEnergy(), pylon.getEnergyCapacity()));
         }
         if (pylon.isTank()) {
             long amount = pylon.getFluidAmount();
@@ -52,7 +56,7 @@ final class PylonTooltip {
             return Component.translatable("tooltip.gash_super_pylons.fluid", pylon.getFluidName(), amount, capacity);
         }
         if (specialty != null && specialty.locksItems()) {
-            return Component.translatable("tooltip.gash_super_pylons.item_storage_locked");
+            return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.item_storage_locked"));
         }
         return itemStorageLine(pylon);
     }

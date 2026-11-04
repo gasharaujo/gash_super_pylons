@@ -41,5 +41,11 @@ final class PylonTank<T> {
         return moved;
     }
 
+    long discard(long maximum) {
+        long removed = Math.min(maximum, amount());
+        restore(new State<>(resource(), amount() - removed));
+        return removed;
+    }
+
     void clear() { restore(new State<>(null, 0)); }
 }

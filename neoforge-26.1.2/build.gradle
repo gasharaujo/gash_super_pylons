@@ -15,6 +15,10 @@ sourceSets.test.java.srcDir '../common/src/test/java'
 
 repositories {
     maven {
+        url = 'https://maven.blamejared.com'
+        content { includeGroup 'mezz.jei' }
+    }
+    maven {
         url = 'https://api.modrinth.com/maven'
         content {
             includeModule 'maven.modrinth', 'jade'
@@ -28,6 +32,8 @@ repositories {
 }
 
 dependencies {
+    compileOnly 'mezz.jei:jei-26.1.2-common-api:29.47.0.110'
+    compileOnly 'mezz.jei:jei-26.1.2-neoforge-api:29.47.0.110'
     compileOnly 'maven.modrinth:jade:Pr1h4azo'
     compileOnly 'mcp.mobius.waila:wthit-api:neo-19.0.1'
     compileOnly 'maven.modrinth:the-one-probe:NOrwYJkt'

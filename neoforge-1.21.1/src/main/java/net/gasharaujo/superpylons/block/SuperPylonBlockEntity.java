@@ -13,6 +13,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
@@ -25,6 +26,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.common.world.chunk.TicketController;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -34,16 +36,17 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
+    public static final TicketController CHUNK_TICKETS = new TicketController(
+        ResourceLocation.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "pylon"));
     private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidStack> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
     private final XpFluidPort xpFluidPort = new XpFluidPort();
     private final IEnergyStorage energyInput = new EnergyPort(Direction.UP);
-    private final IEnergyStorage energyOutput = new EnergyPort(Direction.DOWN);
     private final IEnergyStorage energyInternal = new EnergyPort(null);
 
     public IFluidHandler getFluidHandler() {
-        return isTank() ? fluidHandler : isXpTank() ? xpFluidPort : null;
+        return isTank() || isVoid() ? fluidHandler : isXpTank() ? xpFluidPort : null;
     }
 
     public IItemHandler getItemHandler() { return isRemoved() ? null : itemPort; }
@@ -61,9 +64,12 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         tag.putString("wire_id", saveWireId());
         tag.putString("wires", saveWires());
         tag.putString("auxiliaries", saveAuxiliaries());
+        tag.putString("work_direction", workDirection().getSerializedName());
+        if (forcedRadius() > 0) tag.putInt("forced_radius", forcedRadius());
         if (hasFilter()) {
             CompoundTag filterData = new CompoundTag();
             filterData.putBoolean("allow_list", allowList);
+            filterData.putString("tags", saveFilterTags());
             ContainerHelper.saveAllItems(filterData, filterItems(), registries);
             tag.put("filter", filterData);
         }
@@ -92,11 +98,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadUpgrades(tag.getString("upgrades"));
         loadBreakTool(ItemStack.parseOptional(registries, tag.getCompound("break_tool")));
         loadAuxiliaries(tag.getString("auxiliaries"));
+        loadWorkDirection(tag.getString("work_direction"));
+        loadForcedRadius(tag.getInt("forced_radius"));
         loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
         CompoundTag filterData = tag.getCompound("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries, registries);
         loadFilter(filterEntries, filterData.getBoolean("allow_list"));
+        loadFilterTags(filterData.getString("tags"));
         smeltFuel = Math.max(0, tag.getLong("smelt_fuel"));
         loadSpecialtyAmounts(tag.getLong("experience"), tag.getInt("energy"));
         loadXpFluid(tag.getInt("xp_fluid_remainder"), tag.getString("xp_fluid_id"));
@@ -142,6 +151,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
+    protected void forceChunk(ServerLevel server, int x, int z, boolean add) {
+        CHUNK_TICKETS.forceChunk(server, worldPosition, x, z, add, true);
+    }
+
+    @Override
     protected void capabilitiesChanged() {
         if (level != null) level.invalidateCapabilities(worldPosition);
     }
@@ -164,10 +178,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     public IEnergyStorage getEnergyHandler(Direction side) {
-        if (!isEnergy()) return null;
-        if (side == null) return energyInternal;
-        if (side == Direction.UP) return energyInput;
-        return side == Direction.DOWN ? energyOutput : null;
+        if (!isEnergy() && !isVoid()) return null;
+        return side == null || side == workDirection() ? energyInternal : energyInput;
     }
 
     @Override
@@ -177,7 +189,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     @Override
     protected BiFunction<ItemStack, Boolean, ItemStack> inventoryOutput(ServerLevel server, BlockPos target) {
-        IItemHandler handler = server.getCapability(Capabilities.ItemHandler.BLOCK, target, Direction.UP);
+        IItemHandler handler = server.getCapability(Capabilities.ItemHandler.BLOCK, target, workDirection().getOpposite());
         return handler == null ? null : (stack, simulate) -> ItemHandlerHelper.insertItemStacked(handler, stack, simulate);
     }
 
@@ -214,12 +226,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected long transferFluidTo(PylonBlockEntityBase target, long limit) {
         var resource = tank.resource();
         if (resource == null || !(target instanceof SuperPylonBlockEntity other) || !other.canFillFluid(resource.getFluid())) return 0;
+        if (other.isVoid()) return tank.discard(limit);
         return tank.moveTo(other.tank, limit, other.getFluidCapacity(), FluidStack::isSameFluidSameComponents);
     }
 
     @Override
     protected PylonExperienceStorage experienceAt(ServerLevel server, BlockPos pos) {
-        return server.getCapability(SuperPylonsMod.EXPERIENCE, pos, Direction.UP);
+        return server.getCapability(SuperPylonsMod.EXPERIENCE, pos, workDirection().getOpposite());
     }
 
     @Override
@@ -229,11 +242,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return switch (type) {
             case ITEM -> moveItems(server, neighbor, importing, maximum);
             case FLUID -> {
-                var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, Direction.UP);
+                var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, workDirection().getOpposite());
                 yield moveFluid(importing ? other : fluidHandler, importing ? fluidHandler : other, maximum);
             }
             case ENERGY -> {
-                var other = energyAt(server, neighbor, Direction.UP);
+                var other = energyAt(server, neighbor, workDirection().getOpposite());
                 yield moveEnergy(importing ? other : energyInternal, importing ? energyInternal : other, maximum);
             }
             case XP -> moveLiquidXp(server, neighbor, importing,
@@ -242,7 +255,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     private int moveLiquidXp(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
-        var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, Direction.UP);
+        var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, workDirection().getOpposite());
         if (other == null) return 0;
         if (importing) return moveFluid(other, xpFluidPort, limit);
         Fluid preferred = preferredXpFluid();
@@ -257,7 +270,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     private int moveItems(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
-        var handler = server.getCapability(Capabilities.ItemHandler.BLOCK, neighbor, Direction.UP);
+        var handler = server.getCapability(Capabilities.ItemHandler.BLOCK, neighbor, workDirection().getOpposite());
         if (handler == null) return 0;
         int moved = 0;
         for (int slot = 0; slot < handler.getSlots() && moved < limit; slot++) {
@@ -325,8 +338,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected void transferEnergy(ServerLevel server) {
         int inputLimit = energyLimit(true, Integer.MAX_VALUE);
-        if (inputLimit > 0 && allowsAutomaticEnergyInput(server, worldPosition.above())) {
-            IEnergyStorage source = energyAt(server, worldPosition.above(), Direction.DOWN);
+        if (inputLimit > 0 && allowsAutomaticEnergyInput(server, worldPosition.relative(workDirection().getOpposite()))) {
+            IEnergyStorage source = energyAt(server, worldPosition.relative(workDirection().getOpposite()), workDirection());
             if (source != null) exchangeEnergy(true, source.extractEnergy(inputLimit, false), false);
         }
         int outputLimit = energyLimit(false, Integer.MAX_VALUE);
@@ -343,7 +356,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         }
         outputLimit = energyLimit(false, Integer.MAX_VALUE);
         if (outputLimit > 0 && allowsAutomaticEnergyOutput()) {
-            IEnergyStorage target = energyAt(server, worldPosition.below(), Direction.UP);
+            IEnergyStorage target = energyAt(server, workTarget(), workDirection().getOpposite());
             if (target != null) exchangeEnergy(false, target.receiveEnergy(outputLimit, false), false);
         }
     }
@@ -375,8 +388,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
         private EnergyPort(Direction side) { this.side = side; }
 
-        @Override public boolean canReceive() { return isEnergy() && side != Direction.DOWN; }
-        @Override public boolean canExtract() { return isEnergy() && side != Direction.UP; }
+        @Override public boolean canReceive() { return (isEnergy() || isVoid()) && side != Direction.DOWN; }
+        @Override public boolean canExtract() { return isEnergy() && !isVoid() && side != Direction.UP; }
         @Override public int getEnergyStored() { return isEnergy() ? getEnergy() : 0; }
         @Override public int getMaxEnergyStored() { return getEnergyCapacity(); }
 
@@ -393,7 +406,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     private int exchangeEnergy(boolean input, int requested, boolean simulate) {
         int moved = energyLimit(input, requested);
-        if (moved > 0 && !simulate) {
+        if (moved > 0 && !simulate && !isVoid()) {
             energy.transfer(input, moved, level.getGameTime());
             energyChanged();
         }
@@ -458,6 +471,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override
         public int fill(FluidStack resource, FluidAction action) {
             if (!isFluidValid(0, resource) || isRemoved()) return 0;
+            if (isVoid()) return resource.getAmount();
             FluidStack template = resource.copy();
             template.setAmount(1);
             int filled = tank.insert(template, resource.getAmount(), getFluidCapacity(), FluidStack::isSameFluidSameComponents, action.simulate());

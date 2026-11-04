@@ -26,6 +26,7 @@ import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.minecraft.world.InteractionResult;
@@ -111,6 +112,8 @@ public final class SuperPylonsMod {
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
         CREATIVE_TABS.register(bus);
+        bus.addListener(PylonControls::register);
+        bus.addListener((RegisterTicketControllersEvent event) -> event.register(SuperPylonBlockEntity.CHUNK_TICKETS));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);

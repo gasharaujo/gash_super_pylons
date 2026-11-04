@@ -112,6 +112,7 @@ public final class SuperPylonsMod {
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
         CREATIVE_TABS.register(bus);
+        PylonControls.register();
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(PylonExperienceStorage.class));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));

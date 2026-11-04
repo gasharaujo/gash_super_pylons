@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons.block;
 import java.util.function.Consumer;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -11,6 +12,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 
 public final class PylonToolActions {
+    private static final String DIRECTION_MODE = "direction:";
+
     public enum Kind {
         PAINT(null), COPY(null), WRENCH(null), ENERGY(PylonWire.Type.ENERGY), ITEM(PylonWire.Type.ITEM),
         FLUID(PylonWire.Type.FLUID), XP(PylonWire.Type.XP);
@@ -43,9 +46,44 @@ public final class PylonToolActions {
                     pylon.applyUpgradeSetup(player, saved);
                 }
             }
-            case WRENCH -> useWrench(pylon, player, level, saved, save);
+            case WRENCH -> {
+                if (isDirectionMode(saved)) {
+                    Direction direction = wrenchDirection(saved);
+                    pylon.setWorkDirection(direction);
+                    player.sendSystemMessage(Component.translatable("message.gash_super_pylons.work_direction", directionLabel(direction)));
+                } else {
+                    useWrench(pylon, player, level, saved, save);
+                }
+            }
             default -> useWire(kind.wire, pylon, player, level, stack, saved, save);
         }
+    }
+
+    static boolean isDirectionMode(String saved) { return saved.startsWith(DIRECTION_MODE); }
+
+    private static Direction wrenchDirection(String saved) {
+        String id = saved.substring(DIRECTION_MODE.length());
+        for (Direction direction : Direction.values()) {
+            if (direction.getSerializedName().equals(id)) return direction;
+        }
+        return Direction.DOWN;
+    }
+
+    static String toggleWrenchMode(String saved, Player player) {
+        boolean bind = isDirectionMode(saved);
+        player.sendSystemMessage(Component.translatable("tooltip.gash_super_pylons.wrench_mode." + (bind ? "bind" : "direction")));
+        return bind ? "" : DIRECTION_MODE + Direction.DOWN.getSerializedName();
+    }
+
+    static String cycleWrenchDirection(String saved, Player player) {
+        Direction[] directions = Direction.values();
+        Direction next = directions[(wrenchDirection(saved).ordinal() + 1) % directions.length];
+        player.sendSystemMessage(Component.translatable("tooltip.gash_super_pylons.wrench_direction", directionLabel(next)));
+        return DIRECTION_MODE + next.getSerializedName();
+    }
+
+    private static Component directionLabel(Direction direction) {
+        return Component.translatable("tooltip.gash_super_pylons.direction." + direction.getSerializedName());
     }
 
     private static void useWire(PylonWire.Type type, PylonBlockEntityBase pylon, Player player, ServerLevel level,
@@ -96,6 +134,14 @@ public final class PylonToolActions {
     }
 
     static void tooltip(Kind kind, String saved, Consumer<Component> lines) {
+        if (kind == Kind.WRENCH) {
+            boolean direction = isDirectionMode(saved);
+            lines.accept(Component.translatable("tooltip.gash_super_pylons.wrench_mode." + (direction ? "direction" : "bind")));
+            if (direction) {
+                lines.accept(Component.translatable("tooltip.gash_super_pylons.wrench_direction", directionLabel(wrenchDirection(saved))));
+                return;
+            }
+        }
         if (saved.isEmpty()) return;
         switch (kind) {
             case PAINT -> lines.accept(Component.translatable("tooltip.gash_super_pylons.paint", PylonToolItem.blockById(saved).getName()));

@@ -1,10 +1,13 @@
 package net.gasharaujo.superpylons.block;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -13,8 +16,10 @@ import net.minecraft.world.level.block.CaveVines;
 import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.GrowingPlantHeadBlock;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
@@ -22,6 +27,13 @@ final class PylonFarming {
     record Harvest(BlockState remainder, List<ItemStack> drops) {}
 
     private PylonFarming() {}
+
+    static boolean canPlant(ItemStack stack) {
+        if (!(stack.getItem() instanceof BlockItem item)) return false;
+        BlockState state = item.getBlock().defaultBlockState();
+        return state.is(BlockTags.SAPLINGS) || state.getBlock() instanceof CropBlock ||
+            state.getBlock() instanceof StemBlock || state.is(Blocks.NETHER_WART);
+    }
 
     static boolean canGrow(BlockState state) {
         Block block = state.getBlock();
@@ -55,6 +67,40 @@ final class PylonFarming {
             return withLoot(level, pos, state, Blocks.AIR.defaultBlockState());
         }
         return null;
+    }
+
+    static List<BlockPos> tree(ServerLevel level, BlockPos root) {
+        if (!level.getBlockState(root).is(BlockTags.LOGS) || level.getBlockState(root.below()).is(BlockTags.LOGS)) {
+            return List.of();
+        }
+        var tree = new ArrayList<BlockPos>();
+        var found = new HashSet<BlockPos>();
+        tree.add(root.immutable());
+        found.add(root.immutable());
+        for (int i = 0; i < tree.size(); i++) {
+            BlockPos log = tree.get(i);
+            for (BlockPos next : BlockPos.betweenClosed(log.offset(-1, -1, -1), log.offset(1, 1, 1))) {
+                if (next.getY() < root.getY() || !level.hasChunkAt(next) ||
+                    !level.getBlockState(next).is(BlockTags.LOGS) || !found.add(next.immutable())) continue;
+                if (tree.size() >= 256) return List.of();
+                tree.add(next.immutable());
+            }
+        }
+        int logs = tree.size();
+        for (int i = 0; i < tree.size(); i++) {
+            BlockPos part = tree.get(i);
+            int distance = i < logs ? 0 : level.getBlockState(part).getValue(LeavesBlock.DISTANCE);
+            for (Direction direction : Direction.values()) {
+                BlockPos next = part.relative(direction);
+                if (!level.hasChunkAt(next)) continue;
+                BlockState leaf = level.getBlockState(next);
+                if (!(leaf.getBlock() instanceof LeavesBlock) || leaf.getValue(LeavesBlock.PERSISTENT) ||
+                    leaf.getValue(LeavesBlock.DISTANCE) != distance + 1 || !found.add(next)) continue;
+                if (tree.size() >= 4096) return List.of();
+                tree.add(next);
+            }
+        }
+        return tree.size() == logs ? List.of() : tree;
     }
 
     private static Harvest withLoot(ServerLevel level, BlockPos pos, BlockState state, BlockState remainder) {

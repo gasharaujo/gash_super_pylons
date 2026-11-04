@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.util.TriState;
@@ -36,6 +37,7 @@ public final class PylonInteractions {
     public static void creativeAttack(PlayerInteractEvent.LeftClickBlock event) {
         Player player = event.getEntity();
         if (!player.getAbilities().instabuild ||
+            player.getMainHandItem().is(ItemTags.PICKAXES) ||
             event.getAction() != PlayerInteractEvent.LeftClickBlock.Action.START) return;
         if (!(event.getLevel().getBlockEntity(event.getPos()) instanceof SuperPylonBlockEntity pylon) ||
             pylon.getStoredCount() == 0) return;

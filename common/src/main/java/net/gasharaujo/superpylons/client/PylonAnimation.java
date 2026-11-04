@@ -39,10 +39,12 @@ public final class PylonAnimation {
         return 0.5 + Math.sin(ticks * Math.PI * 2.0 / BOB_TICKS) * BOB_AMPLITUDE;
     }
 
+    static final int XP_ORB_COUNT = 8;
+
     static Vec3 xpOrbit(float ticks, int orb) {
         double angle = ticks * Math.PI * 2 / ROTATION_TICKS * (orb + 2) + orb * 2.4;
-        double radius = 0.22 + 0.055 * Math.sin(angle * 2 + orb);
+        double radius = 0.41 + 0.09 * Math.sin(angle * 2 + orb);
         return new Vec3(0.5 + Math.cos(angle) * radius,
-            coreHeight(ticks) + 0.14 * Math.sin(angle + orb), 0.5 + Math.sin(angle) * radius);
+            coreHeight(ticks) + 0.25 * Math.sin(angle + orb), 0.5 + Math.sin(angle) * radius);
     }
 }

@@ -35,7 +35,7 @@ Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloc
 - **Botão esquerdo:** retira 1 item. **Shift + botão esquerdo:** retira até uma stack normal do item (64, 16 ou 1, conforme o item).
 - Os itens retirados vão para o inventário; se faltar espaço, o restante cai no chão.
 - Ao esvaziar o armazenamento, o core branco reaparece e outro tipo de item pode ser inserido.
-- Segurar o ataque minera o bloco normalmente em Sobrevivência. Na quebra, o conteúdo sai em stacks ou fica no próprio pylon quando o volume é grande. No Criativo, enquanto houver conteúdo, o ataque retira itens em vez de destruir o pylon instantaneamente.
+- Segurar o ataque minera o bloco normalmente em Sobrevivência. Na quebra, o conteúdo sai em stacks ou fica no próprio pylon quando o volume é grande. No Criativo, ataque com uma picareta para quebrar o pylon com conteúdo.
 
 Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A tag inclui os upgrades e pode ser estendida por datapacks. Inserir transfere os itens da mão também no Criativo.
 
@@ -43,7 +43,7 @@ Funis e cabos de itens podem inserir e extrair do estoque por qualquer face. Lei
 
 ### Upgrades
 
-Os upgrades, ferramentas e cabos estão na aba **Gash's Super Pylons** do Criativo, identificada pelo ícone do Super Pylon. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, processamento, especialidade e armazenamento.
+Os upgrades, ferramentas e cabos estão na aba **Gash's Super Pylons** do Criativo, identificada pelo ícone do Super Pylon. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. Quando há um gerador e um processador, o gerador sai primeiro.
 
 Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
 
@@ -57,7 +57,7 @@ Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a
 | V | 5 | 32 | 32× |
 | VI | 1 | 64 | Ilimitada |
 
-Um gerador começa com produção de 1 a cada 60 ticks. Os geradores de itens aceitam somente o produto que geram. O **Clicker** usa uma unidade do item armazenado para clicar com o botão direito na face superior do bloco abaixo, no intervalo de velocidade. O item volta ao pylon se o clique o deixar intacto. Um resultado alterado que não combine com o estoque sai como drop.
+Um gerador começa com produção de 1 a cada 60 ticks. Os geradores de itens aceitam somente o produto que geram. O **Clicker** clica no bloco do lado de trabalho, inclusive de mão vazia. Se houver item armazenado, usa uma unidade por operação. O item volta ao pylon se o clique o deixar intacto. Um resultado alterado que não combine com o estoque sai como drop.
 
 Fluid Storage, geradores de água e lava, Anvil e Enchanter exigem o pylon sem itens e bloqueiam depósitos de itens.
 
@@ -70,26 +70,30 @@ Remover armazenamento exige que o conteúdo caiba na capacidade restante. Na que
 Os upgrades estão disponíveis no Criativo e por comando.
 
 - **XP Tank** coleta orbes a até 2 blocos da estrutura e drena jogadores logo acima. O Speed define até quantos níveis são drenados ou entregues por jogador por tick. Sem Speed, a taxa é de 1 nível. A taxa nos tiers I–VI é de 2, 4, 8, 16, 32 e 64 níveis. A capacidade inicial é de 32.000 pontos de XP, ampliada pelo Storage. Estoques antigos acima do limite ficam guardados e voltam a aceitar XP assim que houver espaço. O jogador logo abaixo pode receber progresso parcial quando sobrarem poucos pontos.
-- O **XP Tank** exige o estoque de itens vazio na instalação e bloqueia novos depósitos de itens. Itens guardados em versões anteriores podem ser retirados normalmente. O tanque se conecta a tubos e tanques de XP líquido do Just Dire Things, Ender IO e Mob Grinding Utils quando os fluidos estão presentes no modpack. Cada ponto equivale a 20 mB, e o pylon guarda frações ao transferir volumes menores.
-- **Energy** puxa FE pela face superior, carrega um item compatível no pedestal e passa a energia restante pela face inferior. A carga do item usa o mesmo orçamento de saída da face inferior. No modo Energy o pedestal comporta um item. Esvazie o XP Tank ou o Energy para retirar o upgrade. Quebrar o pylon com XP ou FE guarda o saldo no bloco junto com os upgrades.
-- **Range** define o raio horizontal de Fertilizer, Harvester e Magnet. Eles procuram alvos no nível do pylon e um bloco acima e abaixo. Sem Range, o raio é de 1 bloco. Fertilizer e Harvester exigem um pylon vazio e bloqueiam depósitos manuais.
+- O **XP Tank** exige o estoque de itens vazio na instalação. Um frasco de experiência vira sete pontos de XP e devolve o frasco de vidro. Um frasco de vidro consome sete pontos para virar um frasco de experiência. O tanque se conecta aos fluidos de XP líquido do Just Dire Things, Ender IO e Mob Grinding Utils presentes no modpack. Cada ponto equivale a 20 mB, com suporte a frações.
+- **Energy** cabe em qualquer pylon e recebe FE por todas as faces. Puxa do lado oposto ao de trabalho, carrega um item compatível quando ele está sozinho no pedestal e envia o restante ao lado de trabalho. Esvazie XP ou FE antes de retirar o upgrade correspondente. Quebrar o pylon guarda o saldo no bloco junto com os upgrades.
+- **Range** amplia o raio horizontal e vertical de Fertilizer, Harvester, Planter e Magnet. Sem Range, o raio é de um bloco. Fertilizer e Harvester exigem um pylon vazio na instalação.
 - **Fertilizer** seleciona plantas ao acaso, sem repetir a mesma posição no ciclo. Speed I–VI define o intervalo de 40, 30, 20, 10, 5 ou 1 tick entre ciclos e aplica respectivamente 1, 2, 3, 4, 5 ou 6 random ticks por planta. Quantity I–VI seleciona até 2, 4, 8, 16, 32 ou 64 plantas por ciclo. Na configuração inicial, tenta um random tick em uma planta a cada 60 ticks.
-- **Harvester** colhe até uma posição por ciclo de Speed, no mesmo intervalo dos geradores. Reinicia cultivos maduros, recolhe frutos de plantas como cacau e bagas e corta só a ponta de cana, cacto e bambu. Melões e abóboras com caule ligado são recolhidos, mantendo o caule. Troncos e copas ficam intactos. A colheita vai pela face superior do inventário abaixo. Se ele só aceitar parte, o pylon guarda o restante e pausa novas colheitas até entregá-lo.
+- **Harvester** reinicia cultivos maduros, recolhe frutos e corta a ponta de cana, cacto e bambu. Usa o inventário no lado de trabalho quando disponível. Também derruba troncos com copa natural e recolhe os drops que couberem no pylon. O excedente fica no chão.
+- **Planter** planta sementes e mudas do estoque em espaços válidos na área de Range. Speed define o intervalo e Quantity define quantas plantas cabem em cada ciclo.
+- **Placer** coloca um bloco do estoque no lado de trabalho por ciclo de Speed.
+- **Void** descarta itens, fluidos, FE e XP recebidos.
+- **Chunk Loader** mantém os chunks ativos em um quadrado centrado no chunk do pylon. Começa com raio de um chunk e usa o raio do upgrade de Range quando instalado.
 
 | Tier | Capacidade de Energy | Transferência por tick e sentido | Área de Range |
 | --- | ---: | ---: | ---: |
-| 0 | 0 FE | 0 FE | 3×3 |
-| I | 1.000.000 FE | 1.000 FE | 7×7 |
-| II | 10.000.000 FE | 10.000 FE | 9×9 |
-| III | 40.000.000 FE | 40.000 FE | 11×11 |
-| IV | 100.000.000 FE | 100.000 FE | 13×13 |
-| V | 400.000.000 FE | 400.000 FE | 15×15 |
-| VI | 2.000.000.000 FE | Ilimitada | 17×17 |
+| 0 | 0 FE | 0 FE | 3×3×3 |
+| I | 1.000.000 FE | 1.000 FE | 7×7×7 |
+| II | 10.000.000 FE | 10.000 FE | 9×9×9 |
+| III | 40.000.000 FE | 40.000 FE | 11×11×11 |
+| IV | 100.000.000 FE | 100.000 FE | 13×13×13 |
+| V | 400.000.000 FE | 400.000 FE | 15×15×15 |
+| VI | 2.000.000.000 FE | Ilimitada | 17×17×17 |
 
 #### Filtro, ímã e processamento
 
-- **Filter** abre com botão direito e as mãos vazias. Use um item no cursor para marcar um dos 27 slots e botão direito para limpar a marca. O filtro começa no modo de bloqueio e pode alternar para a lista de permissão. Ele compara o item e seus dados exatos tanto nos depósitos manuais quanto na coleta do Magnet.
-- **Magnet** coleta itens caídos em uma área inicial de 3×3, com o pylon no centro. Começa com um item a cada 60 ticks e segue os valores de Speed, Quantity e Range. Os itens entram no armazenamento e seguem o filtro e a regra de correspondência exata.
+- **Filter** abre com botão direito e as mãos vazias. Use um item no cursor ou arraste do JEI para preencher um dos 27 slots. Botão direito limpa o slot e botão do meio permite selecionar uma tag do item. O filtro começa em modo de bloqueio e pode alternar para permissão.
+- **Magnet** coleta itens caídos em uma área inicial de 3×3×3, com o pylon no centro. Começa com um item a cada 60 ticks e segue os valores de Speed, Quantity e Range. Os itens entram no armazenamento e seguem o filtro e a regra de correspondência exata.
 - **Smelt** usa receitas de fornalha. **Pulverize** tritura cobbles em cascalho, cascalho em areia e sílex, terracota em areia vermelha e pedras nas variantes quebradas disponíveis. Também processa blocos de minério e usa os pós equivalentes de `c:dust` quando disponíveis.
 - No Pulverize, blocos de minério rendem 2, 3, 4 ou 5 unidades de minério bruto ou gema nos tiers Quantity 0, II, IV e VI. Redstone e lápis-lazúli rendem seis vezes esse valor. Lingotes e gemas rendem um pó. Minério bruto rende 2, 4 ou 6 pós nos tiers 0, IV e VI. O tier intermediário mantém o rendimento do tier anterior.
 - O processamento envia os resultados para o inventário abaixo e funciona com geradores de itens quando existe uma receita para o produto gerado. Speed define o intervalo e Quantity define o máximo de itens processados por ciclo. Cada item custa um uso do saldo de combustível, 1.000 FE de um pylon Energy lateral ou combustível de um inventário lateral. Um carvão rende 8 usos. O saldo só diminui ao processar.
@@ -111,10 +115,15 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 - **Paint Tool** aplica ao frame a textura do bloco da mão secundária sem gastar o bloco. Sem um bloco na mão secundária, Shift + botão direito copia a pintura e botão direito aplica a pintura salva. Uma textura indisponível usa o ferro padrão.
 - **Copy Paste Tool** copia os tipos e tiers de upgrades com Shift + botão direito. Botão direito aplica o setup completo se todos os upgrades faltantes estiverem no inventário. Os upgrades retirados voltam ao jogador. Se faltar algum, o chat lista o que falta. Paint Tool e Copy Paste Tool ganham brilho e tooltip quando guardam dados.
 - **Energy Wire, Item Wire, Fluid Wire e XP Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Para desconectar, selecione os dois pylons em qualquer ordem com qualquer tipo de Wire. O cabo instalado volta ao inventário ou cai no chão se estiver cheio. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos e o upgrade de transferência desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
-- **Insert** puxa do bloco diretamente abaixo. **Extract** envia ao bloco diretamente abaixo. Há uma versão de cada para itens, fluidos, energia e XP. Cada recurso tem um slot para definir o sentido, e o limite por tick usa 10% da capacidade do pylon equipado. As portas funcionam com outros pylons e com blocos que expõem a interface compatível. Os upgrades de energia assumem a transferência ativa da face inferior quando instalados.
-- **Wrench** seleciona um pylon com Enchanter ou Anvil usando Shift + botão direito. Clique com o botão direito em cada um dos dois auxiliares, com um bloco de ar entre cada auxiliar e o principal. No Enchanter, os auxiliares exibem livros. Com lápis-lazúli em um e XP no outro, enviam partículas ao principal. Na Anvil, orbes de XP giram em torno dos cores auxiliares. Os efeitos são visuais.
-- Shift + botão direito no ar limpa os dados salvos na Copy Paste Tool, na Paint Tool ou na Wrench.
-- **Break** minera o bloco diretamente abaixo no intervalo do Speed. Usa uma picareta virtual de diamante por padrão. Shift + botão direito com uma ferramenta de mineração na mão principal instala a ferramenta real, com seus encantamentos e desgaste. Ela aparece na ponta direita da barra e sai antes dos upgrades com Shift + botão direito de mão vazia. Quando ela é retirada ou quebra, a mineração volta a usar a picareta virtual. O Break guarda os drops iguais ao primeiro e deixa os demais no chão. Com o armazenamento cheio, a mineração pausa.
+- **Insert** puxa do bloco no lado de trabalho. **Extract** envia para ele. As portas funcionam com outros pylons e com blocos que expõem a interface compatível. Capacidade VI libera o limite de 10% para Wire, Insert e Extract. Os cabos são amarelos para itens, azuis para fluidos, vermelhos para energia e verdes para XP.
+- **Wrench** alterna entre os modos Vincular e Direção com Shift + rolagem. No modo Vincular, selecione Enchanter ou Anvil com Shift + botão direito. Clique em cada auxiliar, deixando um bloco de ar entre ele e o principal. Enchanter usa livros e partículas. Anvil mostra oito orbes que circulam os núcleos auxiliares.
+- No modo Direção, Shift + botão direito no ar alterna entre os seis lados. Botão direito no pylon aplica o lado selecionado. O padrão é baixo.
+- Shift + botão direito no ar limpa os dados da Copy Paste Tool, da Paint Tool e da Wrench no modo Vincular.
+- **Break** minera o bloco no lado de trabalho no intervalo do Speed. Usa uma picareta virtual de diamante por padrão. Shift + botão direito com uma ferramenta de mineração na mão principal instala a ferramenta real, com seus encantamentos e desgaste. Ela aparece na ponta direita da barra e sai antes dos upgrades com Shift + botão direito de mão vazia. Quando ela é retirada ou quebra, a mineração volta a usar a picareta virtual. O Break guarda os drops iguais ao primeiro e deixa os demais no chão. Com o armazenamento cheio, a mineração pausa.
+
+### Wiki dentro do jogo
+
+Com GuideME instalado, abra a wiki pelo atalho de guia ao apontar para um Super Pylon no inventário. Também é possível pegar o livro com `/guideme give @s gash_super_pylons:wiki`. A wiki inclui páginas em português e inglês nas três versões. Ponder é opcional e oferece uma cena de introdução no Forge 1.20.1 e no NeoForge 1.21.1.
 
 ### Overlays opcionais
 

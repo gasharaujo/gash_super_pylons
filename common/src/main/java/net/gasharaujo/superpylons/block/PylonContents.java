@@ -63,7 +63,7 @@ public final class PylonContents {
         return result;
     }
 
-    void remove(int amount) {
+    void remove(long amount) {
         count -= amount;
         if (count == 0) item = ItemStack.EMPTY;
     }

@@ -37,7 +37,7 @@ final class PylonWorkshopRenderer {
     void renderOrbs(float ticks, PoseStack pose, MultiBufferSource buffers, int light, int overlay) {
         var camera = Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation();
         var buffer = buffers.getBuffer(RenderType.itemEntityTranslucentCull(ORB));
-        for (int orb = 0; orb < 4; orb++) {
+        for (int orb = 0; orb < PylonAnimation.XP_ORB_COUNT; orb++) {
             var point = PylonAnimation.xpOrbit(ticks, orb);
             pose.pushPose();
             pose.translate(point.x, point.y, point.z);

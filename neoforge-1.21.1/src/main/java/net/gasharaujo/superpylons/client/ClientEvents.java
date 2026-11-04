@@ -1,6 +1,8 @@
 package net.gasharaujo.superpylons.client;
 
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -13,6 +15,11 @@ import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 @EventBusSubscriber(modid = SuperPylonsMod.MOD_ID, value = Dist.CLIENT)
 public final class ClientEvents {
     private ClientEvents() {}
+
+    @SubscribeEvent
+    public static void registerPonder(FMLClientSetupEvent event) {
+        if (ModList.get().isLoaded("ponder")) event.enqueueWork(PylonPonder::register);
+    }
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {

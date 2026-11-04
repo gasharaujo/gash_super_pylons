@@ -44,17 +44,21 @@ public enum PylonUpgrade {
     ENCHANTING("enchanting_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     CLICKER("clicker_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     XP_TANK("xp_tank_upgrade", Slot.SPECIALTY, 1, 0, null, null),
-    ENERGY_1("energy_upgrade_1", Slot.SPECIALTY, 1, 1_000_000, null, null),
-    ENERGY_2("energy_upgrade_2", Slot.SPECIALTY, 2, 10_000_000, null, null),
-    ENERGY_3("energy_upgrade_3", Slot.SPECIALTY, 3, 40_000_000, null, null),
-    ENERGY_4("energy_upgrade_4", Slot.SPECIALTY, 4, 100_000_000, null, null),
-    ENERGY_5("energy_upgrade_5", Slot.SPECIALTY, 5, 400_000_000, null, null),
-    ENERGY_6("energy_upgrade_6", Slot.SPECIALTY, 6, 2_000_000_000, null, null),
+    ENERGY_1("energy_upgrade_1", Slot.ENERGY, 1, 1_000_000, null, null),
+    ENERGY_2("energy_upgrade_2", Slot.ENERGY, 2, 10_000_000, null, null),
+    ENERGY_3("energy_upgrade_3", Slot.ENERGY, 3, 40_000_000, null, null),
+    ENERGY_4("energy_upgrade_4", Slot.ENERGY, 4, 100_000_000, null, null),
+    ENERGY_5("energy_upgrade_5", Slot.ENERGY, 5, 400_000_000, null, null),
+    ENERGY_6("energy_upgrade_6", Slot.ENERGY, 6, 2_000_000_000, null, null),
     FERTILIZER("fertilizer_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     HARVESTER("harvester_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     BREAK("break_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     FILTER("filter_upgrade", Slot.FILTER, 1, 0, null, null),
     MAGNET("magnet_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    PLANTER("planter_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    PLACER("placer_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    VOID("void_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    CHUNK_LOADER("chunk_loader_upgrade", Slot.CHUNK_LOADER, 1, 0, null, null),
     SMELT("smelt_upgrade", Slot.PROCESSING, 1, 0, null, null),
     PULVERIZE("pulverize_upgrade", Slot.PROCESSING, 1, 0, null, null),
     INSERT_ITEM("insert_item_upgrade", Slot.ITEM_TRANSFER, PylonWire.Type.ITEM, true),
@@ -66,10 +70,10 @@ public enum PylonUpgrade {
     INSERT_XP("insert_xp_upgrade", Slot.XP_TRANSFER, PylonWire.Type.XP, true),
     EXTRACT_XP("extract_xp_upgrade", Slot.XP_TRANSFER, PylonWire.Type.XP, false);
 
-    // Iteration order is also the order used for removal.
+    // Default removal order. Generators are removed before processing.
     public enum Slot {
-        FILTER, SPEED, QUANTITY, RANGE, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
-        PROCESSING, SPECIALTY, STORAGE
+        FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
+        CHUNK_LOADER, PROCESSING, SPECIALTY, STORAGE
     }
 
     private final String id;
@@ -109,12 +113,11 @@ public enum PylonUpgrade {
     public boolean importsResource() { return insert; }
     public String category() {
         return switch (slot) {
-            case STORAGE, SPEED, QUANTITY, RANGE -> "modifier";
+            case STORAGE, SPEED, QUANTITY, RANGE, ENERGY -> "modifier";
             case PROCESSING -> "processing";
-            case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER -> "utility";
+            case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER, CHUNK_LOADER -> "utility";
             case SPECIALTY -> {
-                if (isEnergy()) yield "modifier";
-                if (item != null || fluid != null) yield "generator";
+                if (isGenerator()) yield "generator";
                 if (this == FLUID_STORAGE || this == XP_TANK) yield "type";
                 yield "utility";
             }
@@ -123,12 +126,14 @@ public enum PylonUpgrade {
     public Item generatedItem() { return item == null ? Items.AIR : item.get(); }
     public Fluid generatedFluid() { return fluid == null ? Fluids.EMPTY : fluid.get(); }
     public boolean generatesFluid() { return fluid != null; }
+    public boolean isGenerator() { return item != null || fluid != null; }
     public boolean isTank() { return this == FLUID_STORAGE || generatesFluid(); }
     public boolean locksItems() {
-        return isTank() || this == XP_TANK || this == ANVIL || this == ENCHANTING || this == FERTILIZER || this == HARVESTER;
+        return isTank() || this == XP_TANK || this == ANVIL || this == ENCHANTING ||
+            this == FERTILIZER || this == HARVESTER || this == VOID;
     }
 
-    public boolean isEnergy() { return energyTransfer() > 0; }
+    public boolean isEnergy() { return slot == Slot.ENERGY; }
 
     public int energyTransfer() {
         return switch (this) {

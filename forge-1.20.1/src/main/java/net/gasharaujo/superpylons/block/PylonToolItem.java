@@ -32,7 +32,11 @@ public final class PylonToolItem extends Item {
         if (kind.isWire() || hand != InteractionHand.MAIN_HAND || !player.isShiftKeyDown() || saved(stack).isEmpty()) {
             return InteractionResultHolder.pass(stack);
         }
-        if (!level.isClientSide()) save(stack, "");
+        if (!level.isClientSide()) {
+            String value = saved(stack);
+            save(stack, kind == PylonToolActions.Kind.WRENCH && PylonToolActions.isDirectionMode(value)
+                ? PylonToolActions.cycleWrenchDirection(value, player) : "");
+        }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 
@@ -43,6 +47,13 @@ public final class PylonToolItem extends Item {
             return InteractionResult.sidedSuccess(context.getLevel().isClientSide());
         }
         return InteractionResult.PASS;
+    }
+
+    public static void toggleWrenchMode(Player player) {
+        ItemStack stack = player.getMainHandItem();
+        if (player.isSpectator() || !(stack.getItem() instanceof PylonToolItem tool) ||
+            tool.kind != PylonToolActions.Kind.WRENCH) return;
+        save(stack, PylonToolActions.toggleWrenchMode(saved(stack), player));
     }
 
     boolean applyTo(PylonBlockEntityBase pylon, Player player, InteractionHand hand) {
