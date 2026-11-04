@@ -60,6 +60,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
 
     public PylonUpgrade getSpecialty() { return upgrades.get(PylonUpgrade.Slot.SPECIALTY); }
 
+    public List<PylonUpgrade> getInstalledUpgrades() { return List.copyOf(upgrades.values()); }
+
     public long getExperience() { return experience; }
     public boolean isEnergy() { return getEnergyCapacity() > 0; }
     public int getEnergy() { return energy.amount(); }

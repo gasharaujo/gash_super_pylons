@@ -43,6 +43,8 @@ Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A 
 
 Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é velocidade, quantidade, alcance, especialidade e armazenamento.
 
+Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
+
 | Tier | Intervalo em ticks | Produção por ciclo | Capacidade de armazenamento |
 | --- | ---: | ---: | ---: |
 | I | 40 | 1 | 2× |
