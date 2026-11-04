@@ -41,6 +41,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     private static final int CONFIRM_TICKS = 100;
     private static final int MAX_LOOSE_STACKS = 64;
     private static final int SMELT_ENERGY_COST = 1000;
+    private static final int VERTICAL_RANGE = 1;
     static final int FILTER_SIZE = 27;
 
     protected final PylonContents contents = new PylonContents();
@@ -341,9 +342,9 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     private void collectItems(ServerLevel server, int maximum) {
         if (getStoredCount() >= getItemCapacity()) return;
         int radius = range();
-        AABB block = new AABB(worldPosition);
-        for (ItemEntity entity : server.getEntitiesOfClass(ItemEntity.class, block.inflate(radius),
-                item -> item.isAlive() && block.distanceToSqr(item.position()) <= radius * radius)) {
+        AABB area = new AABB(worldPosition).inflate(radius, VERTICAL_RANGE, radius);
+        for (ItemEntity entity : server.getEntitiesOfClass(ItemEntity.class, area,
+                item -> item.isAlive() && area.contains(item.position()))) {
             ItemStack stack = entity.getItem();
             ItemStack sample = stack.copyWithCount(Math.min(maximum, stack.getCount()));
             int inserted = insertFrom(sample);
@@ -435,7 +436,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
 
     private Iterable<BlockPos> farmArea() {
         int radius = range();
-        return BlockPos.betweenClosed(worldPosition.offset(-radius, -1, -radius), worldPosition.offset(radius, 1, radius));
+        return BlockPos.betweenClosed(worldPosition.offset(-radius, -VERTICAL_RANGE, -radius),
+            worldPosition.offset(radius, VERTICAL_RANGE, radius));
     }
 
     private void fertilize(ServerLevel server, int ticks, int count) {

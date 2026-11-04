@@ -84,7 +84,7 @@ Os upgrades estão disponíveis no Criativo e por comando.
 #### Filtro, ímã e fundição
 
 - **Filter** abre com botão direito e as mãos vazias. Use um item no cursor para marcar um dos 27 slots e botão direito para limpar a marca. O filtro começa no modo de bloqueio e pode alternar para a lista de permissão. Ele compara o item e seus dados exatos tanto nos depósitos manuais quanto na coleta do Magnet.
-- **Magnet** coleta itens caídos a até 1–6 blocos da estrutura conforme o Range. A coleta começa com um item a cada 40 ticks e segue os valores de Speed e Quantity. Os itens entram no armazenamento do pylon e seguem o limite e a regra de correspondência exata.
+- **Magnet** coleta itens caídos em uma área inicial de 3×3, com o pylon no centro. Range I–VI define áreas de 3×3, 5×5, 7×7, 9×9, 11×11 e 13×13. A coleta abrange o nível do pylon e um bloco acima e abaixo. Começa com um item a cada 40 ticks e segue os valores de Speed e Quantity. Os itens entram no armazenamento do pylon e seguem o limite e a regra de correspondência exata.
 - **Smelt** usa receitas de fornalha e envia o resultado ao inventário imediatamente abaixo. Processa um item por ciclo de Speed. Usa o saldo de combustível já consumido, 1.000 FE de um pylon Energy lateral ou combustível de um inventário lateral, nessa ordem. O combustível rende o mesmo total de ticks de uma fornalha, e itens como baldes retornam ao inventário de origem quando há espaço.
 - **Pulverize**, **Wrench** e **Paint Tool** estão disponíveis no Criativo como itens reservados. A conversão planejada para o Pulverize é de 2, 4 ou 6 pós de `c:dust` por minério, respectivamente sem Quantity, com Quantity IV ou com Quantity VI.
 
