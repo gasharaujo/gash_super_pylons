@@ -355,7 +355,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final class ItemPort implements IItemHandler {
         @Override public int getSlots() { return 1; }
         @Override public ItemStack getStackInSlot(int slot) {
-            return slot == 0 && hasItemStorage() ?
+            return slot == 0 && canExtractItems() ?
                 getStoredItem().copyWithCount((int) Math.min(Integer.MAX_VALUE, getStoredCount())) : ItemStack.EMPTY;
         }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {

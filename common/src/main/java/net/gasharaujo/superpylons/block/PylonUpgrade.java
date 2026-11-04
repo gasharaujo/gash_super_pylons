@@ -125,7 +125,7 @@ public enum PylonUpgrade {
     public boolean generatesFluid() { return fluid != null; }
     public boolean isTank() { return this == FLUID_STORAGE || generatesFluid(); }
     public boolean locksItems() {
-        return isTank() || this == ANVIL || this == ENCHANTING || this == FERTILIZER || this == HARVESTER;
+        return isTank() || this == XP_TANK || this == ANVIL || this == ENCHANTING || this == FERTILIZER || this == HARVESTER;
     }
 
     public boolean isEnergy() { return energyTransfer() > 0; }

@@ -247,7 +247,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             warn(player, "wire_already_connected");
             return false;
         }
-        if (!supportsWire(type) || !target.supportsWire(type)) {
+        if (!supportsTransfer(type, false) || !target.supportsTransfer(type, true)) {
             warn(player, "wire_incompatible");
             return false;
         }
@@ -262,11 +262,11 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         return wires.stream().anyMatch(wire -> wire.target().equals(target.worldPosition) && wire.targetId().equals(target.wireId));
     }
 
-    private boolean supportsWire(PylonWire.Type type) {
+    private boolean supportsTransfer(PylonWire.Type type, boolean input) {
         return switch (type) {
             case ENERGY -> isEnergy();
             case FLUID -> isTank();
-            case ITEM -> hasItemStorage();
+            case ITEM -> input ? hasItemStorage() : canExtractItems();
             case XP -> getSpecialty() == PylonUpgrade.XP_TANK;
         };
     }
@@ -470,7 +470,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected ItemStack extractAutomation(int amount, boolean simulate) {
-        if (!(level instanceof ServerLevel) || !hasItemStorage()) return ItemStack.EMPTY;
+        if (!(level instanceof ServerLevel) || !canExtractItems()) return ItemStack.EMPTY;
         if (simulate) return contents.peek(amount);
         ItemStack extracted = contents.extract(amount);
         if (!extracted.isEmpty()) sync();
@@ -480,6 +480,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     protected boolean hasItemStorage() {
         PylonUpgrade specialty = getSpecialty();
         return !isRemoved() && (specialty == null || !specialty.locksItems());
+    }
+
+    protected boolean canExtractItems() {
+        return hasItemStorage() || (!isRemoved() && isXpTank() && getStoredCount() > 0);
     }
 
     protected boolean canStoreItem(ItemStack input) {
@@ -802,7 +806,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 continue;
             }
             int slot = wire.type().ordinal();
-            if (budget[slot] <= 0 || !supportsWire(wire.type()) || !target.supportsWire(wire.type())) continue;
+            if (budget[slot] <= 0 || !supportsTransfer(wire.type(), false) ||
+                !target.supportsTransfer(wire.type(), true)) continue;
             budget[slot] -= moveToPylon(server, wire.type(), target, budget[slot]);
         }
         if (removed) sync();
@@ -811,10 +816,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         var neighbor = server.getBlockEntity(below);
         for (PylonUpgrade upgrade : upgrades.values()) {
             PylonWire.Type type = upgrade.transferType();
-            if (type == null || !supportsWire(type) || budget[type.ordinal()] == 0) continue;
             boolean importing = upgrade.importsResource();
+            if (type == null || !supportsTransfer(type, importing) || budget[type.ordinal()] == 0) continue;
             long limit = budget[type.ordinal()];
-            if (neighbor instanceof PylonBlockEntityBase pylon && pylon.supportsWire(type)) {
+            if (neighbor instanceof PylonBlockEntityBase pylon && pylon.supportsTransfer(type, !importing)) {
                 if (importing) pylon.moveToPylon(server, type, this, limit);
                 else moveToPylon(server, type, pylon, limit);
             } else if (type == PylonWire.Type.XP) {

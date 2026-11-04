@@ -312,9 +312,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final class ItemPort extends SnapshotJournal<PylonContents.State> implements ResourceHandler<ItemResource> {
         @Override public int size() { return 1; }
         @Override public ItemResource getResource(int index) {
-            return index == 0 && hasItemStorage() ? ItemResource.of(getStoredItem()) : ItemResource.EMPTY;
+            return index == 0 && canExtractItems() ? ItemResource.of(getStoredItem()) : ItemResource.EMPTY;
         }
-        @Override public long getAmountAsLong(int index) { return index == 0 && hasItemStorage() ? getStoredCount() : 0; }
+        @Override public long getAmountAsLong(int index) { return index == 0 && canExtractItems() ? getStoredCount() : 0; }
         @Override public long getCapacityAsLong(int index, ItemResource resource) {
             if (resource.isEmpty()) return index == 0 && hasItemStorage() ? getItemCapacity() : 0;
             return isValid(index, resource) ? getItemCapacity() : 0;
@@ -338,7 +338,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override
         public int extract(int index, ItemResource resource, int amount, TransactionContext transaction) {
             TransferPreconditions.checkNonNegative(amount);
-            if (!(level instanceof ServerLevel) || index != 0 || !hasItemStorage() ||
+            if (!(level instanceof ServerLevel) || index != 0 || !canExtractItems() ||
                 resource.isEmpty() || !resource.equals(getResource(index))) return 0;
             int extracted = (int) Math.min(amount, getStoredCount());
             if (extracted == 0) return 0;
