@@ -252,14 +252,14 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             }
             return;
         }
+        int interval = speed == null ? 40 : speed.value();
+        if (Math.floorMod(server.getGameTime(), interval) != Math.floorMod(worldPosition.hashCode(), interval)) return;
+
         PylonUpgrade quantity = upgrades.get(PylonUpgrade.Slot.QUANTITY);
         if (specialty == PylonUpgrade.FERTILIZER) {
             fertilize(server, Math.max(1, speedTier), 1 << (quantity == null ? 0 : quantity.tier() - 1));
             return;
         }
-        int interval = speed == null ? 40 : speed.value();
-        if (Math.floorMod(server.getGameTime(), interval) != Math.floorMod(worldPosition.hashCode(), interval)) return;
-
         if (specialty == PylonUpgrade.HARVESTER) {
             harvest(server);
             return;
