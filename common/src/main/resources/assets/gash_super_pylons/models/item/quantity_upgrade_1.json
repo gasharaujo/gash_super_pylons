@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "gash_super_pylons:item/icon",
   "textures": {
     "layer0": "gash_super_pylons:item/quantity_upgrade_1"
   }

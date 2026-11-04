@@ -1,5 +1,8 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "gash_super_pylons:item/icon",
+  "display": {
+    "gui": { "scale": [1.16, 1.16, 1.16] }
+  },
   "textures": {
     "layer0": "gash_super_pylons:item/copy_paste_tool"
   }

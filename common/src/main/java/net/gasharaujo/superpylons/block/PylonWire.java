@@ -1,7 +1,9 @@
 package net.gasharaujo.superpylons.block;
 
 import java.util.UUID;
+import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 
 public record PylonWire(Type type, BlockPos target, UUID targetId) {
     public static final int MAX_LENGTH = 32;
@@ -22,6 +24,15 @@ public record PylonWire(Type type, BlockPos target, UUID targetId) {
 
         public String id() { return id; }
         public int color() { return color; }
+
+        ItemStack itemStack() {
+            return new ItemStack(switch (this) {
+                case ENERGY -> SuperPylonsMod.ENERGY_WIRE.get();
+                case ITEM -> SuperPylonsMod.ITEM_WIRE.get();
+                case FLUID -> SuperPylonsMod.FLUID_WIRE.get();
+                case XP -> SuperPylonsMod.XP_WIRE.get();
+            });
+        }
     }
 
     String encode() { return type.name() + ":" + target.asLong() + ":" + targetId; }

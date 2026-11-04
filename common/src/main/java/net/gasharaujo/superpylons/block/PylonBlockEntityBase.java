@@ -255,19 +255,25 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     boolean disconnectWire(PylonBlockEntityBase target, Player player) {
-        boolean removedOutgoing = removeWiresTo(target);
-        boolean removedIncoming = target.removeWiresTo(this);
+        boolean removedOutgoing = removeWiresTo(target, player);
+        boolean removedIncoming = target.removeWiresTo(this, player);
         if (!removedOutgoing && !removedIncoming) return false;
         warn(player, "wire_removed");
         return true;
     }
 
-    private boolean removeWiresTo(PylonBlockEntityBase target) {
-        if (!wires.removeIf(wire -> wire.target().equals(target.worldPosition) && wire.targetId().equals(target.wireId))) {
-            return false;
+    private boolean removeWiresTo(PylonBlockEntityBase target, Player player) {
+        boolean removed = false;
+        for (Iterator<PylonWire> iterator = wires.iterator(); iterator.hasNext();) {
+            PylonWire wire = iterator.next();
+            if (wire.target().equals(target.worldPosition) && wire.targetId().equals(target.wireId)) {
+                iterator.remove();
+                player.getInventory().placeItemBackInInventory(wire.type().itemStack());
+                removed = true;
+            }
         }
-        sync();
-        return true;
+        if (removed) sync();
+        return removed;
     }
 
     private boolean supportsTransfer(PylonWire.Type type, boolean input) {

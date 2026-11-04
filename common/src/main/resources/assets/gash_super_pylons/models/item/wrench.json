@@ -1,5 +1,8 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "gash_super_pylons:item/icon",
+  "display": {
+    "gui": { "scale": [1.38, 1.38, 1.38] }
+  },
   "textures": {
     "layer0": "gash_super_pylons:item/wrench"
   }

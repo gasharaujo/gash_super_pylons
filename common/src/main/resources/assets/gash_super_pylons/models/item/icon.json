@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "display": {
+    "gui": { "scale": [1.25, 1.25, 1.25] },
+    "fixed": { "rotation": [0, 180, 0], "scale": [1.24, 1.24, 1.24] }
+  }
+}
