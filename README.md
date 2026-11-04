@@ -77,6 +77,8 @@ Os upgrades estão disponíveis no Criativo e por comando.
 - **Harvester** reinicia cultivos maduros, recolhe frutos e corta a ponta de cana, cacto e bambu. Usa o inventário no lado de trabalho quando disponível. Também derruba troncos com copa natural e recolhe os drops que couberem no pylon. O excedente fica no chão.
 - **Planter** planta sementes e mudas do estoque em espaços válidos na área de Range. Speed define o intervalo e Quantity define quantas plantas cabem em cada ciclo.
 - **Placer** coloca um bloco do estoque no lado de trabalho por ciclo de Speed.
+- **Dropper** solta itens armazenados no centro do bloco do lado de trabalho, sem espalhar. Começa com um item a cada 60 ticks. Quantity define quantos itens saem por ciclo, Speed define o intervalo e cada tier de Range estende a distância em um bloco. Se o espaço de saída estiver bloqueado, os itens ficam no pylon.
+- **Super** faz quatro Nether Stars orbitarem o núcleo. O upgrade tem slot próprio e pode acompanhar outros upgrades.
 - **Void** descarta itens, fluidos, FE e XP recebidos.
 - **Chunk Loader** mantém os chunks ativos em um quadrado centrado no chunk do pylon. Começa com raio de um chunk e usa o raio do upgrade de Range quando instalado.
 

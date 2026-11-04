@@ -7,6 +7,7 @@
     "gash_super_pylons:cobblestone_generator_upgrade",
     "gash_super_pylons:copy_paste_tool",
     "gash_super_pylons:deepslate_generator_upgrade",
+    "gash_super_pylons:dropper_upgrade",
     "gash_super_pylons:enchanting_upgrade",
     "gash_super_pylons:energy_upgrade_1",
     "gash_super_pylons:energy_upgrade_2",
@@ -63,6 +64,7 @@
     "gash_super_pylons:storage_upgrade_4",
     "gash_super_pylons:storage_upgrade_5",
     "gash_super_pylons:storage_upgrade_6",
+    "gash_super_pylons:super_upgrade",
     "gash_super_pylons:water_generator_upgrade",
     "gash_super_pylons:wrench",
     "gash_super_pylons:xp_tank_upgrade"

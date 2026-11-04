@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 /** Coordinates use the original Blockbench model, where one block is 16 units. */
 public final class PylonAnimation {
@@ -40,6 +41,15 @@ public final class PylonAnimation {
     }
 
     static final int XP_ORB_COUNT = 8;
+    static final int SUPER_STAR_COUNT = 4;
+
+    static void placeStar(PoseStack pose, float ticks, int star, Quaternionf camera) {
+        double angle = 2 * Math.PI * (ticks / ROTATION_TICKS + (double) star / SUPER_STAR_COUNT);
+        pose.translate(0.5 + Math.cos(angle) * 0.32, coreHeight(ticks) + Math.sin(angle) * 0.13,
+            0.5 - Math.sin(angle) * 0.32);
+        pose.mulPose(camera);
+        pose.scale(0.19F, 0.19F, 0.19F);
+    }
 
     static Vec3 xpOrbit(float ticks, int orb) {
         double angle = ticks * Math.PI * 2 / ROTATION_TICKS * (orb + 2) + orb * 2.4;

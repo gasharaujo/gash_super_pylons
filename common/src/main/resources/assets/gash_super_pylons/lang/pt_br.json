@@ -136,5 +136,8 @@
   "menu.gash_super_pylons.filter.exact": "Usar item exato",
   "gash_super_pylons.ponder.pylon_basics.header": "Guardar e transferir recursos",
   "gash_super_pylons.ponder.pylon_basics.text_1": "Clique com o botão direito para guardar itens no Super Pylon.",
-  "gash_super_pylons.ponder.pylon_basics.text_2": "Use um Wire na origem e no destino. Selecione os dois pylons outra vez para recuperar o cabo."
+  "gash_super_pylons.ponder.pylon_basics.text_2": "Use um Wire na origem e no destino. Selecione os dois pylons outra vez para recuperar o cabo.",
+  "item.gash_super_pylons.dropper_upgrade": "Upgrade de Ejeção",
+  "item.gash_super_pylons.super_upgrade": "Upgrade Super",
+  "tooltip.gash_super_pylons.dropper_distance": "%1$s (%2$s blocos)"
 }

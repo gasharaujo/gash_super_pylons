@@ -11,6 +11,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
@@ -42,6 +44,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         List<TextureAtlasSprite> stamps = List.of();
         public final ItemStackRenderState storedItem = new ItemStackRenderState();
         public final ItemStackRenderState breakTool = new ItemStackRenderState();
+        final ItemStackRenderState superStar = new ItemStackRenderState();
     }
 
     @Override
@@ -69,6 +72,9 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
             entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.breakTool,
             entity.getBreakTool(), ItemDisplayContext.GUI, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
+        Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.superStar,
+            entity.hasSuperUpgrade() ? new ItemStack(Items.NETHER_STAR) : ItemStack.EMPTY,
+            ItemDisplayContext.FIXED, entity.getLevel(), null, 0);
     }
 
     @Override
@@ -87,6 +93,14 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                 pose.pushPose();
                 PylonUpgradeStamps.placeTool(pose, face, state.stamps.size());
                 state.breakTool.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                pose.popPose();
+            }
+        }
+        if (!state.superStar.isEmpty()) {
+            for (int star = 0; star < PylonAnimation.SUPER_STAR_COUNT; star++) {
+                pose.pushPose();
+                PylonAnimation.placeStar(pose, state.ticks, star, camera.orientation);
+                state.superStar.submit(pose, collector, 0xF000F0, OverlayTexture.NO_OVERLAY, 0);
                 pose.popPose();
             }
         }

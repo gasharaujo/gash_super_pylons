@@ -23,8 +23,11 @@ final class PylonTooltip {
                 case RANGE -> Component.translatable("tooltip.gash_super_pylons.range_info", name, upgrade.value() * 2 + 1);
                 case STORAGE -> Component.translatable("tooltip.gash_super_pylons.capacity_info", name,
                     upgrade == PylonUpgrade.STORAGE_6 ? capacityLabel(Long.MAX_VALUE) : "×" + upgrade.value());
-                default -> upgrade.isEnergy() ? Component.translatable("tooltip.gash_super_pylons.transfer_info",
-                    name, upgrade.energyTransfer() == Integer.MAX_VALUE ? capacityLabel(Long.MAX_VALUE) : upgrade.energyTransfer()) : name;
+                case SPECIALTY -> upgrade == PylonUpgrade.DROPPER ?
+                    Component.translatable("tooltip.gash_super_pylons.dropper_distance", name, pylon.dropDistance()) : name;
+                case ENERGY -> Component.translatable("tooltip.gash_super_pylons.transfer_info",
+                    name, upgrade.energyTransfer() == Integer.MAX_VALUE ? capacityLabel(Long.MAX_VALUE) : upgrade.energyTransfer());
+                default -> name;
             };
             lines.accept(info);
         }

@@ -94,6 +94,12 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public PylonUpgrade getSpecialty() { return upgrades.get(PylonUpgrade.Slot.SPECIALTY); }
     public PylonUpgrade getProcessing() { return upgrades.get(PylonUpgrade.Slot.PROCESSING); }
     public double getFuelUses() { return (double) smeltFuel / FURNACE_TICKS_PER_ITEM; }
+    public boolean hasSuperUpgrade() { return upgrades.containsKey(PylonUpgrade.Slot.SUPER); }
+
+    public int dropDistance() {
+        PylonUpgrade range = upgrades.get(PylonUpgrade.Slot.RANGE);
+        return range == null ? 1 : range.tier() + 1;
+    }
 
     public List<PylonUpgrade> getInstalledUpgrades() {
         var ordered = new ArrayList<>(upgrades.values());
@@ -945,12 +951,36 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             place(server, workTarget(), workDirection.getOpposite());
             return;
         }
+        if (specialty == PylonUpgrade.DROPPER) {
+            dropItems(server, amount);
+            return;
+        }
         if (specialty != null && specialty.generatesFluid()) {
             generateFluid(specialty.generatedFluid(), amount * 100);
         } else if (generatedItem() != Items.AIR && getStoredCount() < getItemCapacity()) {
             if (contents.add(new ItemStack(generatedItem()), amount, getItemCapacity()) > 0) sync();
         }
         if (processor != null) process(server, processor, amount, quantity == null ? 0 : quantity.tier());
+    }
+
+    private void dropItems(ServerLevel server, int amount) {
+        if (contents.count() == 0) return;
+        BlockPos target = worldPosition.relative(workDirection, dropDistance());
+        if (!server.hasChunkAt(target) || !server.getWorldBorder().isWithinBounds(target)) return;
+        Vec3 center = Vec3.atCenterOf(target);
+        int remaining = amount;
+        while (remaining > 0) {
+            ItemStack stack = contents.peek(remaining);
+            if (stack.isEmpty()) break;
+            int count = stack.getCount();
+            ItemEntity drop = new ItemEntity(server, center.x, center.y, center.z, stack);
+            drop.setDeltaMovement(Vec3.ZERO);
+            drop.setDefaultPickUpDelay();
+            if (!server.noCollision(drop) || !server.addFreshEntity(drop)) break;
+            contents.remove(count);
+            remaining -= count;
+        }
+        if (remaining != amount) sync();
     }
 
     private void tickTransfers(ServerLevel server) {
