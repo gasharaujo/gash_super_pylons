@@ -7,6 +7,7 @@ import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -14,10 +15,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.storage.TagValueOutput;
@@ -35,6 +40,7 @@ import net.neoforged.neoforge.transfer.fluid.FluidUtil;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.item.ItemUtil;
 import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
@@ -57,9 +63,15 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putString("upgrades", saveUpgrades());
+        if (hasFilter()) {
+            ValueOutput filterData = output.child("filter");
+            filterData.putBoolean("allow_list", allowList);
+            ContainerHelper.saveAllItems(filterData, filterItems(), false);
+        }
+        if (smeltFuel > 0) output.putLong("smelt_fuel", smeltFuel);
         if (getExperience() > 0) output.putLong("experience", getExperience());
         if (getEnergy() > 0) output.putInt("energy", getEnergy());
-        if (!harvestBuffer.isEmpty()) output.store("harvest", ItemStack.CODEC.listOf(), harvestBuffer);
+        if (!outputBuffer.isEmpty()) output.store("harvest", ItemStack.CODEC.listOf(), outputBuffer);
         output.putLong("stored_count", getStoredCount());
         output.putLong("fluid_amount", tank.amount());
         if (getStoredCount() > 0) output.store("stored_item", ItemStack.CODEC, getStoredItem());
@@ -70,9 +82,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         loadUpgrades(input.getStringOr("upgrades", ""));
+        ValueInput filterData = input.childOrEmpty("filter");
+        NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(filterData, filterEntries);
+        loadFilter(filterEntries, filterData.getBooleanOr("allow_list", false));
+        smeltFuel = getSpecialty() == PylonUpgrade.SMELT ? Math.max(0, input.getLongOr("smelt_fuel", 0)) : 0;
         loadSpecialtyAmounts(input.getLongOr("experience", 0), input.getIntOr("energy", 0));
-        harvestBuffer.clear();
-        harvestBuffer.addAll(input.read("harvest", ItemStack.CODEC.listOf()).orElse(List.of()));
+        outputBuffer.clear();
+        outputBuffer.addAll(input.read("harvest", ItemStack.CODEC.listOf()).orElse(List.of()));
         contents.restore(input.read("stored_item", ItemStack.CODEC).orElse(ItemStack.EMPTY), input.getLongOr("stored_count", 0), getItemCapacity());
         FluidResource resource = input.read("fluid_template", FluidResource.CODEC).orElse(FluidResource.EMPTY);
         tank.restore(new PylonTank.State<>(resource.isEmpty() || !canFillFluid(resource.getFluid()) ? null : resource,
@@ -148,9 +165,41 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected BiFunction<ItemStack, Boolean, ItemStack> harvestOutput(ServerLevel server, BlockPos target) {
+    protected BiFunction<ItemStack, Boolean, ItemStack> inventoryOutput(ServerLevel server, BlockPos target) {
         ResourceHandler<ItemResource> handler = server.getCapability(Capabilities.Item.BLOCK, target, Direction.UP);
         return handler == null ? null : (stack, simulate) -> ItemUtil.insertItemReturnRemaining(handler, stack, simulate, null);
+    }
+
+    @Override
+    protected SmeltingResult smeltingRecipe(ServerLevel server, ItemStack input) {
+        var recipeInput = new SingleRecipeInput(input);
+        return server.getServer().getRecipeManager().getRecipeFor(RecipeType.SMELTING, recipeInput, server)
+            .map(found -> new SmeltingResult(found.value().assemble(recipeInput), found.value().cookingTime()))
+            .orElse(null);
+    }
+
+    @Override
+    protected int takeSmeltingFuel(ServerLevel server, BlockPos pos, Direction side) {
+        ResourceHandler<ItemResource> handler = server.getCapability(Capabilities.Item.BLOCK, pos, side);
+        if (handler == null) return 0;
+        for (int slot = 0; slot < handler.size(); slot++) {
+            ItemResource resource = handler.getResource(slot);
+            if (resource.isEmpty()) continue;
+            ItemStack stack = resource.toStack(1);
+            int burnTime = stack.getBurnTime(RecipeType.SMELTING, server.fuelValues());
+            if (burnTime <= 0) continue;
+            ItemStack leftover;
+            try (Transaction tx = Transaction.openRoot()) {
+                if (handler.extract(slot, resource, 1, tx) != 1) continue;
+                var remainder = stack.getCraftingRemainder();
+                leftover = remainder == null ? ItemStack.EMPTY :
+                    ItemUtil.insertItemReturnRemaining(handler, remainder.create(), false, tx);
+                tx.commit();
+            }
+            if (!leftover.isEmpty()) Block.popResource(server, pos, leftover);
+            return burnTime;
+        }
+        return 0;
     }
 
     @Override

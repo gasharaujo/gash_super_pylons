@@ -11,12 +11,16 @@ import java.util.stream.Collectors;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -36,10 +40,15 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     private static final int BASE_FLUID_CAPACITY_MB = 32_000;
     private static final int CONFIRM_TICKS = 100;
     private static final int MAX_LOOSE_STACKS = 64;
+    private static final int SMELT_ENERGY_COST = 1000;
+    static final int FILTER_SIZE = 27;
 
     protected final PylonContents contents = new PylonContents();
     protected final PylonEnergy energy = new PylonEnergy();
-    protected final List<ItemStack> harvestBuffer = new ArrayList<>();
+    protected final List<ItemStack> outputBuffer = new ArrayList<>();
+    protected final SimpleContainer filter = new SimpleContainer(FILTER_SIZE);
+    protected boolean allowList;
+    protected long smeltFuel;
     private final EnumMap<PylonUpgrade.Slot, PylonUpgrade> upgrades = new EnumMap<>(PylonUpgrade.Slot.class);
     private long experience;
     private boolean energyUpdatePending;
@@ -61,6 +70,21 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     public PylonUpgrade getSpecialty() { return upgrades.get(PylonUpgrade.Slot.SPECIALTY); }
 
     public List<PylonUpgrade> getInstalledUpgrades() { return List.copyOf(upgrades.values()); }
+
+    public boolean hasFilter() { return upgrades.containsKey(PylonUpgrade.Slot.FILTER); }
+
+    protected NonNullList<ItemStack> filterItems() {
+        NonNullList<ItemStack> entries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
+        for (int i = 0; i < FILTER_SIZE; i++) entries.set(i, filter.getItem(i));
+        return entries;
+    }
+
+    protected void loadFilter(NonNullList<ItemStack> entries, boolean allowList) {
+        filter.clearContent();
+        this.allowList = hasFilter() && allowList;
+        if (!hasFilter()) return;
+        for (int i = 0; i < FILTER_SIZE; i++) filter.setItem(i, entries.get(i).copyWithCount(1));
+    }
 
     public long getExperience() { return experience; }
     public boolean isEnergy() { return getEnergyCapacity() > 0; }
@@ -113,7 +137,11 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     protected abstract void notifyPlayer(Player player, Component message);
     protected abstract long orbExperience(ExperienceOrb orb);
     protected abstract void transferEnergy(ServerLevel server);
-    protected abstract BiFunction<ItemStack, Boolean, ItemStack> harvestOutput(ServerLevel server, BlockPos target);
+    protected abstract BiFunction<ItemStack, Boolean, ItemStack> inventoryOutput(ServerLevel server, BlockPos target);
+    protected abstract SmeltingResult smeltingRecipe(ServerLevel server, ItemStack input);
+    protected abstract int takeSmeltingFuel(ServerLevel server, BlockPos pos, Direction side);
+
+    protected record SmeltingResult(ItemStack output, int fuelTicks) {}
 
     private Item generatedItem() {
         PylonUpgrade specialty = getSpecialty();
@@ -124,6 +152,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         if (!(level instanceof ServerLevel) || isRemoved()) return 0;
         PylonUpgrade specialty = getSpecialty();
         if (specialty != null && specialty.locksItems()) return 0;
+        if (!allowsItem(input)) return 0;
         Item output = generatedItem();
         if (output != Items.AIR && !PylonItemRules.exactlyEqual(new ItemStack(output), input)) return 0;
         int inserted = contents.insert(input, getItemCapacity());
@@ -131,11 +160,27 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         return inserted;
     }
 
+    private boolean allowsItem(ItemStack input) {
+        if (!hasFilter() || input.isEmpty()) return true;
+        for (int i = 0; i < FILTER_SIZE; i++) {
+            if (PylonItemRules.exactlyEqual(filter.getItem(i), input)) return allowList;
+        }
+        return !allowList;
+    }
+
     public boolean use(Player player, InteractionHand hand) {
         if (player.isSpectator()) return false;
         ItemStack held = player.getItemInHand(hand);
         if (held.isEmpty()) {
-            return hand == InteractionHand.MAIN_HAND && player.isShiftKeyDown() && tryRemoveUpgrade(player);
+            if (hand != InteractionHand.MAIN_HAND) return false;
+            if (player.isShiftKeyDown()) return tryRemoveUpgrade(player);
+            if (!hasFilter() || !player.getOffhandItem().isEmpty()) return false;
+            if (player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                    (id, inventory, viewer) -> new PylonFilterMenu(id, inventory, this),
+                    Component.translatable("menu.gash_super_pylons.filter")));
+            }
+            return true;
         }
         if (held.getItem() instanceof PylonUpgradeItem upgrade) {
             if (level instanceof ServerLevel) install(player, held, upgrade.upgrade());
@@ -150,6 +195,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     }
 
     private void install(Player player, ItemStack held, PylonUpgrade next) {
+        if (next == PylonUpgrade.PULVERIZE) {
+            warn(player, "upgrade_disabled");
+            return;
+        }
         PylonUpgrade previous = upgrades.get(next.slot());
         if (previous != null && (previous.tier() >= next.tier() ||
             (next.slot() == PylonUpgrade.Slot.SPECIALTY && !(previous.isEnergy() && next.isEnergy())))) {
@@ -188,7 +237,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         }
         if ((upgrade == PylonUpgrade.XP_TANK && getExperience() > 0) ||
             (upgrade.isEnergy() && getEnergy() > 0) ||
-            (upgrade == PylonUpgrade.HARVESTER && !harvestBuffer.isEmpty())) {
+            ((upgrade == PylonUpgrade.HARVESTER || upgrade == PylonUpgrade.SMELT) && !outputBuffer.isEmpty())) {
             warn(player, "specialty_needs_empty");
             return true;
         }
@@ -208,6 +257,11 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             clearFluid();
         }
         upgrades.remove(upgrade.slot());
+        if (upgrade == PylonUpgrade.FILTER) {
+            filter.clearContent();
+            allowList = false;
+        }
+        if (upgrade == PylonUpgrade.SMELT) smeltFuel = 0;
         warnedPlayer = null;
         if (upgrade.isTank() || upgrade.isEnergy()) capabilitiesChanged();
         sync();
@@ -269,11 +323,80 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             return;
         }
         int amount = quantity == null ? 1 : quantity.value();
+        if (specialty == PylonUpgrade.MAGNET) {
+            collectItems(server, amount);
+            return;
+        }
+        if (specialty == PylonUpgrade.SMELT) {
+            smelt(server);
+            return;
+        }
         if (specialty.generatesFluid()) {
             generateFluid(specialty.generatedFluid(), amount * 100);
         } else if (specialty.generatedItem() != Items.AIR && getStoredCount() < getItemCapacity()) {
             if (contents.add(new ItemStack(specialty.generatedItem()), amount, getItemCapacity()) > 0) sync();
         }
+    }
+
+    private void collectItems(ServerLevel server, int maximum) {
+        if (getStoredCount() >= getItemCapacity()) return;
+        int radius = range();
+        AABB block = new AABB(worldPosition);
+        for (ItemEntity entity : server.getEntitiesOfClass(ItemEntity.class, block.inflate(radius),
+                item -> item.isAlive() && block.distanceToSqr(item.position()) <= radius * radius)) {
+            ItemStack stack = entity.getItem();
+            ItemStack sample = stack.copyWithCount(Math.min(maximum, stack.getCount()));
+            int inserted = insertFrom(sample);
+            if (inserted == 0) continue;
+            if (inserted == stack.getCount()) entity.discard();
+            else entity.setItem(stack.copyWithCount(stack.getCount() - inserted));
+            maximum -= inserted;
+            if (maximum == 0 || getStoredCount() >= getItemCapacity()) return;
+        }
+    }
+
+    private void smelt(ServerLevel server) {
+        var output = outputBelow(server);
+        if (output == null) return;
+        flushOutput(output);
+        if (!outputBuffer.isEmpty() || getStoredCount() == 0) return;
+        ItemStack input = getStoredItem();
+        SmeltingResult recipe = smeltingRecipe(server, input);
+        if (recipe == null || recipe.output().isEmpty() || !output.apply(recipe.output().copy(), true).isEmpty()) return;
+        int cost = Math.max(1, recipe.fuelTicks());
+        if (smeltFuel >= cost) {
+            smeltFuel -= cost;
+        } else if (!consumeSmeltingEnergy(server)) {
+            for (Direction direction : Direction.Plane.HORIZONTAL) {
+                BlockPos source = worldPosition.relative(direction);
+                if (!server.hasChunkAt(source)) continue;
+                int taken = takeSmeltingFuel(server, source, direction.getOpposite());
+                if (taken <= 0) continue;
+                smeltFuel += taken;
+                setChanged();
+                break;
+            }
+            if (smeltFuel < cost) return;
+            smeltFuel -= cost;
+        }
+        if (isRemoved() || !PylonItemRules.exactlyEqual(input, getStoredItem())) return;
+        contents.extract(1);
+        outputBuffer.add(recipe.output());
+        sync();
+        flushOutput(output);
+    }
+
+    private boolean consumeSmeltingEnergy(ServerLevel server) {
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos source = worldPosition.relative(direction);
+            if (server.hasChunkAt(source) && server.getBlockEntity(source) instanceof PylonBlockEntityBase pylon &&
+                pylon.energyLimit(false, SMELT_ENERGY_COST) == SMELT_ENERGY_COST) {
+                pylon.energy.transfer(false, SMELT_ENERGY_COST, server.getGameTime());
+                pylon.energyChanged();
+                return true;
+            }
+        }
+        return false;
     }
 
     private void transferExperience(ServerLevel server, int levels) {
@@ -305,9 +428,13 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             player -> player.isAlive() && !player.isSpectator() && column.contains(player.position()));
     }
 
-    private Iterable<BlockPos> farmArea() {
+    private int range() {
         PylonUpgrade range = upgrades.get(PylonUpgrade.Slot.RANGE);
-        int radius = range == null ? 1 : range.value();
+        return range == null ? 1 : range.value();
+    }
+
+    private Iterable<BlockPos> farmArea() {
+        int radius = range();
         return BlockPos.betweenClosed(worldPosition.offset(-radius, -1, -radius), worldPosition.offset(radius, 1, radius));
     }
 
@@ -332,14 +459,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
     }
 
     private void harvest(ServerLevel server) {
-        BlockPos target = worldPosition.below();
-        if (!server.hasChunkAt(target)) return;
-        BiFunction<ItemStack, Boolean, ItemStack> output = harvestOutput(server, target);
+        BiFunction<ItemStack, Boolean, ItemStack> output = outputBelow(server);
         if (output == null) return;
-        if (!harvestBuffer.isEmpty()) {
-            flushHarvest(output);
-            if (!harvestBuffer.isEmpty()) return;
-        }
+        flushOutput(output);
+        if (!outputBuffer.isEmpty()) return;
         ServerPlayer automation = getAutomationPlayer(server, AUTOMATION_PROFILE);
         for (BlockPos pos : farmArea()) {
             if (!server.hasChunkAt(pos)) continue;
@@ -349,15 +472,20 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
             boolean canInsert = harvest.drops().stream()
                 .anyMatch(drop -> output.apply(drop.copy(), true).getCount() < drop.getCount());
             if (!canInsert || !server.setBlockAndUpdate(pos, harvest.remainder())) continue;
-            harvestBuffer.addAll(harvest.drops());
+            outputBuffer.addAll(harvest.drops());
             setChanged();
-            flushHarvest(output);
+            flushOutput(output);
             return;
         }
     }
 
-    private void flushHarvest(BiFunction<ItemStack, Boolean, ItemStack> output) {
-        for (Iterator<ItemStack> it = harvestBuffer.iterator(); it.hasNext();) {
+    private BiFunction<ItemStack, Boolean, ItemStack> outputBelow(ServerLevel server) {
+        BlockPos target = worldPosition.below();
+        return server.hasChunkAt(target) ? inventoryOutput(server, target) : null;
+    }
+
+    private void flushOutput(BiFunction<ItemStack, Boolean, ItemStack> output) {
+        for (Iterator<ItemStack> it = outputBuffer.iterator(); it.hasNext();) {
             ItemStack stack = it.next();
             ItemStack remaining = output.apply(stack.copy(), false);
             if (remaining.getCount() == stack.getCount()) continue;
@@ -425,8 +553,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity {
         if (!(level instanceof ServerLevel) || contentsDropped) return;
         contentsDropped = true;
         clearFluid();
-        for (ItemStack harvest : harvestBuffer) Block.popResource(level, worldPosition, harvest);
-        harvestBuffer.clear();
+        for (ItemStack output : outputBuffer) Block.popResource(level, worldPosition, output);
+        outputBuffer.clear();
         packedDrop = hasPackedDrop();
         if (packedDrop) {
             Block.popResource(level, worldPosition, createPackedDrop());

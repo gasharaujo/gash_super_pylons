@@ -41,7 +41,7 @@ Itens com a tag **`#gsp:modifier_item`** ficam reservados para modificadores. A 
 
 ### Upgrades
 
-Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é velocidade, quantidade, alcance, especialidade e armazenamento.
+Os upgrades estão na aba **Blocos funcionais** do Criativo. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. A prioridade é filtro, velocidade, quantidade, alcance, especialidade e armazenamento.
 
 Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
 
@@ -64,7 +64,7 @@ Remover armazenamento exige que o conteúdo caiba na capacidade restante. Na que
 
 #### XP, energia e agricultura
 
-Os novos upgrades usam o ícone do Upgrade Base como provisório. Eles estão disponíveis no Criativo e por comando.
+Os upgrades estão disponíveis no Criativo e por comando.
 
 - **XP Tank** coleta orbes a até 2 blocos da estrutura e drena jogadores logo acima. O Speed define até quantos níveis são drenados ou entregues por jogador por tick. Sem Speed, a taxa é de 1 nível. A taxa nos tiers I–VI é de 2, 4, 8, 16, 32 e 64 níveis. O tanque guarda pontos de XP, para preservar a diferença de custo entre níveis. O jogador logo abaixo pode receber progresso parcial quando sobrarem poucos pontos.
 - **Energy** puxa FE pela face superior, carrega um item compatível no pedestal e passa a energia restante pela face inferior. A carga do item usa o mesmo orçamento de saída da face inferior. No modo Energy o pedestal comporta um item. Esvazie o XP Tank ou o Energy para retirar o upgrade. Quebrar o pylon com XP ou FE guarda o saldo no bloco junto com os upgrades.
@@ -80,6 +80,13 @@ Os novos upgrades usam o ícone do Upgrade Base como provisório. Eles estão di
 | IV | 100.000.000 FE | 100.000 FE | 9×9 |
 | V | 400.000.000 FE | 400.000 FE | 11×11 |
 | VI | 2.000.000.000 FE | Ilimitada | 13×13 |
+
+#### Filtro, ímã e fundição
+
+- **Filter** abre com botão direito e as mãos vazias. Use um item no cursor para marcar um dos 27 slots e botão direito para limpar a marca. O filtro começa no modo de bloqueio e pode alternar para a lista de permissão. Ele compara o item e seus dados exatos tanto nos depósitos manuais quanto na coleta do Magnet.
+- **Magnet** coleta itens caídos a até 1–6 blocos da estrutura conforme o Range. A coleta começa com um item a cada 40 ticks e segue os valores de Speed e Quantity. Os itens entram no armazenamento do pylon e seguem o limite e a regra de correspondência exata.
+- **Smelt** usa receitas de fornalha e envia o resultado ao inventário imediatamente abaixo. Processa um item por ciclo de Speed. Usa o saldo de combustível já consumido, 1.000 FE de um pylon Energy lateral ou combustível de um inventário lateral, nessa ordem. O combustível rende o mesmo total de ticks de uma fornalha, e itens como baldes retornam ao inventário de origem quando há espaço.
+- **Pulverize**, **Wrench** e **Paint Tool** estão disponíveis no Criativo como itens reservados. A conversão planejada para o Pulverize é de 2, 4 ou 6 pós de `c:dust` por minério, respectivamente sem Quantity, com Quantity IV ou com Quantity VI.
 
 ### Overlays opcionais
 

@@ -51,10 +51,14 @@ public enum PylonUpgrade {
     ENERGY_5("energy_upgrade_5", Slot.SPECIALTY, 5, 400_000_000, null, null),
     ENERGY_6("energy_upgrade_6", Slot.SPECIALTY, 6, 2_000_000_000, null, null),
     FERTILIZER("fertilizer_upgrade", Slot.SPECIALTY, 1, 0, null, null),
-    HARVESTER("harvester_upgrade", Slot.SPECIALTY, 1, 0, null, null);
+    HARVESTER("harvester_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    FILTER("filter_upgrade", Slot.FILTER, 1, 0, null, null),
+    MAGNET("magnet_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    SMELT("smelt_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    PULVERIZE("pulverize_upgrade", Slot.SPECIALTY, 1, 0, null, null);
 
     // Iteration order is also the order used for removal.
-    public enum Slot { SPEED, QUANTITY, RANGE, SPECIALTY, STORAGE }
+    public enum Slot { FILTER, SPEED, QUANTITY, RANGE, SPECIALTY, STORAGE }
 
     private final String id;
     private final Slot slot;

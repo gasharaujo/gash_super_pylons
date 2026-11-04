@@ -1,3 +1,6 @@
 {
-  "parent": "gash_super_pylons:item/upgrade_base"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gash_super_pylons:item/range_upgrade_5"
+  }
 }

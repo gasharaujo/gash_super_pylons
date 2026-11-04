@@ -61,5 +61,16 @@
   "message.gash_super_pylons.energy_needs_single_item": "Deixe no máximo um item no pylon antes de instalar Energia.",
   "message.gash_super_pylons.specialty_needs_empty": "Esvazie o conteúdo deste upgrade antes de removê-lo.",
   "tooltip.gash_super_pylons.experience": "XP armazenado: %s pontos",
-  "tooltip.gash_super_pylons.energy": "Energia armazenada: %s / %s FE"
+  "tooltip.gash_super_pylons.energy": "Energia armazenada: %s / %s FE",
+  "item.gash_super_pylons.filter_upgrade": "Upgrade de Filtro",
+  "item.gash_super_pylons.magnet_upgrade": "Upgrade de Ímã",
+  "item.gash_super_pylons.smelt_upgrade": "Upgrade de Fundição",
+  "item.gash_super_pylons.pulverize_upgrade": "Upgrade de Pulverização",
+  "item.gash_super_pylons.wrench": "Chave Inglesa",
+  "item.gash_super_pylons.paint_tool": "Ferramenta de Pintura",
+  "menu.gash_super_pylons.filter": "Filtro do Pylon",
+  "menu.gash_super_pylons.filter.allow": "Permitir lista",
+  "menu.gash_super_pylons.filter.block": "Bloquear lista",
+  "menu.gash_super_pylons.filter.help": "Use o cursor para marcar um slot. Clique com o botão direito para limpar. Este botão alterna entre permitir e bloquear os itens marcados.",
+  "message.gash_super_pylons.upgrade_disabled": "Este upgrade está reservado para uma versão futura."
 }

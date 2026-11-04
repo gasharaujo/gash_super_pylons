@@ -5,6 +5,7 @@ import java.util.function.BiFunction;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -12,12 +13,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.FakePlayerFactory;
@@ -52,11 +58,18 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putString("upgrades", saveUpgrades());
+        if (hasFilter()) {
+            CompoundTag filterData = new CompoundTag();
+            filterData.putBoolean("allow_list", allowList);
+            ContainerHelper.saveAllItems(filterData, filterItems());
+            tag.put("filter", filterData);
+        }
+        if (smeltFuel > 0) tag.putLong("smelt_fuel", smeltFuel);
         if (getExperience() > 0) tag.putLong("experience", getExperience());
         if (getEnergy() > 0) tag.putInt("energy", getEnergy());
-        if (!harvestBuffer.isEmpty()) {
+        if (!outputBuffer.isEmpty()) {
             ListTag harvest = new ListTag();
-            for (ItemStack stack : harvestBuffer) harvest.add(stack.save(new CompoundTag()));
+            for (ItemStack stack : outputBuffer) harvest.add(stack.save(new CompoundTag()));
             tag.put("harvest", harvest);
         }
         tag.putLong("stored_count", getStoredCount());
@@ -69,12 +82,17 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public void load(CompoundTag tag) {
         super.load(tag);
         loadUpgrades(tag.getString("upgrades"));
+        CompoundTag filterData = tag.getCompound("filter");
+        NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(filterData, filterEntries);
+        loadFilter(filterEntries, filterData.getBoolean("allow_list"));
+        smeltFuel = getSpecialty() == PylonUpgrade.SMELT ? Math.max(0, tag.getLong("smelt_fuel")) : 0;
         loadSpecialtyAmounts(tag.getLong("experience"), tag.getInt("energy"));
-        harvestBuffer.clear();
+        outputBuffer.clear();
         ListTag harvest = tag.getList("harvest", Tag.TAG_COMPOUND);
         for (int i = 0; i < harvest.size(); i++) {
             ItemStack stack = ItemStack.of(harvest.getCompound(i));
-            if (!stack.isEmpty()) harvestBuffer.add(stack);
+            if (!stack.isEmpty()) outputBuffer.add(stack);
         }
         contents.restore(ItemStack.of(tag.getCompound("stored_item")), tag.getLong("stored_count"), getItemCapacity());
         FluidStack resource = FluidStack.loadFluidStackFromNBT(tag.getCompound("fluid_template"));
@@ -177,10 +195,45 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected BiFunction<ItemStack, Boolean, ItemStack> harvestOutput(ServerLevel server, BlockPos target) {
-        var entity = server.getBlockEntity(target);
-        IItemHandler handler = entity == null ? null : entity.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+    protected BiFunction<ItemStack, Boolean, ItemStack> inventoryOutput(ServerLevel server, BlockPos target) {
+        IItemHandler handler = itemHandlerAt(server, target, Direction.UP);
         return handler == null ? null : (stack, simulate) -> ItemHandlerHelper.insertItemStacked(handler, stack, simulate);
+    }
+
+
+    @Override
+    protected SmeltingResult smeltingRecipe(ServerLevel server, ItemStack input) {
+        var recipeInput = new SimpleContainer(input);
+        return server.getRecipeManager().getRecipeFor(RecipeType.SMELTING, recipeInput, server)
+            .map(found -> {
+                var recipe = found;
+                return new SmeltingResult(recipe.assemble(recipeInput, server.registryAccess()), recipe.getCookingTime());
+            }).orElse(null);
+    }
+
+    @Override
+    protected int takeSmeltingFuel(ServerLevel server, BlockPos pos, Direction side) {
+        IItemHandler handler = itemHandlerAt(server, pos, side);
+        if (handler == null) return 0;
+        for (int slot = 0; slot < handler.getSlots(); slot++) {
+            ItemStack fuel = handler.extractItem(slot, 1, true);
+            int burnTime = ForgeHooks.getBurnTime(fuel, RecipeType.SMELTING);
+            if (burnTime <= 0) continue;
+            fuel = handler.extractItem(slot, 1, false);
+            if (fuel.isEmpty()) continue;
+            ItemStack remainder = fuel.getCraftingRemainingItem();
+            if (!remainder.isEmpty()) {
+                ItemStack leftover = ItemHandlerHelper.insertItemStacked(handler, remainder, false);
+                if (!leftover.isEmpty()) Block.popResource(server, pos, leftover);
+            }
+            return burnTime;
+        }
+        return 0;
+    }
+
+    private static IItemHandler itemHandlerAt(ServerLevel server, BlockPos pos, Direction side) {
+        var entity = server.getBlockEntity(pos);
+        return entity == null ? null : entity.getCapability(ForgeCapabilities.ITEM_HANDLER, side).orElse(null);
     }
 
     @Override

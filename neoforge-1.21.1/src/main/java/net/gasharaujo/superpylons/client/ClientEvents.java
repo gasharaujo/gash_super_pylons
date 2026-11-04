@@ -1,6 +1,7 @@
 package net.gasharaujo.superpylons.client;
 
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -12,6 +13,11 @@ import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 @EventBusSubscriber(modid = SuperPylonsMod.MOD_ID, value = Dist.CLIENT)
 public final class ClientEvents {
     private ClientEvents() {}
+
+    @SubscribeEvent
+    public static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(SuperPylonsMod.FILTER_MENU.get(), PylonFilterScreen::new);
+    }
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

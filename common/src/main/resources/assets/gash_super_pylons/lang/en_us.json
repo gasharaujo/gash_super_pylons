@@ -61,5 +61,16 @@
   "message.gash_super_pylons.energy_needs_single_item": "Leave at most one item on the pylon before installing Energy.",
   "message.gash_super_pylons.specialty_needs_empty": "Empty this upgrade's contents before removing it.",
   "tooltip.gash_super_pylons.experience": "Stored XP: %s points",
-  "tooltip.gash_super_pylons.energy": "Stored energy: %s / %s FE"
+  "tooltip.gash_super_pylons.energy": "Stored energy: %s / %s FE",
+  "item.gash_super_pylons.filter_upgrade": "Filter Upgrade",
+  "item.gash_super_pylons.magnet_upgrade": "Magnet Upgrade",
+  "item.gash_super_pylons.smelt_upgrade": "Smelt Upgrade",
+  "item.gash_super_pylons.pulverize_upgrade": "Pulverize Upgrade",
+  "item.gash_super_pylons.wrench": "Wrench",
+  "item.gash_super_pylons.paint_tool": "Paint Tool",
+  "menu.gash_super_pylons.filter": "Pylon Filter",
+  "menu.gash_super_pylons.filter.allow": "Allow list",
+  "menu.gash_super_pylons.filter.block": "Block list",
+  "menu.gash_super_pylons.filter.help": "Use the cursor to mark a slot. Right-click a slot to clear it. This button switches between allowing and blocking the marked items.",
+  "message.gash_super_pylons.upgrade_disabled": "This upgrade is reserved for a future version."
 }

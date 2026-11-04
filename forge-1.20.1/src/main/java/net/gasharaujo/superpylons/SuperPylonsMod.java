@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import net.gasharaujo.superpylons.block.PylonFilterMenu;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 
@@ -20,6 +21,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -46,6 +49,14 @@ public final class SuperPylonsMod {
         BLOCK_ENTITIES.register("super_pylon", () ->
             BlockEntityType.Builder.of(SuperPylonBlockEntity::new, SUPER_PYLON.get()).build(null));
 
+    private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, MOD_ID);
+    public static final RegistryObject<MenuType<PylonFilterMenu>> FILTER_MENU = MENUS.register("pylon_filter",
+        () -> new MenuType<>(PylonFilterMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final Supplier<? extends Item> WRENCH =
+        ITEMS.register("wrench", () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final Supplier<? extends Item> PAINT_TOOL =
+        ITEMS.register("paint_tool", () -> new Item(new Item.Properties().stacksTo(1)));
     public static final Supplier<? extends Item> UPGRADE_BASE =
         ITEMS.register("upgrade_base", () -> new Item(new Item.Properties()));
     public static final Map<PylonUpgrade, Supplier<? extends Item>> UPGRADES = registerUpgrades();
@@ -63,6 +74,7 @@ public final class SuperPylonsMod {
         BLOCKS.register(bus);
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
+        MENUS.register(bus);
         bus.addListener(this::addCreativeItem);
         bus.addListener(this::enqueueIntegrations);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
@@ -79,6 +91,8 @@ public final class SuperPylonsMod {
         if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(SUPER_PYLON_ITEM.get());
             event.accept(UPGRADE_BASE.get());
+            event.accept(WRENCH.get());
+            event.accept(PAINT_TOOL.get());
             UPGRADES.values().forEach(upgrade -> event.accept(upgrade.get()));
         }
     }
