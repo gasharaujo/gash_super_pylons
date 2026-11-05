@@ -148,7 +148,7 @@ Shift + botão direito com a mão vazia devolve o Command Block na ordem normal 
 
 ## Enchanter e Anvil
 
-Os dois upgrades trabalham com um item de entrada por vez no pylon principal e exigem dois auxiliares vinculados com a Wrench: um com **XP Tank** e outro com os materiais. Os dois primeiros vínculos definem esses auxiliares, em qualquer ordem. O alcance é de 1 a 5 blocos entre centros, em qualquer direção. Speed define o intervalo de operação: 60/40/30/20/10/5/1 ticks. O resultado substitui o item no núcleo e fica disponível para retirada manual ou por automação. Se faltar XP, material ou uma combinação válida, nada é consumido. Jade, WTHIT e The One Probe mostram o estado e o custo em pontos de XP.
+Os dois upgrades trabalham com um item de entrada por vez no pylon principal e exigem dois auxiliares vinculados com a Wrench: um com **XP Tank** e outro com os materiais. Os dois primeiros vínculos definem esses auxiliares, em qualquer ordem. O alcance é de 1 a 5 blocos entre centros, em qualquer direção. Speed define o intervalo de operação: 60/40/30/20/10/5/1 ticks. O resultado vai automaticamente para o inventário do lado de trabalho. Se a saída não puder receber, o item pronto permanece no núcleo para nova tentativa ou retirada manual. Se faltar XP, material ou uma combinação válida, nada é consumido. Jade, WTHIT e The One Probe mostram o estado e o custo em pontos de XP.
 
 ### Enchanter
 

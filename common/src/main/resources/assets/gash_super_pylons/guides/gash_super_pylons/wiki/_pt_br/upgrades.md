@@ -43,7 +43,7 @@ O Command Block aparece na barra e no overlay, com quantidades infinitas indicad
 
 ## Enchanter e Anvil
 
-Com a Wrench no modo Vincular, use Shift + botão direito no principal e botão direito num XP Tank e num auxiliar de itens. A ordem desses dois auxiliares é livre. Eles podem ficar entre 1 e 5 blocos do principal, medidos entre centros, inclusive na vertical e na diagonal. As duas máquinas trabalham com um item por vez; o resultado substitui a entrada no núcleo e pode ser retirado por automação. Speed controla o intervalo. Uma operação incompleta não consome recursos.
+Com a Wrench no modo Vincular, use Shift + botão direito no principal e botão direito num XP Tank e num auxiliar de itens. A ordem desses dois auxiliares é livre. Eles podem ficar entre 1 e 5 blocos do principal, medidos entre centros, inclusive na vertical e na diagonal. As duas máquinas trabalham com um item por vez; o resultado vai automaticamente para o inventário do lado de trabalho (abaixo por padrão). Sem espaço na saída, o item pronto fica no núcleo até poder sair ou ser retirado manualmente. Speed controla o intervalo. Uma operação incompleta não consome recursos.
 
 ### Enchanter
 

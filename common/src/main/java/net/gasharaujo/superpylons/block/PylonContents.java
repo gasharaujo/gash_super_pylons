@@ -9,6 +9,7 @@ public final class PylonContents {
     public static final int CAPACITY = 32 * 64;
     private ItemStack item = ItemStack.EMPTY;
     private long count;
+    private boolean workshopOutput;
     private final BooleanSupplier creative;
     private final LongSupplier capacity;
 
@@ -20,11 +21,23 @@ public final class PylonContents {
 
     long available() { return count > 0 && creative.getAsBoolean() ? Math.max(count, capacity.getAsLong()) : count; }
 
-    record State(ItemStack item, long count) {}
-    State snapshot() { return new State(item, count); }
+    // An automation transaction must roll back the output marker together with the stored item.
+    record State(ItemStack item, long count, boolean workshopOutput) {}
+    State snapshot() { return new State(item, count, workshopOutput); }
     void restore(State state) {
         item = state.item();
         count = state.count();
+        workshopOutput = state.workshopOutput();
+    }
+
+    boolean isWorkshopOutput() { return workshopOutput; }
+    void markWorkshopOutput() { workshopOutput = count > 0; }
+    void clearWorkshopOutput() { workshopOutput = false; }
+
+    void updateChargedItem(ItemStack stack) {
+        boolean finished = workshopOutput;
+        restore(stack, count, capacity.getAsLong());
+        if (finished) markWorkshopOutput();
     }
 
     public long count() { return count; }
@@ -77,7 +90,10 @@ public final class PylonContents {
     void remove(long amount) {
         if (creative.getAsBoolean()) return;
         count -= amount;
-        if (count == 0) item = ItemStack.EMPTY;
+        if (count == 0) {
+            item = ItemStack.EMPTY;
+            clearWorkshopOutput();
+        }
     }
 
     ItemStack peek(int requested) {
@@ -92,5 +108,6 @@ public final class PylonContents {
     public void restore(ItemStack savedItem, long savedCount, long capacity) {
         count = savedItem.isEmpty() ? 0 : Math.max(0, Math.min(capacity, savedCount));
         item = count == 0 ? ItemStack.EMPTY : savedItem.copyWithCount(1);
+        clearWorkshopOutput();
     }
 }

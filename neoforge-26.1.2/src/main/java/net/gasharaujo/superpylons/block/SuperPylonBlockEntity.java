@@ -122,7 +122,6 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadExcavationCursor(input.getIntOr("excavation_cursor", 0));
         loadAuxiliaries(input.getStringOr("auxiliaries", ""));
         loadWorkshopOwner(input.getStringOr("workshop_owner", ""));
-        loadWorkshopStatus(input.getStringOr("workshop_status", "connections"), input.getLongOr("workshop_cost", 0));
         loadShelfItems(input.read("enchanting_shelves", ItemStack.CODEC.listOf()).orElse(List.of()));
         loadWorkDirection(input.getStringOr("work_direction", ""));
         loadForcedRadius(input.getIntOr("forced_radius", 0));
@@ -139,6 +138,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         outputBuffer.clear();
         outputBuffer.addAll(input.read("harvest", ItemStack.CODEC.listOf()).orElse(List.of()));
         contents.restore(input.read("stored_item", ItemStack.CODEC).orElse(ItemStack.EMPTY), input.getLongOr("stored_count", 0), getItemCapacity());
+        loadWorkshopStatus(input.getStringOr("workshop_status", "connections"), input.getLongOr("workshop_cost", 0));
         FluidResource resource = input.read("fluid_template", FluidResource.CODEC).orElse(FluidResource.EMPTY);
         tank.restore(new PylonTank.State<>(resource.isEmpty() || !canFillFluid(resource.getFluid()) ? null : resource,
             input.getLongOr("fluid_amount", 0)));
@@ -486,7 +486,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             ItemStack stack = getStoredItem();
             EnergyHandler item = ItemAccess.forStack(stack).getCapability(Capabilities.Energy.ITEM);
             if (EnergyHandlerUtil.move(energyInternal, item, outputLimit, null) > 0) {
-                contents.restore(stack, 1, getItemCapacity());
+                contents.updateChargedItem(stack);
             }
         }
         outputLimit = energyLimit(false, Integer.MAX_VALUE);

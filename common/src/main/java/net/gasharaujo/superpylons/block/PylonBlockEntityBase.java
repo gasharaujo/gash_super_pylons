@@ -117,8 +117,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public boolean hasSuperUpgrade() { return upgrades.containsKey(PylonUpgrade.Slot.SUPER); }
 
     public List<ItemStack> getShelfItems() { return shelves.stream().map(ItemStack::copy).toList(); }
-    public String getWorkshopStatus() { return workshopStatus; }
-    public long getWorkshopCost() { return workshopCost; }
+    public String getWorkshopStatus() { return contents.isWorkshopOutput() ? "complete" : workshopStatus; }
+    public long getWorkshopCost() {
+        return contents.isWorkshopOutput() || workshopStatus.equals("xp") ? workshopCost : 0;
+    }
     public int getEnchantmentPower() {
         PylonUpgrade capacity = upgrades.get(PylonUpgrade.Slot.STORAGE);
         return capacity == null ? 1 : capacity.tier() == 6 ? 100 : capacity.tier() * 10;
@@ -129,7 +131,12 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected void loadWorkshopStatus(String status, long cost) {
-        workshopStatus = List.of("connections", "input", "lapis", "second_item", "no_result", "xp", "complete").contains(status) ? status : "connections";
+        if (status.equals("complete") && isWorkshop()) {
+            contents.markWorkshopOutput();
+            status = "input";
+        }
+        workshopStatus = List.of("connections", "input", "lapis", "second_item", "no_result", "xp").contains(status)
+            ? status : "connections";
         workshopCost = Math.max(0, cost);
     }
 
@@ -359,6 +366,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private void operateWorkshop(ServerLevel server) {
+        if (contents.isWorkshopOutput()) {
+            if (exportWorkshopOutput(server) && !isRemoved()) sync();
+            return;
+        }
         if (auxiliaries.size() < 2) { workshopStatus("connections", 0); return; }
         PylonBlockEntityBase first = auxiliary(auxiliaries.get(0));
         PylonBlockEntityBase second = auxiliary(auxiliaries.get(1));
@@ -388,15 +399,40 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         long cost = PylonExperience.pointsAtLevel((int) Math.min(1_000_000, result.levels()));
         if (xp.getAvailableExperience() < cost) { workshopStatus("xp", cost); return; }
         contents.restore(result.item(), 1, getItemCapacity());
+        contents.markWorkshopOutput();
         if (!xp.isCreativeStorage()) xp.experience -= cost;
         xp.sync();
         if (enchanting || !hasSuperUpgrade() || !material.getStoredItem().is(Items.ENCHANTED_BOOK)) {
             material.contents.remove(1);
             material.sync();
         }
-        workshopStatus = "complete";
+        workshopStatus = "input";
         workshopCost = cost;
-        sync();
+        exportWorkshopOutput(server);
+        if (!isRemoved()) sync();
+    }
+
+    private boolean exportWorkshopOutput(ServerLevel server) {
+        BlockPos target = workTarget();
+        for (Auxiliary link : auxiliaries) {
+            if (link.pos().equals(target) && auxiliary(link) != null) return false;
+        }
+        var output = workOutput(server);
+        if (output == null || !output.apply(contents.peek(1), true).isEmpty() ||
+            !contents.isWorkshopOutput() || isRemoved()) return false;
+        boolean copied = isCreativeStorage();
+        ItemStack remainder = output.apply(contents.extract(1), false);
+        if (remainder.isEmpty()) return true;
+        if (!copied) {
+            if (!isRemoved() && getStoredCount() == 0) {
+                contents.restore(remainder, 1, getItemCapacity());
+                if (isWorkshop()) contents.markWorkshopOutput();
+            } else {
+                Block.popResource(server, worldPosition, remainder);
+                return true;
+            }
+        }
+        return false;
     }
 
     protected String saveAuxiliaries() {
@@ -1046,6 +1082,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (processor != PylonUpgrade.SMELT) giveBackFurnaceAttachment(player);
         if (previousSpecialty != specialty || rangeChanged) excavationCursor = 0;
         if (previousSpecialty != specialty) {
+            contents.clearWorkshopOutput();
             clearWorkshopLinks();
             for (ItemStack shelf : shelves) player.getInventory().placeItemBackInInventory(shelf);
             shelves.clear();
@@ -1115,7 +1152,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             upgrade.slot() == PylonUpgrade.Slot.RANGE) excavationCursor = 0;
         trimWorkshopLinks();
         updateChunkLoading();
-        if (upgrade == PylonUpgrade.ANVIL || upgrade == PylonUpgrade.ENCHANTING) clearWorkshopLinks();
+        if (upgrade == PylonUpgrade.ANVIL || upgrade == PylonUpgrade.ENCHANTING) {
+            contents.clearWorkshopOutput();
+            clearWorkshopLinks();
+        }
         if (upgrade == PylonUpgrade.FILTER) {
             clearFilter();
             allowList = false;
@@ -1441,7 +1481,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
 
         ItemStack input = getStoredItem();
-        if (!input.isEmpty() && outputBuffer.isEmpty() && !isRemoved()) {
+        if (!input.isEmpty() && !contents.isWorkshopOutput() && outputBuffer.isEmpty() && !isRemoved()) {
             var recipe = processingRecipe(server, processor, input, tier);
             for (int i = 0; i < amount && !recipe.isEmpty() && outputBuffer.isEmpty() && !isRemoved(); i++) {
                 if (!processOne(server, output, recipe, hasSuperUpgrade() ? sourcePos : null, () ->

@@ -118,7 +118,6 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadExcavationCursor(tag.getInt("excavation_cursor"));
         loadAuxiliaries(tag.getString("auxiliaries"));
         loadWorkshopOwner(tag.getString("workshop_owner"));
-        loadWorkshopStatus(tag.getString("workshop_status"), tag.getLong("workshop_cost"));
         var shelfItems = new java.util.ArrayList<ItemStack>();
         ListTag shelfData = tag.getList("enchanting_shelves", Tag.TAG_COMPOUND);
         for (int i = 0; i < shelfData.size(); i++) {
@@ -144,6 +143,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             if (!stack.isEmpty()) outputBuffer.add(stack);
         }
         contents.restore(ItemStack.parseOptional(registries, tag.getCompound("stored_item")), tag.getLong("stored_count"), getItemCapacity());
+        loadWorkshopStatus(tag.getString("workshop_status"), tag.getLong("workshop_cost"));
         FluidStack resource = FluidStack.parseOptional(registries, tag.getCompound("fluid_template"));
         tank.restore(new PylonTank.State<>(resource.isEmpty() || !canFillFluid(resource.getFluid()) ? null : resource,
             tag.getLong("fluid_amount")));
@@ -508,7 +508,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
                 int accepted = item.receiveEnergy(outputLimit, false);
                 if (accepted > 0) {
                     exchangeEnergy(false, accepted, false);
-                    contents.restore(stack, 1, getItemCapacity());
+                    contents.updateChargedItem(stack);
                 }
             }
         }

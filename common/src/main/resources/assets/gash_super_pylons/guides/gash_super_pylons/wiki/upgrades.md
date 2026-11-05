@@ -43,7 +43,7 @@ The Command Block is shown in the upgrade bar and overlay, with infinite amounts
 
 ## Enchanter and Anvil
 
-Shift-right-click the main pylon with the Wrench in Bind mode, then right-click an XP Tank and an item pylon. Either order works. Auxiliaries may be 1–5 blocks from the main pylon, measured between centers, vertically, horizontally or diagonally. Both machines work on one item at a time; the finished item replaces the input in the core and can be extracted by automation. Speed sets the operation interval. Nothing is consumed when an operation cannot finish.
+Shift-right-click the main pylon with the Wrench in Bind mode, then right-click an XP Tank and an item pylon. Either order works. Auxiliaries may be 1–5 blocks from the main pylon, measured between centers, vertically, horizontally or diagonally. Both machines work on one item at a time and send the finished item to the inventory on the working side (below by default). When the output cannot accept it, the item stays in the core until it can be sent or collected manually. Speed sets the operation interval. Nothing is consumed when an operation cannot finish.
 
 ### Enchanter
 

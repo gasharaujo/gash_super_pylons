@@ -150,7 +150,7 @@
   "tooltip.gash_super_pylons.workshop.second_item": "Waiting for the second anvil item in the auxiliary.",
   "tooltip.gash_super_pylons.workshop.no_result": "No compatible operation for this item.",
   "tooltip.gash_super_pylons.workshop.xp": "Waiting for enough XP in the linked XP Tank.",
-  "tooltip.gash_super_pylons.workshop.complete": "Operation complete. Remove the finished item.",
+  "tooltip.gash_super_pylons.workshop.complete": "Finished item ready. Waiting for space in the output inventory or manual removal.",
   "tooltip.gash_super_pylons.workshop_cost": "Operation cost: %s XP points",
   "tooltip.gash_super_pylons.enchanting_power": "Base enchanting power: %s | Minimum enchantments: %s",
   "tooltip.gash_super_pylons.shelves": "Installed Apotheosis shelves: %s",

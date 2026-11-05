@@ -153,7 +153,7 @@
   "tooltip.gash_super_pylons.workshop.second_item": "Aguardando o segundo item da bigorna no auxiliar.",
   "tooltip.gash_super_pylons.workshop.no_result": "Nenhuma operação compatível com este item.",
   "tooltip.gash_super_pylons.workshop.xp": "Aguardando XP suficiente no Tanque de XP vinculado.",
-  "tooltip.gash_super_pylons.workshop.complete": "Operação concluída. Retire o item pronto.",
+  "tooltip.gash_super_pylons.workshop.complete": "Item pronto. Aguardando espaço no inventário de saída ou retirada manual.",
   "tooltip.gash_super_pylons.workshop_cost": "Custo da operação: %s pontos de XP",
   "tooltip.gash_super_pylons.enchanting_power": "Poder base de encantamento: %s | Mínimo de encantamentos: %s",
   "tooltip.gash_super_pylons.shelves": "Estantes do Apotheosis instaladas: %s",
