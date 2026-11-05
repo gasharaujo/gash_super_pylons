@@ -6,6 +6,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShearsItem;
@@ -21,6 +23,15 @@ public final class PylonItemRules {
 
     static boolean isMiningTool(ItemStack stack) {
         return !stack.isEmpty() && (stack.getItem() instanceof ShearsItem || stack.has(DataComponents.TOOL));
+    }
+
+    static boolean isWeapon(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        boolean[] damage = {false};
+        stack.forEachModifier(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
+            if (attribute.equals(Attributes.ATTACK_DAMAGE) && modifier.amount() > 0) damage[0] = true;
+        });
+        return damage[0];
     }
 
     static boolean matches(ItemStack stack, String selector) {

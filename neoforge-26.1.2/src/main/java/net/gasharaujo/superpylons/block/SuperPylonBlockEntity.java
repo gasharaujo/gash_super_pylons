@@ -6,6 +6,8 @@ import java.util.function.BiFunction;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -21,6 +23,8 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.block.Block;
@@ -75,6 +79,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         super.saveAdditional(output);
         output.putString("upgrades", saveUpgrades());
         if (!getBreakTool().isEmpty()) output.store("break_tool", ItemStack.CODEC, getBreakTool());
+        if (!getFurnaceAttachment().isEmpty()) output.store("furnace_attachment", ItemStack.CODEC, getFurnaceAttachment());
+        if (excavationCursor() != 0) output.putInt("excavation_cursor", excavationCursor());
         output.putString("paint", savePaint());
         output.putString("wire_id", saveWireId());
         output.putString("wires", saveWires());
@@ -112,6 +118,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         super.loadAdditional(input);
         loadUpgrades(input.getStringOr("upgrades", ""));
         loadBreakTool(input.read("break_tool", ItemStack.CODEC).orElse(ItemStack.EMPTY));
+        loadFurnaceAttachment(input.read("furnace_attachment", ItemStack.CODEC).orElse(ItemStack.EMPTY));
+        loadExcavationCursor(input.getIntOr("excavation_cursor", 0));
         loadAuxiliaries(input.getStringOr("auxiliaries", ""));
         loadWorkshopOwner(input.getStringOr("workshop_owner", ""));
         loadWorkshopStatus(input.getStringOr("workshop_status", "connections"), input.getLongOr("workshop_cost", 0));
@@ -214,9 +222,75 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
+    protected ProcessingSource processingSource(ServerLevel server, BlockPos pos, Direction side) {
+        ResourceHandler<ItemResource> handler = server.getCapability(Capabilities.Item.BLOCK, pos, side);
+        if (handler == null) return null;
+        return new ProcessingSource() {
+            @Override public int slots() { return handler.size(); }
+            @Override public int stackSize(int slot) { return handler.getAmountAsInt(slot); }
+            @Override public ItemStack extractOne(int slot, boolean simulate) {
+                ItemResource item = handler.getResource(slot);
+                if (item.isEmpty()) return ItemStack.EMPTY;
+                try (Transaction tx = Transaction.openRoot()) {
+                    if (handler.extract(slot, item, 1, tx) != 1) return ItemStack.EMPTY;
+                    if (!simulate) tx.commit();
+                    return item.toStack(1);
+                }
+            }
+        };
+    }
+
+    private RecipeType<? extends AbstractCookingRecipe> smeltingType() {
+        ItemStack attachment = getFurnaceAttachment();
+        if (attachment.is(Items.BLAST_FURNACE)) return RecipeType.BLASTING;
+        if (attachment.is(Items.SMOKER)) return RecipeType.SMOKING;
+        return RecipeType.SMELTING;
+    }
+
+    @Override
+    protected int minimumY(ServerLevel server) { return server.getMinY(); }
+
+    @Override
+    protected boolean collectFluidSource(ServerLevel server, ServerPlayer player, BlockPos pos, BlockState state) {
+        if (!(state.getBlock() instanceof BucketPickup pickup)) return false;
+        Fluid fluid = state.getFluidState().getType();
+        FluidResource resource = FluidResource.of(fluid);
+        try (Transaction tx = Transaction.openRoot()) {
+            if (fluidHandler.insert(0, resource, 1000, tx) != 1000) return false;
+            if (pickup.pickupBlock(player, server, pos, state).isEmpty()) return false;
+            tx.commit();
+            return true;
+        }
+    }
+
+    @Override
+    protected List<ItemStack> dispense(ServerLevel server, BlockPos origin, Direction direction, ItemStack stack) {
+        return PylonDispenser.dispense(server, origin, direction, stack);
+    }
+
+    @Override
+    protected void attackMob(ServerPlayer player, Mob mob, ItemStack weapon) {
+        ItemStack previous = player.getMainHandItem();
+        int cooldown = player.attackStrengthTicker;
+        int swapCooldown = player.itemSwapTicker;
+        player.setItemInHand(InteractionHand.MAIN_HAND, weapon);
+        player.detectEquipmentUpdates();
+        try {
+            player.attackStrengthTicker = Integer.MAX_VALUE;
+            player.itemSwapTicker = Integer.MAX_VALUE;
+            player.attack(mob);
+        } finally {
+            player.itemSwapTicker = swapCooldown;
+            player.attackStrengthTicker = cooldown;
+            player.setItemInHand(InteractionHand.MAIN_HAND, previous);
+            player.detectEquipmentUpdates();
+        }
+    }
+
+    @Override
     protected ItemStack smeltingRecipe(ServerLevel server, ItemStack input) {
         var recipeInput = new SingleRecipeInput(input);
-        return server.getServer().getRecipeManager().getRecipeFor(RecipeType.SMELTING, recipeInput, server)
+        return server.getServer().getRecipeManager().getRecipeFor(smeltingType(), recipeInput, server)
             .map(found -> found.value().assemble(recipeInput))
             .orElse(ItemStack.EMPTY);
     }

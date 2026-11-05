@@ -23,7 +23,7 @@ Faça o Upgrade Base com cinco pedregulhos em cruz. Use a base no centro para o 
 **Speed** controla o intervalo. **Quantity** controla a quantidade por operação. **Range** expande a área na horizontal e na vertical. **Capacidade** aumenta o armazenamento. **Energia** adiciona um estoque de FE independente da especialidade e aceita energia por todas as faces.
 
 - **Planter** planta as sementes ou mudas armazenadas. **Fertilizer** acelera o crescimento.
-- **Harvester** replanta cultivos e derruba árvores. O que couber dos drops das árvores fica no pylon. O excedente cai no mundo.
+- **Harvester** é feito com uma base de upgrade e um machado de diamante. Replanta cultivos e derruba árvores. O que couber dos drops das árvores fica no pylon. O excedente cai no mundo.
 - **Placer** coloca um bloco armazenado no lado de trabalho. **Break** minera esse lado. **Clicker** interage com ele, inclusive de mão vazia.
 - **Dropper** solta itens armazenados no centro do bloco adjacente no lado de trabalho. Speed e Quantity controlam o ciclo e cada tier de Range estende a ejeção em um bloco.
 - **Super** adiciona quatro Nether Stars que orbitam o núcleo e sai primeiro ao remover upgrades.
@@ -31,7 +31,7 @@ Faça o Upgrade Base com cinco pedregulhos em cruz. Use a base no centro para o 
 - **XP Tank** converte um frasco de experiência em sete pontos de XP e um frasco de vidro. Use um frasco de vidro no tanque para fazer a conversão inversa.
 - **Fluid Storage** começa com 32 baldes de capacidade. Os geradores de água e lava também funcionam como tanques.
 
-Geradores de itens podem abastecer Smelt ou Pulverize. O processamento gasta 1.000 FE ou combustível equivalente a um uso de fornalha.
+Geradores de itens podem abastecer Smelt ou Pulverize. Cada item processado custa 1.000 FE. O pylon tenta usar sua própria energia e depois a de um pylon vizinho. Quando falta FE, usa combustível de fornalha. Clique no pylon com um alto-forno ou defumador para selecionar apenas receitas desse tipo no Smelt.
 
 Geradores têm espaço próprio: só é permitido um gerador, independente da utilidade/tipo e do processamento. A geração funciona junto com os outros upgrades instalados. Um item diferente no estoque pausa a geração em vez de impedir a instalação. Geradores de água/lava podem guardar itens e fluido; o tipo instalado ainda pode bloquear a entrada de itens. Com XP Tank, a automação de fluidos enxerga dois reservatórios separados.
 
@@ -60,3 +60,11 @@ Coloque o primeiro item no principal e o segundo item ou material de reparo no a
 O preço soma **nível resultante × raridade**: comum 1, incomum 2, raro 3 e muito raro 4. Para cada encantamento acima do máximo normal, multiplique seu preço novamente pela raridade, com multiplicador mínimo dois. Reparos custam ao menos um nível. O total é convertido em pontos de XP pela curva vanilla a partir do zero e pago pelo auxiliar de XP.
 
 Super preserva um livro encantado usado como segundo item. Outros itens e materiais de reparo continuam sendo consumidos. Só há gasto quando a operação melhora encantamentos ou repara dano. Jade, WTHIT e The One Probe mostram o estado, o custo e as estantes instaladas.
+
+## Combinações com Super
+
+- **Smelt e Pulverize** processam todos os stacks elegíveis do inventário do lado oposto à saída no mesmo ciclo, conforme o espaço e a energia ou combustível disponíveis.
+- **Fertilizer** avança os estágios das plantas diretamente. **Harvester** ataca mobs na área, começando pelos mais próximos. Quantity dá até 1 + tier alvos. Use agachar e clicar com uma arma para equipá-la. A arma padrão é um machado de diamante.
+- **Break e Fluid Storage** varrem o chunk por camadas, começando três blocos abaixo do pylon. Cada tier de Range acrescenta um chunk de raio. Break envia os drops para o inventário do lado de trabalho. Fluid Storage coleta fontes e pode enviá-las ao tanque do lado de trabalho.
+- **Magnet** insere os itens no inventário do lado de trabalho. **Placer** preenche espaços vazios de um plano três blocos abaixo. Range amplia esse plano.
+- **Dropper** usa os comportamentos do ejetor do Minecraft e alinha a trajetória inicial dos projéteis com a direção de trabalho.

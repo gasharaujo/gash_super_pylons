@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "gash_super_pylons:upgrade_base"
+    },
+    {
+      "item": "minecraft:diamond_axe"
+    }
+  ],
+  "result": {
+    "id": "gash_super_pylons:harvester_upgrade",
+    "count": 1
+  }
+}

@@ -9,6 +9,7 @@ import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonExperienceStorage;
 import net.gasharaujo.superpylons.block.PylonBreaker;
+import net.gasharaujo.superpylons.block.PylonDispenseAim;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.BlockCapability;
@@ -122,18 +123,21 @@ public final class SuperPylonsMod {
         bus.addListener(PylonControls::register);
         bus.addListener((RegisterTicketControllersEvent event) -> event.register(SuperPylonBlockEntity.CHUNK_TICKETS));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,
-            (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
-        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
+            (EntityJoinLevelEvent event) -> {
+                PylonBreaker.trackDrop(event.getLevel(), event.getEntity());
+                PylonDispenseAim.onSpawn(event.getLevel(), event.getEntity());
+            });
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installWorkTool);
         bus.addListener(this::enqueueIntegrations);
         bus.addListener(this::registerCapabilities);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
     }
 
-    private void installBreakTool(PlayerInteractEvent.RightClickBlock event) {
+    private void installWorkTool(PlayerInteractEvent.RightClickBlock event) {
         if (event.getUseBlock() == TriState.FALSE || event.getUseItem() == TriState.FALSE) return;
         var level = event.getLevel();
         if (level.getBlockEntity(event.getPos()) instanceof SuperPylonBlockEntity pylon &&
-            pylon.tryInstallBreakTool(event.getEntity(), event.getHand())) {
+            pylon.tryInstallWorkTool(event.getEntity(), event.getHand())) {
             event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
             event.setCanceled(true);
         }

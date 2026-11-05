@@ -68,15 +68,19 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
             state.stamps = List.of();
         } else {
             var atlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.ITEMS);
-            state.stamps = PylonUpgradeStamps.sprites(upgrades,
-                id -> atlas.getSprite(Identifier.parse(id)));
+            state.stamps = PylonUpgradeStamps.sprites(upgrades, entity.getFurnaceAttachment(),
+                id -> atlas.getSprite(Identifier.parse(switch (id) {
+                    case "minecraft:block/blast_furnace_front" -> "gash_super_pylons:block/blast_furnace_front";
+                    case "minecraft:block/smoker_front" -> "gash_super_pylons:block/smoker_front";
+                    default -> id;
+                })));
         }
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.storedItem,
             entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.breakTool,
             entity.getBreakTool(), ItemDisplayContext.GUI, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
         state.toolSlot = PylonUpgradeStamps.toolSlot(!state.breakTool.isEmpty(), entity.hasSuperUpgrade());
-        state.shelfSlot = PylonUpgradeStamps.shelfSlot(upgrades, state.toolSlot);
+        state.shelfSlot = PylonUpgradeStamps.shelfSlot(upgrades, state.toolSlot, !entity.getFurnaceAttachment().isEmpty());
         state.shelves = entity.getShelfItems().stream().map(item -> {
             var render = new ItemStackRenderState();
             Minecraft.getInstance().getItemModelResolver().updateForTopItem(render, item,

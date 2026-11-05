@@ -14,14 +14,19 @@ final class PylonTooltip {
         var upgrades = pylon.getInstalledUpgrades();
         if (!upgrades.isEmpty()) lines.accept(Component.translatable("tooltip.gash_super_pylons.upgrades"));
         var tool = pylon.getBreakTool();
-        var toolLine = tool.isEmpty() ? null : Component.translatable("tooltip.gash_super_pylons.break_tool", tool.getHoverName());
+        var toolLine = tool.isEmpty() ? null : Component.translatable(
+            pylon.getSpecialty() == PylonUpgrade.HARVESTER ? "tooltip.gash_super_pylons.weapon" :
+                "tooltip.gash_super_pylons.break_tool", tool.getHoverName());
         if (toolLine != null && !pylon.hasSuperUpgrade()) lines.accept(toolLine);
+        var furnace = pylon.getFurnaceAttachment();
         for (PylonUpgrade upgrade : upgrades) {
             Component name = Component.translatable("item.gash_super_pylons." + upgrade.id()).withStyle(ChatFormatting.BLUE);
             Component info = switch (upgrade.slot()) {
                 case SPEED -> Component.translatable("tooltip.gash_super_pylons.speed_info", name, upgrade.value());
-                case QUANTITY -> Component.translatable("tooltip.gash_super_pylons.quantity_info", name, upgrade.value());
-                case RANGE -> Component.translatable("tooltip.gash_super_pylons.range_info", name, upgrade.value() * 2 + 1);
+                case QUANTITY -> pylon.hasSuperUpgrade() && pylon.getSpecialty() == PylonUpgrade.HARVESTER ?
+                    Component.translatable("tooltip.gash_super_pylons.target_quantity", name, upgrade.tier() + 1) :
+                    Component.translatable("tooltip.gash_super_pylons.quantity_info", name, upgrade.value());
+                case RANGE -> rangeInfo(pylon, upgrade, name);
                 case STORAGE -> Component.translatable("tooltip.gash_super_pylons.capacity_info", name,
                     upgrade == PylonUpgrade.STORAGE_6 ? capacityLabel(Long.MAX_VALUE) : "×" + upgrade.value());
                 case SPECIALTY -> upgrade == PylonUpgrade.DROPPER ?
@@ -30,6 +35,9 @@ final class PylonTooltip {
                     name, upgrade.energyTransfer() == Integer.MAX_VALUE ? capacityLabel(Long.MAX_VALUE) : upgrade.energyTransfer());
                 default -> name;
             };
+            if (upgrade == PylonUpgrade.SMELT && !furnace.isEmpty()) {
+                lines.accept(Component.translatable("tooltip.gash_super_pylons.furnace_attachment", furnace.getHoverName()));
+            }
             lines.accept(info);
             if (upgrade == PylonUpgrade.SUPER && toolLine != null) lines.accept(toolLine);
         }
@@ -52,6 +60,23 @@ final class PylonTooltip {
                 }
             }
         }
+    }
+
+    private static Component rangeInfo(PylonBlockEntityBase pylon, PylonUpgrade upgrade, Component name) {
+        int width = upgrade.value() * 2 + 1;
+        var specialty = pylon.getSpecialty();
+        if (pylon.hasSuperUpgrade()) {
+            if (specialty == PylonUpgrade.BREAK || specialty == PylonUpgrade.FLUID_STORAGE) {
+                return Component.translatable("tooltip.gash_super_pylons.chunk_range", name, upgrade.tier() * 2 + 1);
+            }
+            if (specialty == PylonUpgrade.PLACER) {
+                return Component.translatable("tooltip.gash_super_pylons.plane_range", name, width);
+            }
+        }
+        if (specialty == PylonUpgrade.DROPPER) {
+            return Component.translatable("tooltip.gash_super_pylons.dropper_distance", name, pylon.dropDistance());
+        }
+        return Component.translatable("tooltip.gash_super_pylons.range_info", name, width);
     }
 
     static Component storageLine(PylonBlockEntityBase pylon) {

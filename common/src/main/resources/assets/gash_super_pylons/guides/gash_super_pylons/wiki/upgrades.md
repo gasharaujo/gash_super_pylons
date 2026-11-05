@@ -23,7 +23,7 @@ Craft the Upgrade Base from five cobblestone in a cross. Tier I uses the base in
 **Speed** changes the operation interval. **Quantity** changes the amount per operation. **Range** expands the working area horizontally and vertically. **Capacity** increases storage. **Energy** adds FE storage independently of the pylon's specialty and accepts power from every side.
 
 - **Planter** plants stored seeds and saplings. **Fertilizer** speeds up growth.
-- **Harvester** replants crops and fells trees. Tree drops that fit stay in the pylon. Excess drops remain in the world.
+- **Harvester** is crafted from an upgrade base and a diamond axe. It replants crops and fells trees. Tree drops that fit stay in the pylon. Excess drops remain in the world.
 - **Placer** places a stored block at the working side. **Break** mines that side. **Clicker** interacts with it, including with an empty hand.
 - **Dropper** ejects stored items at the center of the adjacent block on the working side. Speed and Quantity control the cycle, and each Range tier extends the ejection by one block.
 - **Super** adds four Nether Stars that orbit the core and is removed first.
@@ -31,7 +31,7 @@ Craft the Upgrade Base from five cobblestone in a cross. Tier I uses the base in
 - **XP Tank** exchanges a Bottle o' Enchanting for seven XP and a glass bottle. Use a glass bottle on the tank to reverse the exchange.
 - **Fluid Storage** starts at 32 buckets. Water and Lava Generators also act as tanks.
 
-Item generators can feed Smelt or Pulverize. Processing uses 1,000 FE or one smelting operation's worth of fuel.
+Item generators can feed Smelt or Pulverize. Each processed item costs 1,000 FE. The pylon tries its own energy first, then checks adjacent pylons. It uses furnace fuel when FE is unavailable. Use a blast furnace or smoker on a Smelt pylon to select that recipe family.
 
 Generators have their own slot: only one generator is allowed, independently of utility/type and processing upgrades. Generation runs alongside the other installed upgrades. A different stored item pauses item generation instead of blocking installation. Water/lava generators can hold items as well as fluid; an installed type may still block item input. With XP Tank, fluid automation exposes two separate reservoirs.
 
@@ -60,3 +60,11 @@ Put the first anvil item in the main pylon and the second item or repair materia
 The price sums **resulting enchantment level × rarity**: common 1, uncommon 2, rare 3 and very rare 4. For an enchantment above its normal maximum, multiply its price by rarity again, with a minimum multiplier of two. Repairs cost at least one level. The total is converted to XP points using the vanilla level curve from zero and paid by the XP auxiliary.
 
 Super preserves an enchanted book in the second slot. Other donor items and repair materials are still consumed. An operation must improve enchantments or repair damage to spend resources. Jade, WTHIT and The One Probe show machine status, XP cost and installed shelves.
+
+## Super combinations
+
+- **Smelt and Pulverize** process every eligible stack from the inventory opposite the working side in the same cycle, as output space and energy or fuel allow.
+- **Fertilizer** advances plant stages directly. **Harvester** attacks nearby mobs, starting with the closest. Quantity allows 1 + tier targets. Sneak and use a weapon on the pylon to equip it. The default weapon is a diamond axe.
+- **Break and Fluid Storage** work down through the pylon's chunk, starting three blocks beneath it. Each Range tier adds one chunk to the radius. Break sends drops to the inventory on the working side. Fluid Storage collects sources and can send them to a tank on the working side.
+- **Magnet** inserts items into the inventory on its working side. **Placer** fills gaps in a plane three blocks below the pylon. Range expands the plane.
+- **Dropper** uses Minecraft dispenser behaviors and aligns each projectile's initial trajectory with the working direction.

@@ -2,12 +2,15 @@ package net.gasharaujo.superpylons.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 final class PylonUpgradeStamps {
     private static final float HEIGHT = 2.0F / 16.0F;
@@ -16,13 +19,19 @@ final class PylonUpgradeStamps {
 
     private PylonUpgradeStamps() {}
 
-    static List<TextureAtlasSprite> sprites(List<PylonUpgrade> upgrades, Function<String, TextureAtlasSprite> lookup) {
-        return upgrades.stream().map(upgrade -> {
+    static List<TextureAtlasSprite> sprites(List<PylonUpgrade> upgrades, ItemStack furnace, Function<String, TextureAtlasSprite> lookup) {
+        var sprites = new ArrayList<TextureAtlasSprite>();
+        for (PylonUpgrade upgrade : upgrades) {
+            if (upgrade == PylonUpgrade.SMELT && !furnace.isEmpty()) {
+                sprites.add(lookup.apply(furnace.is(Items.BLAST_FURNACE)
+                    ? "minecraft:block/blast_furnace_front" : "minecraft:block/smoker_front"));
+            }
             TextureAtlasSprite sprite = lookup.apply(upgrade == PylonUpgrade.CREATIVE_STORAGE ?
                 "minecraft:block/command_block_front" : "gash_super_pylons:item/" + upgrade.id());
-            return sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation())
-                ? lookup.apply("gash_super_pylons:item/upgrade_base") : sprite;
-        }).toList();
+            sprites.add(sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation())
+                ? lookup.apply("gash_super_pylons:item/upgrade_base") : sprite);
+        }
+        return sprites;
     }
 
     static int toolSlot(boolean hasTool, boolean hasSuper) {
@@ -30,9 +39,12 @@ final class PylonUpgradeStamps {
         return hasSuper ? 1 : 0;
     }
 
-    static int shelfSlot(List<PylonUpgrade> upgrades, int toolSlot) {
+    static int shelfSlot(List<PylonUpgrade> upgrades, int toolSlot, boolean hasFurnace) {
         int slot = upgrades.indexOf(PylonUpgrade.ENCHANTING);
-        return slot < 0 ? -1 : slot + (toolSlot >= 0 && slot >= toolSlot ? 1 : 0);
+        if (slot < 0) return -1;
+        int smelt = upgrades.indexOf(PylonUpgrade.SMELT);
+        if (hasFurnace && smelt >= 0 && smelt < slot) slot++;
+        return slot + (toolSlot >= 0 && slot >= toolSlot ? 1 : 0);
     }
 
     static void draw(List<TextureAtlasSprite> sprites, int toolSlot, int shelfSlot, int shelves, VertexSink sink) {

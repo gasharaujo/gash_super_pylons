@@ -9,6 +9,7 @@ import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonExperienceStorage;
 import net.gasharaujo.superpylons.block.PylonBreaker;
+import net.gasharaujo.superpylons.block.PylonDispenseAim;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 
 import com.mojang.logging.LogUtils;
@@ -122,17 +123,20 @@ public final class SuperPylonsMod {
         PylonControls.register();
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(PylonExperienceStorage.class));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
-            (EntityJoinLevelEvent event) -> PylonBreaker.trackDrop(event.getLevel(), event.getEntity()));
-        MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installBreakTool);
+            (EntityJoinLevelEvent event) -> {
+                PylonBreaker.trackDrop(event.getLevel(), event.getEntity());
+                PylonDispenseAim.onSpawn(event.getLevel(), event.getEntity());
+            });
+        MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::installWorkTool);
         bus.addListener(this::enqueueIntegrations);
         LOGGER.info("Gash's Super Pylons loaded ({})", MOD_ID);
     }
 
-    private void installBreakTool(PlayerInteractEvent.RightClickBlock event) {
+    private void installWorkTool(PlayerInteractEvent.RightClickBlock event) {
         if (event.getUseBlock() == Result.DENY || event.getUseItem() == Result.DENY) return;
         var level = event.getLevel();
         if (level.getBlockEntity(event.getPos()) instanceof SuperPylonBlockEntity pylon &&
-            pylon.tryInstallBreakTool(event.getEntity(), event.getHand())) {
+            pylon.tryInstallWorkTool(event.getEntity(), event.getHand())) {
             event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
             event.setCanceled(true);
         }

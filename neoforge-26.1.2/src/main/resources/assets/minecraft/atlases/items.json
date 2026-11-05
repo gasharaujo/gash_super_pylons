@@ -3,6 +3,16 @@
     {
       "type": "minecraft:single",
       "resource": "minecraft:block/command_block_front"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/blast_furnace_front",
+      "sprite": "gash_super_pylons:block/blast_furnace_front"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/smoker_front",
+      "sprite": "gash_super_pylons:block/smoker_front"
     }
   ]
 }

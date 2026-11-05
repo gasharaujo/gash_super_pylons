@@ -18,10 +18,12 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.GrowingPlantHeadBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 final class PylonFarming {
     record Harvest(BlockState remainder, List<ItemStack> drops) {}
@@ -42,6 +44,20 @@ final class PylonFarming {
             state.is(Blocks.NETHER_WART) || state.is(Blocks.PUMPKIN_STEM) || state.is(Blocks.MELON_STEM) ||
             state.is(Blocks.SWEET_BERRY_BUSH) || state.is(Blocks.SUGAR_CANE) || state.is(Blocks.CACTUS) ||
             state.is(Blocks.BAMBOO) || state.is(Blocks.BAMBOO_SAPLING) || state.is(Blocks.CHORUS_FLOWER));
+    }
+
+    static boolean advanceStage(ServerLevel level, BlockPos pos, BlockState state) {
+        for (var property : state.getProperties()) {
+            if (!(property instanceof IntegerProperty stage) ||
+                !(stage.getName().equals("age") || stage.getName().equals("stage"))) continue;
+            int next = state.getValue(stage) + 1;
+            if (stage.getPossibleValues().contains(next)) return level.setBlockAndUpdate(pos, state.setValue(stage, next));
+        }
+        if (state.getBlock() instanceof SaplingBlock sapling) {
+            sapling.performBonemeal(level, level.getRandom(), pos, state);
+            return true;
+        }
+        return false;
     }
 
     static Harvest harvest(ServerLevel level, BlockPos pos, BlockState state) {

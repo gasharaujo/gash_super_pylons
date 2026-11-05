@@ -86,6 +86,7 @@ def recipes():
     }
     for upgrade, material in generic.items():
         result[upgrade] = shapeless([BASE, vanilla(material), vanilla(material)], upgrade)
+    result["harvester_upgrade"] = shapeless([BASE, vanilla("diamond_axe")], "harvester_upgrade")
     result["planter_upgrade"] = shapeless([BASE, f"#{MOD}:planter_seeds", "#minecraft:saplings"], "planter_upgrade")
     result["magnet_upgrade"] = shapeless([BASE, vanilla("iron_ingot"), vanilla("gold_ingot")], "magnet_upgrade")
 
