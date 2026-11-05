@@ -67,6 +67,12 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         tag.putString("wire_id", saveWireId());
         tag.putString("wires", saveWires());
         tag.putString("auxiliaries", saveAuxiliaries());
+        tag.putString("workshop_owner", saveWorkshopOwner());
+        tag.putString("workshop_status", getWorkshopStatus());
+        tag.putLong("workshop_cost", getWorkshopCost());
+        ListTag shelfData = new ListTag();
+        for (ItemStack shelf : getShelfItems()) shelfData.add(shelf.save(new CompoundTag()));
+        tag.put("enchanting_shelves", shelfData);
         tag.putString("work_direction", workDirection().getSerializedName());
         if (forcedRadius() > 0) tag.putInt("forced_radius", forcedRadius());
         if (hasFilter()) {
@@ -101,6 +107,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadUpgrades(tag.getString("upgrades"));
         loadBreakTool(ItemStack.of(tag.getCompound("break_tool")));
         loadAuxiliaries(tag.getString("auxiliaries"));
+        loadWorkshopOwner(tag.getString("workshop_owner"));
+        loadWorkshopStatus(tag.getString("workshop_status"), tag.getLong("workshop_cost"));
+        var shelfItems = new java.util.ArrayList<ItemStack>();
+        ListTag shelfData = tag.getList("enchanting_shelves", Tag.TAG_COMPOUND);
+        for (int i = 0; i < shelfData.size(); i++) {
+            shelfItems.add(ItemStack.of(shelfData.getCompound(i)));
+        }
+        loadShelfItems(shelfItems);
         loadWorkDirection(tag.getString("work_direction"));
         loadForcedRadius(tag.getInt("forced_radius"));
         loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));

@@ -38,6 +38,20 @@ final class PylonTooltip {
             lines.accept(Component.translatable("tooltip.gash_super_pylons.fuel_uses",
                 uses % 1 == 0 ? Long.toString((long) uses) : Double.toString(uses)));
         }
+        if (pylon.isWorkshop()) {
+            lines.accept(Component.translatable("tooltip.gash_super_pylons.workshop." + pylon.getWorkshopStatus()));
+            if (pylon.getWorkshopCost() > 0) lines.accept(Component.translatable("tooltip.gash_super_pylons.workshop_cost", pylon.getWorkshopCost()));
+            if (pylon.getSpecialty() == PylonUpgrade.ENCHANTING) {
+                lines.accept(Component.translatable("tooltip.gash_super_pylons.enchanting_power",
+                    pylon.getEnchantmentPower(), pylon.getMinimumEnchantments()));
+                if (!pylon.getShelfItems().isEmpty()) {
+                    lines.accept(Component.translatable("tooltip.gash_super_pylons.shelves", pylon.getShelfItems().size()));
+                    java.util.Map<net.minecraft.world.item.Item, Integer> counts = new java.util.LinkedHashMap<>();
+                    for (var shelf : pylon.getShelfItems()) counts.merge(shelf.getItem(), 1, Integer::sum);
+                    counts.forEach((item, count) -> lines.accept(Component.translatable("tooltip.gash_super_pylons.shelf", count, new net.minecraft.world.item.ItemStack(item).getHoverName())));
+                }
+            }
+        }
     }
 
     static Component storageLine(PylonBlockEntityBase pylon) {

@@ -76,6 +76,10 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         output.putString("wire_id", saveWireId());
         output.putString("wires", saveWires());
         output.putString("auxiliaries", saveAuxiliaries());
+        output.putString("workshop_owner", saveWorkshopOwner());
+        output.putString("workshop_status", getWorkshopStatus());
+        output.putLong("workshop_cost", getWorkshopCost());
+        if (!getShelfItems().isEmpty()) output.store("enchanting_shelves", ItemStack.CODEC.listOf(), getShelfItems());
         output.putString("work_direction", workDirection().getSerializedName());
         if (forcedRadius() > 0) output.putInt("forced_radius", forcedRadius());
         if (hasFilter()) {
@@ -105,6 +109,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadUpgrades(input.getStringOr("upgrades", ""));
         loadBreakTool(input.read("break_tool", ItemStack.CODEC).orElse(ItemStack.EMPTY));
         loadAuxiliaries(input.getStringOr("auxiliaries", ""));
+        loadWorkshopOwner(input.getStringOr("workshop_owner", ""));
+        loadWorkshopStatus(input.getStringOr("workshop_status", "connections"), input.getLongOr("workshop_cost", 0));
+        loadShelfItems(input.read("enchanting_shelves", ItemStack.CODEC.listOf()).orElse(List.of()));
         loadWorkDirection(input.getStringOr("work_direction", ""));
         loadForcedRadius(input.getIntOr("forced_radius", 0));
         loadDecorations(input.getStringOr("paint", ""), input.getStringOr("wire_id", ""), input.getStringOr("wires", ""));

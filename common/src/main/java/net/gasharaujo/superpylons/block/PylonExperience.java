@@ -43,7 +43,7 @@ final class PylonExperience {
         return 7 + 2 * level;
     }
 
-    private static long pointsAtLevel(int level) {
+    static long pointsAtLevel(int level) {
         // Sum the vanilla cost of each preceding level, including both formula changes.
         if (level <= 15) return (long) level * (level + 6);
         if (level <= 30) return 315 + sumCosts(level - 15, 37, 5);

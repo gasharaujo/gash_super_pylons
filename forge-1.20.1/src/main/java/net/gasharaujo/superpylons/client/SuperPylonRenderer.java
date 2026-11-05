@@ -78,18 +78,30 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         if (upgrades.isEmpty()) return;
         ItemStack tool = entity.getBreakTool();
         int toolSlot = PylonUpgradeStamps.toolSlot(!tool.isEmpty(), entity.hasSuperUpgrade());
+        var shelves = entity.getShelfItems();
+        int shelfSlot = PylonUpgradeStamps.shelfSlot(upgrades, toolSlot);
+        int total = upgrades.size() + (toolSlot >= 0 ? 1 : 0) + shelves.size();
         var atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
         var sprites = PylonUpgradeStamps.sprites(upgrades, id -> atlas.apply(new ResourceLocation(SuperPylonsMod.MOD_ID, "item/" + id)));
         var buffer = buffers.getBuffer(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
         var matrix = pose.last();
-        PylonUpgradeStamps.draw(sprites, toolSlot, (x, y, z, normal, u, v) -> buffer.vertex(matrix.pose(), x, y, z)
+        PylonUpgradeStamps.draw(sprites, toolSlot, shelfSlot, shelves.size(), (x, y, z, normal, u, v) -> buffer.vertex(matrix.pose(), x, y, z)
             .color(255, 255, 255, 255).uv(u, v).overlayCoords(overlay).uv2(light)
             .normal(matrix.normal(), normal.getStepX(), normal.getStepY(), normal.getStepZ()).endVertex());
         if (!tool.isEmpty()) {
             for (Direction face : Direction.Plane.HORIZONTAL) {
                 pose.pushPose();
-                PylonUpgradeStamps.placeTool(pose, face, sprites.size(), toolSlot);
+                PylonUpgradeStamps.placeItem(pose, face, total, toolSlot);
                 Minecraft.getInstance().getItemRenderer().renderStatic(tool, ItemDisplayContext.GUI,
+                    light, overlay, pose, buffers, entity.getLevel(), (int) entity.getBlockPos().asLong());
+                pose.popPose();
+            }
+        }
+        for (int i = 0; i < shelves.size(); i++) {
+            for (Direction face : Direction.Plane.HORIZONTAL) {
+                pose.pushPose();
+                PylonUpgradeStamps.placeItem(pose, face, total, shelfSlot + i);
+                Minecraft.getInstance().getItemRenderer().renderStatic(shelves.get(i), ItemDisplayContext.GUI,
                     light, overlay, pose, buffers, entity.getLevel(), (int) entity.getBlockPos().asLong());
                 pose.popPose();
             }

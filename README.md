@@ -61,7 +61,7 @@ Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a
 
 Um gerador começa com produção de 1 a cada 60 ticks. Os geradores de itens aceitam somente o produto que geram. O **Clicker** clica no bloco do lado de trabalho, inclusive de mão vazia. Se houver item armazenado, usa uma unidade por operação. O item volta ao pylon se o clique o deixar intacto. Um resultado alterado que não combine com o estoque sai como drop.
 
-Fluid Storage, geradores de água e lava, Anvil e Enchanter exigem o pylon sem itens e bloqueiam depósitos de itens.
+Fluid Storage e geradores de água e lava exigem o pylon sem itens e bloqueiam depósitos de itens. Anvil e Enchanter recebem um item por vez no núcleo para processá-lo; retire itens excedentes antes de instalar esses upgrades.
 
 Fluid Storage e os geradores de água e lava aceitam baldes e automação de fluidos. A capacidade inicial é de **32 baldes (32.000 mB)**. Com Storage I–VI, passa a 64, 128, 256, 512, 1.024 baldes e capacidade ilimitada. Tanques salvos acima do novo limite mantêm todo o líquido e voltam a aceitar fluido quando houver espaço. Os geradores produzem **100 mB por unidade** de produção e aceitam o próprio fluido. Fluid Storage só pode ser removido vazio. A remoção de um gerador com líquido pede um segundo clique em até 5 segundos para descartar seu conteúdo. Quebrar o pylon descarta o líquido.
 
@@ -120,7 +120,7 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 - **Copy Paste Tool** copia os tipos e tiers de upgrades com Shift + botão direito. Botão direito aplica o setup completo se todos os upgrades faltantes estiverem no inventário. Os upgrades retirados voltam ao jogador. Se faltar algum, o chat lista o que falta. Paint Tool e Copy Paste Tool ganham brilho e tooltip quando guardam dados.
 - **Energy Wire, Item Wire, Fluid Wire e XP Wire** empilham até 64. Clique primeiro na origem e depois no destino, a até 32 blocos na mesma dimensão. Uma conexão concluída gasta um cabo. Cada par aceita uma conexão, em um sentido. Para desconectar, selecione os dois pylons em qualquer ordem com qualquer tipo de Wire. O cabo instalado volta ao inventário ou cai no chão se estiver cheio. Shift + botão direito no pylon cancela a seleção. O limite por tick é de 10% da capacidade da origem por tipo, compartilhado entre os cabos e o upgrade de transferência desse tipo. Energia também respeita os limites de entrada e saída, e itens seguem o filtro e a regra de correspondência exata do destino.
 - **Insert** puxa do bloco no lado de trabalho. **Extract** envia para ele. As portas funcionam com outros pylons e com blocos que expõem a interface compatível. Capacidade VI libera o limite de 10% para Wire, Insert e Extract. Os cabos são amarelos para itens, azuis para fluidos, vermelhos para energia e verdes para XP.
-- **Wrench** alterna entre os modos Vincular e Direção com Shift + rolagem. No modo Vincular, selecione Enchanter ou Anvil com Shift + botão direito. Clique em cada auxiliar, deixando um bloco de ar entre ele e o principal. Enchanter usa livros e partículas. Anvil mostra oito orbes que circulam os núcleos auxiliares.
+- **Wrench** alterna entre os modos Vincular e Direção com Shift + rolagem. No modo Vincular, selecione Enchanter ou Anvil com Shift + botão direito. Clique em cada auxiliar a uma distância de 1 a 5 blocos entre centros, inclusive na vertical e na diagonal. Os dois auxiliares principais do Enchanter mostram livros e partículas; o terceiro auxiliar de blacklist mantém o item ou livro no núcleo. Anvil mostra oito orbes que circulam os núcleos auxiliares.
 - No modo Direção, Shift + botão direito no ar alterna entre os seis lados. Botão direito no pylon aplica o lado selecionado. O padrão é baixo.
 - Shift + botão direito no ar limpa os dados da Copy Paste Tool, da Paint Tool e da Wrench no modo Vincular.
 - **Break** minera o bloco no lado de trabalho no intervalo do Speed. Usa uma picareta virtual de diamante por padrão. Shift + botão direito com uma ferramenta de mineração na mão principal instala a ferramenta real, com seus encantamentos e desgaste. Ela aparece na barra na ordem de remoção, logo depois do Super quando instalado. Quando ela é retirada ou quebra, a mineração volta a usar a picareta virtual. O Break guarda os drops iguais ao primeiro e deixa os demais no chão. Com o armazenamento cheio, a mineração pausa.
@@ -136,6 +136,27 @@ Jade, WTHIT (fork do Waila) e The One Probe mostram o conteúdo, a quantidade, a
 Jade e WTHIT leem o conteúdo que o pylon sincroniza com o cliente. The One Probe usa sua consulta ao servidor, onde também precisa estar instalado em multijogador. Cada integração é ativada pelo overlay correspondente.
 
 Cada módulo gera um JAR próprio. Todas as dependências declaradas no mod usam apenas versão mínima, sem limite máximo. Isso não substitui a validação em outras versões de Minecraft ou do loader.
+
+
+## Enchanter e Anvil
+
+Os dois upgrades trabalham com um item de entrada por vez no pylon principal e exigem dois auxiliares vinculados com a Wrench: um com **XP Tank** e outro com os materiais. Os dois primeiros vínculos definem esses auxiliares, em qualquer ordem. O alcance é de 1 a 5 blocos entre centros, em qualquer direção. Speed define o intervalo de operação: 60/40/30/20/10/5/1 ticks. O resultado substitui o item no núcleo e fica disponível para retirada manual ou por automação. Se faltar XP, material ou uma combinação válida, nada é consumido. Jade, WTHIT e The One Probe mostram o estado e o custo em pontos de XP.
+
+### Enchanter
+
+- O item a encantar fica no principal; lápis-lazúli fica no auxiliar de itens. Cada operação consome **um lápis-lazúli e 27 pontos de XP**, equivalentes a três níveis contados a partir de zero, independentemente do poder.
+- O poder base é **1/10/20/30/40/50/100** para Capacidade 0/I/II/III/IV/V/VI. Capacidade modifica o poder de encantamento dessa máquina; seu espaço de trabalho continua sendo um item.
+- Quantity no principal define o mínimo de **1/2/3/4/5/6/7 encantamentos**. A máquina respeita compatibilidade e disponibilidade: se não houver encantamentos suficientes, aplica os possíveis. Um item já encantado não é reencantado automaticamente.
+- Com **Super**, um terceiro auxiliar pode conter um item ou livro encantado. Os encantamentos nele formam uma blacklist; esse item não é consumido e continua visível no núcleo. Remover Super libera esse terceiro vínculo.
+- Estantes do Apotheosis/Apothic Enchanting podem ser instaladas com botão direito, até 64 estantes. A integração consulta os valores e a seleção de encantamentos do próprio mod para aplicar Eterna, Quanta, Arcana, tesouros, estabilidade/retificação e blacklist, conforme a versão. Pistas de interface não alteram o processamento automático. As estantes são salvas, aparecem na barra e saem antes do Enchanter, quando ele for o próximo upgrade a remover.
+
+### Anvil
+
+- O item principal vai na Anvil e o segundo item, livro ou material de reparo fica no auxiliar de itens. Um item do auxiliar é usado por operação. A máquina mantém as regras de compatibilidade dos encantamentos e também aceita reparos válidos de bigorna.
+- Encantamentos de mesmo nível combinam para o próximo nível, inclusive acima do máximo normal. Níveis diferentes preservam o maior. O limite técnico de gravação usado é 255.
+- O preço soma `nível × raridade` dos encantamentos resultantes: comum 1, incomum 2, raro 3 e muito raro 4. Para cada encantamento acima do máximo normal, seu custo é multiplicado novamente pela raridade, com multiplicador mínimo 2. Reparos sem encantamentos custam ao menos um nível.
+- O total em níveis é convertido em pontos de XP pela curva vanilla a partir do nível zero, debitados do XP Tank auxiliar.
+- Com **Super**, um **livro encantado** usado como segundo item não é consumido. Ferramentas e materiais de reparo continuam sendo consumidos. Se a combinação não melhorar os encantamentos nem reparar o item, a máquina não gasta recursos.
 
 ## Compilar
 

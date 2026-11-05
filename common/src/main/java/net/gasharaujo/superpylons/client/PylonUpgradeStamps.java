@@ -29,8 +29,13 @@ final class PylonUpgradeStamps {
         return hasSuper ? 1 : 0;
     }
 
-    static void draw(List<TextureAtlasSprite> sprites, int toolSlot, VertexSink sink) {
-        float width = slotWidth(sprites.size() + (toolSlot >= 0 ? 1 : 0));
+    static int shelfSlot(List<PylonUpgrade> upgrades, int toolSlot) {
+        int slot = upgrades.indexOf(PylonUpgrade.ENCHANTING);
+        return slot < 0 ? -1 : slot + (toolSlot >= 0 && slot >= toolSlot ? 1 : 0);
+    }
+
+    static void draw(List<TextureAtlasSprite> sprites, int toolSlot, int shelfSlot, int shelves, VertexSink sink) {
+        float width = slotWidth(sprites.size() + (toolSlot >= 0 ? 1 : 0) + shelves);
         for (Direction normal : Direction.Plane.HORIZONTAL) {
             float faceX = 0.5F + normal.getStepX() * FACE_DEPTH;
             float faceZ = 0.5F + normal.getStepZ() * FACE_DEPTH;
@@ -40,6 +45,7 @@ final class PylonUpgradeStamps {
             for (int i = 0; i < sprites.size(); i++) {
                 TextureAtlasSprite sprite = sprites.get(i);
                 int slot = i + (toolSlot >= 0 && i >= toolSlot ? 1 : 0);
+                if (shelfSlot >= 0 && slot >= shelfSlot) slot += shelves;
                 float right = START_RIGHT - slot * width;
                 float left = right - width;
                 float x0 = faceX + left * rightX;
@@ -54,9 +60,9 @@ final class PylonUpgradeStamps {
         }
     }
 
-    static void placeTool(PoseStack pose, Direction face, int upgrades, int toolSlot) {
-        float width = slotWidth(upgrades + 1);
-        float right = START_RIGHT - (toolSlot + 0.5F) * width;
+    static void placeItem(PoseStack pose, Direction face, int total, int slot) {
+        float width = slotWidth(total);
+        float right = START_RIGHT - (slot + 0.5F) * width;
         float depth = FACE_DEPTH + 1.0F / 128;
         pose.translate(0.5F + face.getStepX() * depth + face.getStepZ() * right, width / 2,
             0.5F + face.getStepZ() * depth - face.getStepX() * right);

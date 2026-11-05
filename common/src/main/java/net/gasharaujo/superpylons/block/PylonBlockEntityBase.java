@@ -71,6 +71,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private final List<PylonWire> wires = new ArrayList<>();
     private ItemStack breakTool = ItemStack.EMPTY;
     private final List<Auxiliary> auxiliaries = new ArrayList<>(2);
+    private Auxiliary workshopOwner;
+    private final List<ItemStack> shelves = new ArrayList<>();
+    private String workshopStatus = "connections";
+    private long workshopCost;
     private final EnumMap<PylonUpgrade.Slot, PylonUpgrade> upgrades = new EnumMap<>(PylonUpgrade.Slot.class);
     private long experience;
     private int experienceRemainder;
@@ -88,6 +92,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public long getStoredCount() { return contents.count(); }
     public ItemStack getStoredItem() { return contents.displayItem(); }
     public long getItemCapacity() {
+        if (isWorkshop()) return 1;
         return PylonUpgrade.itemCapacity(upgrades.get(PylonUpgrade.Slot.STORAGE));
     }
 
@@ -95,6 +100,32 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public PylonUpgrade getProcessing() { return upgrades.get(PylonUpgrade.Slot.PROCESSING); }
     public double getFuelUses() { return (double) smeltFuel / FURNACE_TICKS_PER_ITEM; }
     public boolean hasSuperUpgrade() { return upgrades.containsKey(PylonUpgrade.Slot.SUPER); }
+
+    public List<ItemStack> getShelfItems() { return shelves.stream().map(ItemStack::copy).toList(); }
+    public String getWorkshopStatus() { return workshopStatus; }
+    public long getWorkshopCost() { return workshopCost; }
+    public int getEnchantmentPower() {
+        PylonUpgrade capacity = upgrades.get(PylonUpgrade.Slot.STORAGE);
+        return capacity == null ? 1 : capacity.tier() == 6 ? 100 : capacity.tier() * 10;
+    }
+    public int getMinimumEnchantments() {
+        PylonUpgrade quantity = upgrades.get(PylonUpgrade.Slot.QUANTITY);
+        return quantity == null ? 1 : quantity.tier() + 1;
+    }
+
+    protected void loadWorkshopStatus(String status, long cost) {
+        workshopStatus = List.of("connections", "input", "lapis", "second_item", "no_result", "xp", "complete").contains(status) ? status : "connections";
+        workshopCost = Math.max(0, cost);
+    }
+
+    protected void loadShelfItems(List<ItemStack> saved) {
+        shelves.clear();
+        if (getSpecialty() != PylonUpgrade.ENCHANTING) return;
+        for (ItemStack shelf : saved) {
+            if (shelves.size() == 64) break;
+            if (PylonShelfEffects.isShelf(shelf)) shelves.add(shelf.copyWithCount(1));
+        }
+    }
 
     public int dropDistance() {
         PylonUpgrade range = upgrades.get(PylonUpgrade.Slot.RANGE);
@@ -180,24 +211,29 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             return false;
         }
         Auxiliary link = new Auxiliary(target.worldPosition, target.wireId);
-        auxiliaries.removeIf(aux -> level.hasChunkAt(aux.pos()) && auxiliary(aux) == null);
-        if (auxiliaries.contains(link)) return auxiliaries.size() == 2;
-        if (auxiliaries.size() == 2 || target.workshop() != null) {
+        int maximum = getSpecialty() == PylonUpgrade.ENCHANTING && hasSuperUpgrade() ? 3 : 2;
+        if (auxiliaries.contains(link)) return auxiliaries.size() >= maximum;
+        int vacant = -1;
+        for (int i = 0; i < Math.min(maximum, auxiliaries.size()); i++) {
+            Auxiliary old = auxiliaries.get(i);
+            if (level.hasChunkAt(old.pos()) && auxiliary(old) == null) { vacant = i; break; }
+        }
+        if ((auxiliaries.size() >= maximum && vacant < 0) || target.workshop() != null) {
             warn(player, "workshop_full");
             return false;
         }
-        auxiliaries.add(link);
-        target.setChanged();
+        if (vacant >= 0) auxiliaries.set(vacant, link);
+        else auxiliaries.add(link);
+        target.workshopOwner = new Auxiliary(worldPosition, wireId);
+        target.sync();
         warn(player, "workshop_linked");
         sync();
-        return auxiliaries.size() == 2;
+        return auxiliaries.size() == maximum;
     }
 
     private boolean validAuxiliaryPosition(BlockPos pos) {
-        int x = pos.getX() - worldPosition.getX();
-        int z = pos.getZ() - worldPosition.getZ();
-        return pos.getY() == worldPosition.getY() && (Math.abs(x) == 2 && z == 0 || Math.abs(z) == 2 && x == 0) &&
-            level.getBlockState(worldPosition.offset(x / 2, 0, z / 2)).isAir();
+        double distance = worldPosition.distSqr(pos);
+        return distance >= 1 && distance <= 25;
     }
 
     private PylonBlockEntityBase auxiliary(Auxiliary link) {
@@ -208,38 +244,135 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private PylonBlockEntityBase workshop() {
-        if (level == null || isWorkshop()) return null;
+        if (level == null || isWorkshop() || workshopOwner == null || !level.hasChunkAt(workshopOwner.pos())) return null;
         Auxiliary self = new Auxiliary(worldPosition, wireId);
-        for (Direction direction : Direction.Plane.HORIZONTAL) {
-            BlockPos pos = worldPosition.relative(direction, 2);
-            if (level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof PylonBlockEntityBase candidate &&
-                candidate.isWorkshop() && candidate.auxiliaries.contains(self) && candidate.validAuxiliaryPosition(worldPosition)) {
-                return candidate;
-            }
+        if (level.getBlockEntity(workshopOwner.pos()) instanceof PylonBlockEntityBase candidate &&
+            candidate.wireId.equals(workshopOwner.id()) && candidate.isWorkshop() &&
+            candidate.auxiliaries.contains(self) && candidate.validAuxiliaryPosition(worldPosition)) {
+            return candidate;
         }
         return null;
     }
 
     public PylonUpgrade auxiliaryMode() {
         PylonBlockEntityBase source = workshop();
+        if (source != null && source.auxiliaries.indexOf(new Auxiliary(worldPosition, wireId)) == 2) return null;
         return source == null ? null : source.getSpecialty();
     }
 
+    private void refreshWorkshopLinks() {
+        for (Auxiliary link : auxiliaries) {
+            PylonBlockEntityBase target = auxiliary(link);
+            Auxiliary owner = new Auxiliary(worldPosition, wireId);
+            if (target != null && !owner.equals(target.workshopOwner)) {
+                target.workshopOwner = owner;
+                target.sync();
+            }
+        }
+    }
+
+    private void clearWorkshopLinks() {
+        for (Auxiliary link : auxiliaries) {
+            PylonBlockEntityBase target = auxiliary(link);
+            if (target != null && new Auxiliary(worldPosition, wireId).equals(target.workshopOwner)) {
+                target.workshopOwner = null;
+                target.sync();
+            }
+        }
+        auxiliaries.clear();
+    }
+
+    private void trimWorkshopLinks() {
+        int maximum = getSpecialty() == PylonUpgrade.ENCHANTING && hasSuperUpgrade() ? 3 : 2;
+        while (auxiliaries.size() > maximum) {
+            Auxiliary link = auxiliaries.remove(auxiliaries.size() - 1);
+            PylonBlockEntityBase target = auxiliary(link);
+            if (target != null && new Auxiliary(worldPosition, wireId).equals(target.workshopOwner)) {
+                target.workshopOwner = null;
+                target.sync();
+            }
+        }
+    }
+
+    protected String saveWorkshopOwner() {
+        return workshopOwner == null ? "" : workshopOwner.pos().asLong() + ":" + workshopOwner.id();
+    }
+
+    protected void loadWorkshopOwner(String value) {
+        workshopOwner = null;
+        String[] parts = value.split(":");
+        if (parts.length != 2) return;
+        try {
+            workshopOwner = new Auxiliary(BlockPos.of(Long.parseLong(parts[0])), UUID.fromString(parts[1]));
+        } catch (IllegalArgumentException ignored) {
+            // Ignore malformed workshop owners.
+        }
+    }
+
     private void emitEnchantingParticles(ServerLevel server) {
-        if (auxiliaries.size() != 2 || server.getGameTime() % 4 != 0) return;
+        if (auxiliaries.size() < 2 || server.getGameTime() % 4 != 0) return;
         PylonBlockEntityBase first = auxiliary(auxiliaries.get(0));
         PylonBlockEntityBase second = auxiliary(auxiliaries.get(1));
         if (first == null || second == null || !(first.suppliesLapis() && second.experience > 0 ||
             second.suppliesLapis() && first.experience > 0)) return;
-        for (Auxiliary link : auxiliaries) {
+        for (Auxiliary link : auxiliaries.subList(0, 2)) {
             double x = link.pos().getX() - worldPosition.getX();
+            double y = link.pos().getY() - worldPosition.getY() + .1;
             double z = link.pos().getZ() - worldPosition.getZ();
             server.sendParticles(ParticleTypes.ENCHANT, worldPosition.getX() + .5, worldPosition.getY() + .67,
-                worldPosition.getZ() + .5, 0, x, 0.1, z, 1);
+                worldPosition.getZ() + .5, 0, x, y, z, 1);
         }
     }
 
     private boolean suppliesLapis() { return getStoredCount() > 0 && getStoredItem().is(Items.LAPIS_LAZULI); }
+
+    private void workshopStatus(String status, long cost) {
+        if (status.equals(workshopStatus) && cost == workshopCost) return;
+        workshopStatus = status;
+        workshopCost = cost;
+        sync();
+    }
+
+    private void operateWorkshop(ServerLevel server) {
+        if (auxiliaries.size() < 2) { workshopStatus("connections", 0); return; }
+        PylonBlockEntityBase first = auxiliary(auxiliaries.get(0));
+        PylonBlockEntityBase second = auxiliary(auxiliaries.get(1));
+        if (first == null || second == null || first.isXpTank() == second.isXpTank()) {
+            workshopStatus("connections", 0);
+            return;
+        }
+        PylonBlockEntityBase xp = first.isXpTank() ? first : second;
+        PylonBlockEntityBase material = first.isXpTank() ? second : first;
+        if (getStoredCount() == 0) { workshopStatus("input", 0); return; }
+        boolean enchanting = getSpecialty() == PylonUpgrade.ENCHANTING;
+        if (enchanting ? !material.suppliesLapis() : material.getStoredCount() == 0) {
+            workshopStatus(enchanting ? "lapis" : "second_item", 0);
+            return;
+        }
+        ItemStack blacklist = ItemStack.EMPTY;
+        if (enchanting && hasSuperUpgrade() && auxiliaries.size() >= 3) {
+            PylonBlockEntityBase third = auxiliary(auxiliaries.get(2));
+            if (third == null) { workshopStatus("connections", 0); return; }
+            blacklist = third.getStoredItem();
+        }
+        PylonWorkshopResult result = enchanting ?
+            PylonEnchanting.enchant(server, worldPosition, getStoredItem(), getEnchantmentPower(),
+                getMinimumEnchantments(), blacklist, shelves) :
+            PylonEnchanting.anvil(getAutomationPlayer(server, AUTOMATION_PROFILE), getStoredItem(), material.getStoredItem());
+        if (result == null) { workshopStatus("no_result", 0); return; }
+        long cost = PylonExperience.pointsAtLevel((int) Math.min(1_000_000, result.levels()));
+        if (xp.experience < cost) { workshopStatus("xp", cost); return; }
+        contents.restore(result.item(), 1, getItemCapacity());
+        xp.experience -= cost;
+        xp.sync();
+        if (enchanting || !hasSuperUpgrade() || !material.getStoredItem().is(Items.ENCHANTED_BOOK)) {
+            material.contents.remove(1);
+            material.sync();
+        }
+        workshopStatus = "complete";
+        workshopCost = cost;
+        sync();
+    }
 
     protected String saveAuxiliaries() {
         StringJoiner data = new StringJoiner(",");
@@ -252,7 +385,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (!isWorkshop()) return;
         for (String entry : saved.split(",")) {
             String[] fields = entry.split(":");
-            if (fields.length != 2 || auxiliaries.size() == 2) continue;
+            if (fields.length != 2 || auxiliaries.size() == 3) continue;
             try {
                 Auxiliary link = new Auxiliary(BlockPos.of(Long.parseLong(fields[0])), UUID.fromString(fields[1]));
                 if (!auxiliaries.contains(link)) auxiliaries.add(link);
@@ -658,6 +791,18 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             return true;
         }
         if (held.getItem() instanceof PylonToolItem tool) return tool.applyTo(this, player, hand);
+        if (getSpecialty() == PylonUpgrade.ENCHANTING && PylonShelfEffects.isShelf(held)) {
+            if (level instanceof ServerLevel) {
+                if (shelves.size() == 64) {
+                    warn(player, "shelf_limit");
+                } else {
+                    shelves.add(held.copyWithCount(1));
+                    held.shrink(1);
+                    sync();
+                }
+            }
+            return true;
+        }
         if (PylonItemRules.isModifier(held)) return false;
         if (level instanceof ServerLevel) {
             if (isXpTank()) interactWithXpBottles(player, held);
@@ -711,6 +856,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         if (next.locksItems() && getStoredCount() > 0) {
             warn(player, "upgrade_needs_empty");
+            return;
+        }
+        if ((next == PylonUpgrade.ANVIL || next == PylonUpgrade.ENCHANTING) && getStoredCount() > 1) {
+            warn(player, "workshop_single_item");
             return;
         }
         if (next == PylonUpgrade.VOID && getEnergy() > 0) {
@@ -780,7 +929,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         int energyCapacity = energyUpgrade == null ? 0 : energyUpgrade.value();
         if ((specialty == PylonUpgrade.VOID && getEnergy() > 0) || getEnergy() > energyCapacity ||
-            getStoredCount() > PylonUpgrade.itemCapacity(storage) ||
+            getStoredCount() > (specialty == PylonUpgrade.ANVIL || specialty == PylonUpgrade.ENCHANTING ?
+                1 : PylonUpgrade.itemCapacity(storage)) ||
             (storage != upgrades.get(PylonUpgrade.Slot.STORAGE) &&
                 (getFluidAmount() > PylonUpgrade.storageCapacity(BASE_FLUID_CAPACITY_MB, storage) ||
                  xpFluidAmount() > PylonXpFluids.millibuckets(PylonUpgrade.storageCapacity(BASE_XP_CAPACITY, storage))))) {
@@ -805,9 +955,14 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             .filter(upgrade -> next.get(upgrade.slot()) != upgrade).toList();
         upgrades.clear();
         upgrades.putAll(next);
+        trimWorkshopLinks();
         updateChunkLoading();
         if (specialty != PylonUpgrade.BREAK) giveBackBreakTool(player);
-        if (previousSpecialty != specialty) auxiliaries.clear();
+        if (previousSpecialty != specialty) {
+            clearWorkshopLinks();
+            for (ItemStack shelf : shelves) player.getInventory().placeItemBackInInventory(shelf);
+            shelves.clear();
+        }
         if (!hasFilter()) {
             clearFilter();
             allowList = false;
@@ -829,6 +984,12 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         PylonUpgrade upgrade = getInstalledUpgrades().stream().findFirst().orElse(null);
         if (upgrade == null) return false;
         if (!(level instanceof ServerLevel)) return true;
+        if (upgrade == PylonUpgrade.ENCHANTING && !shelves.isEmpty()) {
+            ItemStack shelf = shelves.remove(0);
+            player.getInventory().placeItemBackInInventory(shelf);
+            sync();
+            return true;
+        }
 
         if (upgrade == PylonUpgrade.FLUID_STORAGE && getFluidAmount() > 0) {
             warn(player, "tank_needs_empty");
@@ -857,8 +1018,9 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             clearFluid();
         }
         upgrades.remove(upgrade.slot());
+        trimWorkshopLinks();
         updateChunkLoading();
-        if (upgrade == PylonUpgrade.ANVIL || upgrade == PylonUpgrade.ENCHANTING) auxiliaries.clear();
+        if (upgrade == PylonUpgrade.ANVIL || upgrade == PylonUpgrade.ENCHANTING) clearWorkshopLinks();
         if (upgrade == PylonUpgrade.FILTER) {
             clearFilter();
             allowList = false;
@@ -900,6 +1062,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public void tick(ServerLevel server) {
         updatePaintedState();
         updateChunkLoading();
+        if (isWorkshop()) refreshWorkshopLinks();
         tickTransfers(server);
         PylonUpgrade specialty = getSpecialty();
         PylonUpgrade processor = getProcessing();
@@ -920,6 +1083,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         int interval = speed == null ? 60 : speed.value();
         if (Math.floorMod(server.getGameTime(), interval) != Math.floorMod(worldPosition.hashCode(), interval)) return;
+        if (isWorkshop()) {
+            operateWorkshop(server);
+            return;
+        }
 
         PylonUpgrade quantity = upgrades.get(PylonUpgrade.Slot.QUANTITY);
         int amount = quantity == null ? 1 : quantity.value();
@@ -985,7 +1152,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     private void tickTransfers(ServerLevel server) {
         if (wires.isEmpty() && upgrades.values().stream().noneMatch(upgrade -> upgrade.transferType() != null)) return;
-        long[] budget = { getEnergyCapacity() / 10L, getItemCapacity() / 10, getFluidCapacity() / 10,
+        long[] budget = { getEnergyCapacity() / 10L, Math.max(1, getItemCapacity() / 10), getFluidCapacity() / 10,
             getExperienceCapacity() / 10 };
         if (upgrades.get(PylonUpgrade.Slot.STORAGE) == PylonUpgrade.STORAGE_6) {
             Arrays.fill(budget, Long.MAX_VALUE);
@@ -1442,7 +1609,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         updateChunkLoading(server, 0);
         clearFluid();
         wires.clear();
-        auxiliaries.clear();
+        clearWorkshopLinks();
         for (ItemStack output : outputBuffer) Block.popResource(level, worldPosition, output);
         outputBuffer.clear();
         packedDrop = hasPackedDrop();
@@ -1457,8 +1624,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             for (PylonUpgrade upgrade : upgrades.values()) {
                 Block.popResource(level, worldPosition, upgradeStack(upgrade));
             }
+            for (ItemStack shelf : shelves) Block.popResource(level, worldPosition, shelf);
         }
         breakTool = ItemStack.EMPTY;
+        shelves.clear();
         upgrades.clear();
     }
 

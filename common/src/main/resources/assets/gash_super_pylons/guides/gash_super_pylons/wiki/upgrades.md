@@ -31,4 +31,24 @@ Craft the Upgrade Base from five cobblestone in a cross. Tier I uses the base in
 - **XP Tank** exchanges a Bottle o' Enchanting for seven XP and a glass bottle. Use a glass bottle on the tank to reverse the exchange.
 - **Fluid Storage** starts at 32 buckets. Water and Lava Generators also act as tanks.
 
-Item generators can feed Smelt or Pulverize. Processing uses 1,000 FE or one smelting operation's worth of fuel. Enchanter and Anvil currently provide workshop visuals through their bound auxiliary pylons.
+Item generators can feed Smelt or Pulverize. Processing uses 1,000 FE or one smelting operation's worth of fuel.
+
+## Enchanter and Anvil
+
+Shift-right-click the main pylon with the Wrench in Bind mode, then right-click an XP Tank and an item pylon. Either order works. Auxiliaries may be 1–5 blocks from the main pylon, measured between centers, vertically, horizontally or diagonally. Both machines work on one item at a time; the finished item replaces the input in the core and can be extracted by automation. Speed sets the operation interval. Nothing is consumed when an operation cannot finish.
+
+### Enchanter
+
+Put the item in the main pylon and lapis lazuli in the item auxiliary. Each operation consumes one lapis and **27 XP points**, equivalent to three levels starting from zero, at every power level. Capacity 0/I/II/III/IV/V/VI sets base enchanting power to **1/10/20/30/40/50/100**. Quantity on the main pylon sets a minimum of **1/2/3/4/5/6/7 enchantments**; only compatible available enchantments are added. Already enchanted items are not enchanted again.
+
+With Super, bind an optional third pylon containing an enchanted item or book. Its enchantments are blacklisted, its contents are preserved, and its normal core remains visible. Only the first two auxiliaries display enchanting-table books. Removing Super releases the third link.
+
+Right-click Apotheosis/Apothic Enchanting shelves onto the Enchanter to install up to 64 shelves. The integration uses that mod's actual shelf stats and enchantment selection, including Eterna, Quanta, Arcana, treasure access, stability/rectification and shelf blacklists where available. Interface clues do not affect automatic enchanting. Shelves are saved and displayed in the upgrade bar. They are returned before the Enchanter when it becomes next in the removal order.
+
+### Anvil
+
+Put the first anvil item in the main pylon and the second item or repair material in the item auxiliary. Equal enchantment levels combine into the next level, including beyond the normal maximum; different levels keep the greater value. Enchantments must remain compatible. The technical level limit is 255.
+
+The price sums **resulting enchantment level × rarity**: common 1, uncommon 2, rare 3 and very rare 4. For an enchantment above its normal maximum, multiply its price by rarity again, with a minimum multiplier of two. Repairs cost at least one level. The total is converted to XP points using the vanilla level curve from zero and paid by the XP auxiliary.
+
+Super preserves an enchanted book in the second slot. Other donor items and repair materials are still consumed. An operation must improve enchantments or repair damage to spend resources. Jade, WTHIT and The One Probe show machine status, XP cost and installed shelves.

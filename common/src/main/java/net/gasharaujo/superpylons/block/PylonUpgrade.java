@@ -131,7 +131,7 @@ public enum PylonUpgrade {
     public boolean isGenerator() { return item != null || fluid != null; }
     public boolean isTank() { return this == FLUID_STORAGE || generatesFluid(); }
     public boolean locksItems() {
-        return isTank() || this == XP_TANK || this == ANVIL || this == ENCHANTING ||
+        return isTank() || this == XP_TANK ||
             this == FERTILIZER || this == HARVESTER || this == VOID;
     }
 
