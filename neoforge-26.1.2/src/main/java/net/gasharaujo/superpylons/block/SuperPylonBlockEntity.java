@@ -53,11 +53,13 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final PylonTank<FluidResource> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
     private final XpFluidPort xpFluidPort = new XpFluidPort();
+    private final ResourceHandler<FluidResource> combinedFluids = new CombinedFluids();
     private final EnergyJournal energyJournal = new EnergyJournal();
     private final EnergyHandler energyInput = new EnergyPort(Direction.UP);
     private final EnergyHandler energyInternal = new EnergyPort(null);
 
     public ResourceHandler<FluidResource> getFluidHandler() {
+        if (isTank() && isXpTank()) return combinedFluids;
         return isTank() || isVoid() ? fluidHandler : isXpTank() ? xpFluidPort : null;
     }
 
@@ -157,8 +159,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected void interactWithTank(Player player, InteractionHand hand) {
-        FluidUtil.interactWithFluidHandler(player, hand, worldPosition, fluidHandler, null);
+    protected boolean interactWithTank(Player player, InteractionHand hand) {
+        return FluidUtil.interactWithFluidHandler(player, hand, worldPosition, getFluidHandler(), null);
     }
 
     @Override
@@ -440,6 +442,30 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override protected XpFluidState createSnapshot() { return xpFluidSnapshot(); }
         @Override protected void revertToSnapshot(XpFluidState snapshot) { restoreXpFluid(snapshot); }
         @Override protected void onRootCommit(XpFluidState original) { sync(); }
+    }
+
+    private final class CombinedFluids implements ResourceHandler<FluidResource> {
+        private ResourceHandler<FluidResource> port(int index) { return index == 0 ? fluidHandler : xpFluidPort; }
+        private boolean validIndex(int index) { return index == 0 || index == 1; }
+        @Override public int size() { return 2; }
+        @Override public FluidResource getResource(int index) {
+            return validIndex(index) ? port(index).getResource(0) : FluidResource.EMPTY;
+        }
+        @Override public long getAmountAsLong(int index) {
+            return validIndex(index) ? port(index).getAmountAsLong(0) : 0;
+        }
+        @Override public long getCapacityAsLong(int index, FluidResource resource) {
+            return validIndex(index) ? port(index).getCapacityAsLong(0, resource) : 0;
+        }
+        @Override public boolean isValid(int index, FluidResource resource) {
+            return validIndex(index) && port(index).isValid(0, resource);
+        }
+        @Override public int insert(int index, FluidResource resource, int amount, TransactionContext transaction) {
+            return validIndex(index) ? port(index).insert(0, resource, amount, transaction) : 0;
+        }
+        @Override public int extract(int index, FluidResource resource, int amount, TransactionContext transaction) {
+            return validIndex(index) ? port(index).extract(0, resource, amount, transaction) : 0;
+        }
     }
 
     private final class TankHandler extends SnapshotJournal<PylonTank.State<FluidResource>>

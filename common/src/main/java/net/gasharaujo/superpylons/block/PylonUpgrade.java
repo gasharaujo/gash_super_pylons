@@ -31,15 +31,15 @@ public enum PylonUpgrade {
     RANGE_4("range_upgrade_4", Slot.RANGE, 4, 6, null, null),
     RANGE_5("range_upgrade_5", Slot.RANGE, 5, 7, null, null),
     RANGE_6("range_upgrade_6", Slot.RANGE, 6, 8, null, null),
-    COBBLESTONE_GENERATOR("cobblestone_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.COBBLESTONE, null),
-    DEEPSLATE_GENERATOR("deepslate_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.DEEPSLATE, null),
-    BLACKSTONE_GENERATOR("blackstone_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.BLACKSTONE, null),
-    GLASS_GENERATOR("glass_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.GLASS, null),
-    NETHERRACK_GENERATOR("netherrack_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.NETHERRACK, null),
-    SAND_GENERATOR("sand_generator_upgrade", Slot.SPECIALTY, 1, 0, () -> Items.SAND, null),
+    COBBLESTONE_GENERATOR("cobblestone_generator_upgrade", Slot.GENERATOR, 1, 0, () -> Items.COBBLESTONE, null),
+    DEEPSLATE_GENERATOR("deepslate_generator_upgrade", Slot.GENERATOR, 1, 0, () -> Items.DEEPSLATE, null),
+    BLACKSTONE_GENERATOR("blackstone_generator_upgrade", Slot.GENERATOR, 1, 0, () -> Items.BLACKSTONE, null),
+    GLASS_GENERATOR("glass_generator_upgrade", Slot.GENERATOR, 1, 0, () -> Items.GLASS, null),
+    NETHERRACK_GENERATOR("netherrack_generator_upgrade", Slot.GENERATOR, 1, 0, () -> Items.NETHERRACK, null),
+    SAND_GENERATOR("sand_generator_upgrade", Slot.GENERATOR, 1, 0, () -> Items.SAND, null),
     FLUID_STORAGE("fluid_storage_upgrade", Slot.SPECIALTY, 1, 0, null, null),
-    WATER_GENERATOR("water_generator_upgrade", Slot.SPECIALTY, 1, 0, null, () -> Fluids.WATER),
-    LAVA_GENERATOR("lava_generator_upgrade", Slot.SPECIALTY, 1, 0, null, () -> Fluids.LAVA),
+    WATER_GENERATOR("water_generator_upgrade", Slot.GENERATOR, 1, 0, null, () -> Fluids.WATER),
+    LAVA_GENERATOR("lava_generator_upgrade", Slot.GENERATOR, 1, 0, null, () -> Fluids.LAVA),
     ANVIL("anvil_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     ENCHANTING("enchanting_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     CLICKER("clicker_upgrade", Slot.SPECIALTY, 1, 0, null, null),
@@ -75,7 +75,7 @@ public enum PylonUpgrade {
     // Default removal order. Generators are removed before processing.
     public enum Slot {
         SUPER, FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
-        CHUNK_LOADER, PROCESSING, SPECIALTY, STORAGE
+        CHUNK_LOADER, GENERATOR, PROCESSING, SPECIALTY, STORAGE
     }
 
     private final String id;
@@ -117,9 +117,9 @@ public enum PylonUpgrade {
         return switch (slot) {
             case STORAGE, SPEED, QUANTITY, RANGE, ENERGY -> "modifier";
             case PROCESSING -> "processing";
+            case GENERATOR -> "generator";
             case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER, CHUNK_LOADER, SUPER -> "utility";
             case SPECIALTY -> {
-                if (isGenerator()) yield "generator";
                 if (this == FLUID_STORAGE || this == XP_TANK) yield "type";
                 yield "utility";
             }
@@ -131,7 +131,7 @@ public enum PylonUpgrade {
     public boolean isGenerator() { return item != null || fluid != null; }
     public boolean isTank() { return this == FLUID_STORAGE || generatesFluid(); }
     public boolean locksItems() {
-        return isTank() || this == XP_TANK ||
+        return this == FLUID_STORAGE || this == XP_TANK ||
             this == FERTILIZER || this == HARVESTER || this == VOID;
     }
 

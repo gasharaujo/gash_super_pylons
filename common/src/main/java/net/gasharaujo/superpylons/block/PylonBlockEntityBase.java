@@ -96,6 +96,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         return PylonUpgrade.itemCapacity(upgrades.get(PylonUpgrade.Slot.STORAGE));
     }
 
+    public PylonUpgrade getGenerator() { return upgrades.get(PylonUpgrade.Slot.GENERATOR); }
     public PylonUpgrade getSpecialty() { return upgrades.get(PylonUpgrade.Slot.SPECIALTY); }
     public PylonUpgrade getProcessing() { return upgrades.get(PylonUpgrade.Slot.PROCESSING); }
     public double getFuelUses() { return (double) smeltFuel / FURNACE_TICKS_PER_ITEM; }
@@ -133,14 +134,9 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     public List<PylonUpgrade> getInstalledUpgrades() {
-        var ordered = new ArrayList<>(upgrades.values());
-        var specialty = getSpecialty();
-        if (specialty != null && specialty.isGenerator() && getProcessing() != null) {
-            ordered.remove(specialty);
-            ordered.add(ordered.indexOf(getProcessing()), specialty);
-        }
-        return List.copyOf(ordered);
+        return List.copyOf(upgrades.values());
     }
+
     public ItemStack getBreakTool() { return breakTool.copy(); }
 
     protected void loadBreakTool(ItemStack tool) {
@@ -672,8 +668,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     public boolean isTank() {
-        PylonUpgrade specialty = getSpecialty();
-        return specialty != null && specialty.isTank();
+        PylonUpgrade generator = getGenerator();
+        return getSpecialty() == PylonUpgrade.FLUID_STORAGE || generator != null && generator.generatesFluid();
     }
 
     public long getFluidCapacity() {
@@ -683,16 +679,16 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     public boolean canFillFluid(Fluid fluid) {
         if (isVoid()) return fluid != Fluids.EMPTY;
-        PylonUpgrade specialty = getSpecialty();
-        return specialty != null && specialty.isTank() &&
-            (!specialty.generatesFluid() || specialty.generatedFluid() == fluid);
+        PylonUpgrade generator = getGenerator();
+        return fluid != Fluids.EMPTY && (getSpecialty() == PylonUpgrade.FLUID_STORAGE ||
+            generator != null && generator.generatesFluid() && generator.generatedFluid() == fluid);
     }
 
     public abstract long getFluidAmount();
     public abstract Component getFluidName();
     protected abstract void clearFluid();
     protected abstract void generateFluid(Fluid fluid, int amount);
-    protected abstract void interactWithTank(Player player, InteractionHand hand);
+    protected abstract boolean interactWithTank(Player player, InteractionHand hand);
     protected abstract void capabilitiesChanged();
     protected abstract ServerPlayer getAutomationPlayer(ServerLevel level, GameProfile profile);
     protected abstract ItemStack createPackedDrop();
@@ -706,11 +702,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     protected abstract long transferAdjacentExternal(ServerLevel server, BlockPos neighbor, PylonWire.Type type,
                                                      boolean importing, long limit);
     protected abstract PylonExperienceStorage experienceAt(ServerLevel server, BlockPos pos);
-
-    private Item generatedItem() {
-        PylonUpgrade specialty = getSpecialty();
-        return specialty == null ? Items.AIR : specialty.generatedItem();
-    }
 
     public int insertFrom(ItemStack input) {
         int inserted = insertItems(input, input.getCount(), false);
@@ -748,8 +739,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected boolean canExtractItems() {
-        return !isRemoved() && !isVoid() && (hasItemStorage() ||
-            ((isXpTank() || getSpecialty() == PylonUpgrade.HARVESTER) && getStoredCount() > 0));
+        return !isRemoved() && !isVoid() && (hasItemStorage() || getStoredCount() > 0);
     }
 
     protected boolean canStoreItem(ItemStack input) {
@@ -757,8 +747,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             (!hasItemStorage() && !isVoid()) || !allowsItem(input)) return false;
         if (getSpecialty() == PylonUpgrade.PLANTER) return PylonFarming.canPlant(input);
         if (getSpecialty() == PylonUpgrade.PLACER) return input.getItem() instanceof BlockItem;
-        Item output = generatedItem();
-        return output == Items.AIR || PylonItemRules.exactlyEqual(new ItemStack(output), input);
+        return true;
     }
 
     private boolean allowsItem(ItemStack input) {
@@ -805,9 +794,11 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         if (PylonItemRules.isModifier(held)) return false;
         if (level instanceof ServerLevel) {
-            if (isXpTank()) interactWithXpBottles(player, held);
-            else if (isTank()) interactWithTank(player, hand);
-            else insertFrom(held);
+            if (isXpTank() && (held.is(Items.EXPERIENCE_BOTTLE) || held.is(Items.GLASS_BOTTLE))) {
+                interactWithXpBottles(player, held);
+            } else if (!isTank() || !interactWithTank(player, hand)) {
+                insertFrom(held);
+            }
         }
         return true;
     }
@@ -844,11 +835,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private void install(Player player, ItemStack held, PylonUpgrade next) {
-        if (next.slot() == PylonUpgrade.Slot.PROCESSING && !canProcessWith(getSpecialty()) ||
-            next.slot() == PylonUpgrade.Slot.SPECIALTY && getProcessing() != null && !canProcessWith(next)) {
-            warn(player, "processing_incompatible");
-            return;
-        }
         PylonUpgrade previous = upgrades.get(next.slot());
         if (previous != null && previous.tier() >= next.tier()) {
             warn(player, "upgrade_slot_occupied");
@@ -864,11 +850,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         if (next == PylonUpgrade.VOID && getEnergy() > 0) {
             warn(player, "specialty_needs_empty");
-            return;
-        }
-        if (next.generatedItem() != Items.AIR && getStoredCount() > 0 &&
-            !PylonItemRules.exactlyEqual(getStoredItem(), new ItemStack(next.generatedItem()))) {
-            warn(player, "upgrade_incompatible_items");
             return;
         }
         held.shrink(1);
@@ -914,15 +895,15 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
         PylonUpgrade previousSpecialty = getSpecialty();
         PylonUpgrade specialty = next.get(PylonUpgrade.Slot.SPECIALTY);
+        PylonUpgrade generator = next.get(PylonUpgrade.Slot.GENERATOR);
+        boolean generatorChanged = getGenerator() != generator;
         PylonUpgrade processor = next.get(PylonUpgrade.Slot.PROCESSING);
         PylonUpgrade storage = next.get(PylonUpgrade.Slot.STORAGE);
         PylonUpgrade energyUpgrade = next.get(PylonUpgrade.Slot.ENERGY);
         boolean energyUpgradeChanged = upgrades.get(PylonUpgrade.Slot.ENERGY) != energyUpgrade;
-        if (processor != null && !canProcessWith(specialty)) {
-            warn(player, "processing_incompatible");
-            return;
-        }
-        if ((previousSpecialty != specialty && (hasExperience() || getFluidAmount() > 0)) ||
+        boolean nextTank = specialty == PylonUpgrade.FLUID_STORAGE || generator != null && generator.generatesFluid();
+        if ((previousSpecialty != specialty && hasExperience()) ||
+            (getFluidAmount() > 0 && (!nextTank || generatorChanged && getGenerator() != null && getGenerator().generatesFluid())) ||
             ((previousSpecialty != specialty || getProcessing() != processor) && !outputBuffer.isEmpty())) {
             warn(player, "specialty_needs_empty");
             return;
@@ -940,11 +921,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (specialty != null && getStoredCount() > 0 && specialty != previousSpecialty) {
             if (specialty.locksItems()) {
                 warn(player, "upgrade_needs_empty");
-                return;
-            }
-            Item generated = specialty.generatedItem();
-            if (generated != Items.AIR && !PylonItemRules.exactlyEqual(getStoredItem(), new ItemStack(generated))) {
-                warn(player, "upgrade_incompatible_items");
                 return;
             }
         }
@@ -968,7 +944,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             allowList = false;
         }
         warnedPlayer = null;
-        if (previousSpecialty != specialty || energyUpgradeChanged) capabilitiesChanged();
+        if (previousSpecialty != specialty || generatorChanged || energyUpgradeChanged) capabilitiesChanged();
         sync();
         for (PylonUpgrade upgrade : returned) giveUpgrade(player, upgrade);
     }
@@ -1073,59 +1049,33 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 sync();
             }
         }
-        if (specialty == null && processor == null) return;
+        PylonUpgrade generator = getGenerator();
+        if (specialty == null && processor == null && generator == null) return;
         if (specialty == PylonUpgrade.ENCHANTING) emitEnchantingParticles(server);
         PylonUpgrade speed = upgrades.get(PylonUpgrade.Slot.SPEED);
         int speedTier = speed == null ? 0 : speed.tier();
-        if (specialty == PylonUpgrade.XP_TANK) {
-            transferExperience(server, 1 << speedTier);
-            return;
-        }
+        if (specialty == PylonUpgrade.XP_TANK) transferExperience(server, 1 << speedTier);
         int interval = speed == null ? 60 : speed.value();
         if (Math.floorMod(server.getGameTime(), interval) != Math.floorMod(worldPosition.hashCode(), interval)) return;
-        if (isWorkshop()) {
-            operateWorkshop(server);
-            return;
-        }
-
         PylonUpgrade quantity = upgrades.get(PylonUpgrade.Slot.QUANTITY);
         int amount = quantity == null ? 1 : quantity.value();
-        if (specialty == PylonUpgrade.FERTILIZER) {
-            fertilize(server, Math.max(1, speedTier), amount);
-            return;
+        if (generator != null && !isVoid()) {
+            if (generator.generatesFluid()) generateFluid(generator.generatedFluid(), amount * 100);
+            else if (contents.add(new ItemStack(generator.generatedItem()), amount, getItemCapacity()) > 0) sync();
         }
-        if (specialty == PylonUpgrade.HARVESTER) {
-            harvest(server);
-            return;
-        }
-        if (specialty == PylonUpgrade.CLICKER) {
-            clickTarget(server);
-            return;
-        }
-        if (specialty == PylonUpgrade.BREAK) {
-            breakTarget(server);
-            return;
-        }
-        if (specialty == PylonUpgrade.MAGNET) {
-            collectItems(server, amount);
-            return;
-        }
-        if (specialty == PylonUpgrade.PLANTER) {
-            plant(server, amount);
-            return;
-        }
-        if (specialty == PylonUpgrade.PLACER) {
-            place(server, workTarget(), workDirection.getOpposite());
-            return;
-        }
-        if (specialty == PylonUpgrade.DROPPER) {
-            dropItems(server, amount);
-            return;
-        }
-        if (specialty != null && specialty.generatesFluid()) {
-            generateFluid(specialty.generatedFluid(), amount * 100);
-        } else if (generatedItem() != Items.AIR && getStoredCount() < getItemCapacity()) {
-            if (contents.add(new ItemStack(generatedItem()), amount, getItemCapacity()) > 0) sync();
+        if (isWorkshop()) operateWorkshop(server);
+        else if (specialty != null) {
+            switch (specialty) {
+                case FERTILIZER -> fertilize(server, Math.max(1, speedTier), amount);
+                case HARVESTER -> harvest(server);
+                case CLICKER -> clickTarget(server);
+                case BREAK -> breakTarget(server);
+                case MAGNET -> collectItems(server, amount);
+                case PLANTER -> plant(server, amount);
+                case PLACER -> place(server, workTarget(), workDirection.getOpposite());
+                case DROPPER -> dropItems(server, amount);
+                default -> { }
+            }
         }
         if (processor != null) process(server, processor, amount, quantity == null ? 0 : quantity.tier());
     }
@@ -1279,10 +1229,6 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             maximum -= inserted;
             if (maximum == 0 || getStoredCount() >= getItemCapacity()) return;
         }
-    }
-
-    private static boolean canProcessWith(PylonUpgrade specialty) {
-        return specialty == null || specialty.generatedItem() != Items.AIR;
     }
 
     private void process(ServerLevel server, PylonUpgrade processor, int amount, int tier) {

@@ -33,6 +33,8 @@ Faça o Upgrade Base com cinco pedregulhos em cruz. Use a base no centro para o 
 
 Geradores de itens podem abastecer Smelt ou Pulverize. O processamento gasta 1.000 FE ou combustível equivalente a um uso de fornalha.
 
+Geradores têm espaço próprio: só é permitido um gerador, independente da utilidade/tipo e do processamento. A geração funciona junto com os outros upgrades instalados. Um item diferente no estoque pausa a geração em vez de impedir a instalação. Geradores de água/lava podem guardar itens e fluido; o tipo instalado ainda pode bloquear a entrada de itens. Com XP Tank, a automação de fluidos enxerga dois reservatórios separados.
+
 ## Enchanter e Anvil
 
 Com a Wrench no modo Vincular, use Shift + botão direito no principal e botão direito num XP Tank e num auxiliar de itens. A ordem desses dois auxiliares é livre. Eles podem ficar entre 1 e 5 blocos do principal, medidos entre centros, inclusive na vertical e na diagonal. As duas máquinas trabalham com um item por vez; o resultado substitui a entrada no núcleo e pode ser retirado por automação. Speed controla o intervalo. Uma operação incompleta não consome recursos.

@@ -41,16 +41,18 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final PylonTank<FluidStack> tank = new PylonTank<>();
     private final TankHandler fluidHandler = new TankHandler();
     private final XpFluidPort xpFluidPort = new XpFluidPort();
+    private final IFluidHandler combinedFluids = new CombinedFluids();
     private final EnergyPort energyInput = new EnergyPort(Direction.UP);
     private final EnergyPort energyInternal = new EnergyPort(null);
     private LazyOptional<IEnergyStorage> inputCapability = LazyOptional.of(() -> energyInput);
     private LazyOptional<IEnergyStorage> internalCapability = LazyOptional.of(() -> energyInternal);
-    private LazyOptional<IFluidHandler> tankCapability = LazyOptional.of(() -> fluidHandler);
+    private LazyOptional<IFluidHandler> tankCapability = LazyOptional.of(this::getFluidHandler);
     private LazyOptional<IFluidHandler> xpFluidCapability = LazyOptional.of(() -> xpFluidPort);
     private LazyOptional<IItemHandler> itemCapability = LazyOptional.of(() -> itemPort);
     private LazyOptional<PylonExperienceStorage> experienceCapability = LazyOptional.of(() -> this);
 
     public IFluidHandler getFluidHandler() {
+        if (isTank() && isXpTank()) return combinedFluids;
         return isTank() || isVoid() ? fluidHandler : isXpTank() ? xpFluidPort : null;
     }
 
@@ -163,8 +165,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected void interactWithTank(Player player, InteractionHand hand) {
-        FluidUtil.interactWithFluidHandler(player, hand, fluidHandler);
+    protected boolean interactWithTank(Player player, InteractionHand hand) {
+        return FluidUtil.interactWithFluidHandler(player, hand, getFluidHandler());
     }
 
     @Override
@@ -231,7 +233,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private void createPylonCapabilities() {
         experienceCapability = LazyOptional.of(() -> this);
         itemCapability = LazyOptional.of(() -> itemPort);
-        tankCapability = LazyOptional.of(() -> fluidHandler);
+        tankCapability = LazyOptional.of(this::getFluidHandler);
         xpFluidCapability = LazyOptional.of(() -> xpFluidPort);
         inputCapability = LazyOptional.of(() -> energyInput);
         internalCapability = LazyOptional.of(() -> energyInternal);
@@ -509,6 +511,29 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
                 sync();
             }
             return moved;
+        }
+    }
+
+    private final class CombinedFluids implements IFluidHandler {
+        @Override public int getTanks() { return 2; }
+        @Override public FluidStack getFluidInTank(int index) {
+            return index == 0 ? fluidHandler.getFluidInTank(0) : index == 1 ? xpFluidPort.getFluidInTank(0) : FluidStack.EMPTY;
+        }
+        @Override public int getTankCapacity(int index) {
+            return index == 0 ? fluidHandler.getTankCapacity(0) : index == 1 ? xpFluidPort.getTankCapacity(0) : 0;
+        }
+        @Override public boolean isFluidValid(int index, FluidStack resource) {
+            return index == 0 ? fluidHandler.isFluidValid(0, resource) : index == 1 && xpFluidPort.isFluidValid(0, resource);
+        }
+        @Override public int fill(FluidStack resource, FluidAction action) {
+            return xpFluidPort.isFluidValid(0, resource) ? xpFluidPort.fill(resource, action) : fluidHandler.fill(resource, action);
+        }
+        @Override public FluidStack drain(FluidStack resource, FluidAction action) {
+            return xpFluidPort.isFluidValid(0, resource) ? xpFluidPort.drain(resource, action) : fluidHandler.drain(resource, action);
+        }
+        @Override public FluidStack drain(int maximum, FluidAction action) {
+            FluidStack result = fluidHandler.drain(maximum, action);
+            return result.isEmpty() ? xpFluidPort.drain(maximum, action) : result;
         }
     }
 

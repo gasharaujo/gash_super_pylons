@@ -33,6 +33,8 @@ Craft the Upgrade Base from five cobblestone in a cross. Tier I uses the base in
 
 Item generators can feed Smelt or Pulverize. Processing uses 1,000 FE or one smelting operation's worth of fuel.
 
+Generators have their own slot: only one generator is allowed, independently of utility/type and processing upgrades. Generation runs alongside the other installed upgrades. A different stored item pauses item generation instead of blocking installation. Water/lava generators can hold items as well as fluid; an installed type may still block item input. With XP Tank, fluid automation exposes two separate reservoirs.
+
 ## Enchanter and Anvil
 
 Shift-right-click the main pylon with the Wrench in Bind mode, then right-click an XP Tank and an item pylon. Either order works. Auxiliaries may be 1–5 blocks from the main pylon, measured between centers, vertically, horizontally or diagonally. Both machines work on one item at a time; the finished item replaces the input in the core and can be extracted by automation. Speed sets the operation interval. Nothing is consumed when an operation cannot finish.

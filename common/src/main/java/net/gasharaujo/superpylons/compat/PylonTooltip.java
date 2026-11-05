@@ -64,16 +64,22 @@ final class PylonTooltip {
     private static Component primaryStorage(PylonBlockEntityBase pylon) {
         PylonUpgrade specialty = pylon.getSpecialty();
         if (pylon.isVoid()) return Component.translatable("tooltip.gash_super_pylons.void");
+        Component modes = Component.empty();
+        boolean hasMode = false;
         if (specialty == PylonUpgrade.XP_TANK) {
-            return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.experience",
-                pylon.getExperience(), capacityLabel(pylon.getExperienceCapacity())));
+            modes = Component.translatable("tooltip.gash_super_pylons.experience",
+                pylon.getExperience(), capacityLabel(pylon.getExperienceCapacity()));
+            hasMode = true;
         }
         if (pylon.isTank()) {
             long amount = pylon.getFluidAmount();
             Object capacity = capacityLabel(pylon.getFluidCapacity());
-            if (amount == 0) return Component.translatable("tooltip.gash_super_pylons.empty_tank", capacity);
-            return Component.translatable("tooltip.gash_super_pylons.fluid", pylon.getFluidName(), amount, capacity);
+            Component fluid = amount == 0 ? Component.translatable("tooltip.gash_super_pylons.empty_tank", capacity) :
+                Component.translatable("tooltip.gash_super_pylons.fluid", pylon.getFluidName(), amount, capacity);
+            modes = hasMode ? Component.empty().append(modes).append(" | ").append(fluid) : fluid;
+            hasMode = true;
         }
+        if (hasMode) return withItems(pylon, modes);
         if (specialty != null && specialty.locksItems()) {
             return withItems(pylon, Component.translatable("tooltip.gash_super_pylons.item_storage_locked"));
         }
