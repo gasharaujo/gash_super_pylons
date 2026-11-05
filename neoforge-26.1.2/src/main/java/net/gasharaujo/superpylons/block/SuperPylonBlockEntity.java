@@ -24,6 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.storage.TagValueOutput;
@@ -77,6 +78,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         output.putString("paint", savePaint());
         output.putString("wire_id", saveWireId());
         output.putString("wires", saveWires());
+        output.putString("wire_inputs", saveWireInputs());
         output.putString("auxiliaries", saveAuxiliaries());
         output.putString("workshop_owner", saveWorkshopOwner());
         output.putString("workshop_status", getWorkshopStatus());
@@ -117,6 +119,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadWorkDirection(input.getStringOr("work_direction", ""));
         loadForcedRadius(input.getIntOr("forced_radius", 0));
         loadDecorations(input.getStringOr("paint", ""), input.getStringOr("wire_id", ""), input.getStringOr("wires", ""));
+        loadWireInputs(input.getStringOr("wire_inputs", ""));
         ValueInput filterData = input.childOrEmpty("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries);
@@ -258,34 +261,111 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected long transferAdjacentExternal(ServerLevel server, BlockPos neighbor, PylonWire.Type type,
                                             boolean importing, long limit) {
-        int maximum = (int) Math.min(Integer.MAX_VALUE, limit);
+        if (!importing && hasBulkTransfer()) {
+            long accepted = insertIntoCondenser(server.getBlockEntity(neighbor), type, limit);
+            if (accepted >= 0) return accepted;
+        }
         return switch (type) {
             case ITEM -> {
                 var other = server.getCapability(Capabilities.Item.BLOCK, neighbor, workDirection().getOpposite());
-                yield ResourceHandlerUtil.move(importing ? other : itemPort, importing ? itemPort : other,
-                    resource -> true, maximum, null);
+                yield moveResources(importing ? other : itemPort, importing ? itemPort : other, limit);
             }
             case FLUID -> {
                 var other = server.getCapability(Capabilities.Fluid.BLOCK, neighbor, workDirection().getOpposite());
-                yield ResourceHandlerUtil.move(importing ? other : fluidHandler, importing ? fluidHandler : other,
-                    resource -> true, maximum, null);
+                yield moveResources(importing ? other : fluidHandler, importing ? fluidHandler : other, limit);
             }
             case ENERGY -> {
                 var other = energyAt(server, neighbor, workDirection().getOpposite());
-                yield EnergyHandlerUtil.move(importing ? other : energyInternal, importing ? energyInternal : other,
-                    maximum, null);
+                yield moveEnergy(importing ? other : energyInternal, importing ? energyInternal : other, limit);
             }
             case XP -> moveLiquidXp(server, neighbor, importing,
-                (int) Math.min(Integer.MAX_VALUE, PylonXpFluids.millibuckets(limit)));
+                PylonXpFluids.millibuckets(limit));
         };
     }
 
-    private int moveLiquidXp(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
+    private static <T extends net.neoforged.neoforge.transfer.resource.Resource> long moveResources(
+            ResourceHandler<T> source, ResourceHandler<T> target, long limit) {
+        if (source == null || target == null) return 0;
+        long moved = 0;
+        while (moved < limit) {
+            long before = resourceAmount(source);
+            long targetBefore = resourceAmount(target);
+            int step = ResourceHandlerUtil.move(source, target, resource -> true, (int) Math.min(Integer.MAX_VALUE, limit - moved), null);
+            if (step <= 0) break;
+            moved += step;
+            boolean targetProgress = resourceAmount(target) > targetBefore && finiteResourceCapacity(target);
+            if (limit == Long.MAX_VALUE && resourceAmount(source) >= before && !targetProgress) break;
+        }
+        return moved;
+    }
+
+    private static <T extends net.neoforged.neoforge.transfer.resource.Resource> boolean finiteResourceCapacity(ResourceHandler<T> handler) {
+        for (int slot = 0; slot < handler.size(); slot++) {
+            if (handler.getCapacityAsLong(slot, handler.getResource(slot)) == Long.MAX_VALUE) return false;
+        }
+        return true;
+    }
+
+    private static long resourceAmount(ResourceHandler<?> handler) {
+        long total = 0;
+        for (int slot = 0; slot < handler.size(); slot++) {
+            long amount = handler.getAmountAsLong(slot);
+            if (amount > Long.MAX_VALUE - total) return Long.MAX_VALUE;
+            total += amount;
+        }
+        return total;
+    }
+
+    private static long moveEnergy(EnergyHandler source, EnergyHandler target, long limit) {
+        if (source == null || target == null) return 0;
+        long moved = 0;
+        while (moved < limit) {
+            long before = source.getAmountAsLong();
+            long targetBefore = target.getAmountAsLong();
+            int step = EnergyHandlerUtil.move(source, target, (int) Math.min(Integer.MAX_VALUE, limit - moved), null);
+            if (step <= 0) break;
+            moved += step;
+            if (limit == Long.MAX_VALUE && source.getAmountAsLong() >= before && target.getAmountAsLong() <= targetBefore) break;
+        }
+        return moved;
+    }
+
+    private long insertIntoCondenser(BlockEntity target, PylonWire.Type type, long limit) {
+        Object template;
+        long available;
+        Fluid fluid = preferredXpFluid();
+        switch (type) {
+            case ITEM -> { template = getStoredItem(); available = getAvailableItemCount(); }
+            case FLUID -> { template = tank.resource(); available = tank.available(); }
+            case XP -> {
+                if (fluid == net.minecraft.world.level.material.Fluids.EMPTY) return -1;
+                template = FluidResource.of(fluid);
+                available = availableXpFluid();
+                limit = PylonXpFluids.millibuckets(limit);
+            }
+            default -> { return -1; }
+        }
+        var port = PylonCondenserCompat.port(target, type != PylonWire.Type.ITEM, template);
+        if (port == null) return -1;
+        long moved = port.insert(Math.min(limit, available));
+        if (moved > 0) {
+            switch (type) {
+                case ITEM -> contents.remove(moved);
+                case FLUID -> tank.discard(moved);
+                case XP -> moveXpFluid(false, fluid, moved);
+                default -> { }
+            }
+            sync();
+        }
+        return moved;
+    }
+
+    private long moveLiquidXp(ServerLevel server, BlockPos neighbor, boolean importing, long limit) {
         var other = server.getCapability(Capabilities.Fluid.BLOCK, neighbor, workDirection().getOpposite());
         if (other == null) return 0;
-        if (importing) return ResourceHandlerUtil.move(other, xpFluidPort, resource -> true, limit, null);
+        if (importing) return moveResources(other, xpFluidPort, limit);
         Fluid preferred = preferredXpFluid();
-        int moved = exportLiquidXp(other, preferred, limit);
+        long moved = exportLiquidXp(other, preferred, limit);
         if (moved > 0) return moved;
         for (Fluid fluid : PylonXpFluids.available()) {
             if (fluid == preferred) continue;
@@ -295,7 +375,21 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return 0;
     }
 
-    private int exportLiquidXp(ResourceHandler<FluidResource> target, Fluid fluid, int limit) {
+    private long exportLiquidXp(ResourceHandler<FluidResource> target, Fluid fluid, long limit) {
+        long moved = 0;
+        while (moved < limit) {
+            long before = xpFluidAmount();
+            long targetBefore = resourceAmount(target);
+            int step = exportLiquidXpBatch(target, fluid, (int) Math.min(Integer.MAX_VALUE, limit - moved));
+            if (step <= 0) break;
+            moved += step;
+            boolean targetProgress = resourceAmount(target) > targetBefore && finiteResourceCapacity(target);
+            if (limit == Long.MAX_VALUE && xpFluidAmount() >= before && !targetProgress) break;
+        }
+        return moved;
+    }
+
+    private int exportLiquidXpBatch(ResourceHandler<FluidResource> target, Fluid fluid, int limit) {
         int available = xpFluidLimit(false, fluid, limit);
         if (available == 0) return 0;
         FluidResource resource = FluidResource.of(fluid);

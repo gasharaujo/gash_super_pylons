@@ -69,6 +69,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private int forcedRadius;
     private UUID wireId = UUID.randomUUID();
     private final List<PylonWire> wires = new ArrayList<>();
+    private final List<PylonWire> wireInputs = new ArrayList<>();
     private ItemStack breakTool = ItemStack.EMPTY;
     private final List<Auxiliary> auxiliaries = new ArrayList<>(2);
     private Auxiliary workshopOwner;
@@ -90,6 +91,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     public boolean isCreativeStorage() { return upgrades.containsKey(PylonUpgrade.Slot.CREATIVE); }
+    public boolean hasBulkTransfer() { return upgrades.get(PylonUpgrade.Slot.STORAGE) == PylonUpgrade.STORAGE_6; }
     public long getAvailableItemCount() { return contents.available(); }
     public int getAvailableEnergy() { return energy.available(getEnergyCapacity()); }
     public long getAvailableExperience() {
@@ -423,6 +425,18 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         return data.toString();
     }
 
+    protected String saveWireInputs() {
+        return wireInputs.stream().map(PylonWire::encode).collect(Collectors.joining(","));
+    }
+
+    protected void loadWireInputs(String saved) {
+        wireInputs.clear();
+        for (String entry : saved.split(",")) {
+            PylonWire wire = PylonWire.decode(entry);
+            if (wire != null && validWireDistance(wire.target()) && !wireInputs.contains(wire)) wireInputs.add(wire);
+        }
+    }
+
     protected void loadDecorations(String block, String anchor, String links) {
         paint = block.isEmpty() ? Blocks.IRON_BLOCK : PylonToolItem.blockById(block);
         try {
@@ -451,7 +465,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             return false;
         }
         wires.add(new PylonWire(type, target.worldPosition, target.wireId));
-        target.setChanged();
+        target.recordWireInput(type, this);
         warn(player, "wire_connected");
         sync();
         return true;
@@ -471,12 +485,22 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             PylonWire wire = iterator.next();
             if (wire.target().equals(target.worldPosition) && wire.targetId().equals(target.wireId)) {
                 iterator.remove();
+                target.wireInputs.remove(new PylonWire(wire.type(), worldPosition, wireId));
+                target.sync();
                 player.getInventory().placeItemBackInInventory(wire.type().itemStack());
                 removed = true;
             }
         }
         if (removed) sync();
         return removed;
+    }
+
+    private void recordWireInput(PylonWire.Type type, PylonBlockEntityBase source) {
+        PylonWire input = new PylonWire(type, source.worldPosition, source.wireId);
+        if (!wireInputs.contains(input)) {
+            wireInputs.add(input);
+            sync();
+        }
     }
 
     private boolean supportsTransfer(PylonWire.Type type, boolean input) {
@@ -597,15 +621,15 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         return (int) Math.min(requested, available);
     }
 
-    protected void moveXpFluid(boolean input, Fluid fluid, int amount) {
+    protected void moveXpFluid(boolean input, Fluid fluid, long amount) {
         int ratio = PylonXpFluids.MILLIBUCKETS_PER_POINT;
         if (input) {
             if (!hasExperience() || experienceFluid.isEmpty()) experienceFluid = PylonXpFluids.id(fluid);
-            int remainder = experienceRemainder + amount % ratio;
+            int remainder = experienceRemainder + (int) (amount % ratio);
             experience += amount / ratio + remainder / ratio;
             experienceRemainder = remainder % ratio;
         } else if (!isCreativeStorage()) {
-            int remainder = experienceRemainder - amount % ratio;
+            int remainder = experienceRemainder - (int) (amount % ratio);
             experience -= amount / ratio + (remainder < 0 ? 1 : 0);
             experienceRemainder = Math.floorMod(remainder, ratio);
         }
@@ -668,7 +692,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (!(level instanceof ServerLevel) || isRemoved() || requested <= 0) return 0;
         if (isVoid()) return input ? requested : 0;
         if (!isEnergy()) return 0;
-        return energy.limit(input, requested, getEnergyCapacity(), upgrades.get(PylonUpgrade.Slot.ENERGY).energyTransfer(),
+        return energy.limit(input, requested, getEnergyCapacity(), hasBulkTransfer() ? Integer.MAX_VALUE : upgrades.get(PylonUpgrade.Slot.ENERGY).energyTransfer(),
             level.getGameTime());
     }
 
@@ -737,10 +761,34 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     protected ItemStack extractAutomation(int amount, boolean simulate) {
         if (!(level instanceof ServerLevel) || !canExtractItems()) return ItemStack.EMPTY;
+        if (hasBulkTransfer()) return transferItemBatch(amount, simulate);
         if (simulate) return contents.peek(amount);
         ItemStack extracted = contents.extract(amount);
         if (!extracted.isEmpty()) sync();
         return extracted;
+    }
+
+    protected ItemStack transferItemBatch(int maximum, boolean simulate) {
+        if (!canExtractItems() || maximum <= 0 || getAvailableItemCount() == 0) return ItemStack.EMPTY;
+        ItemStack batch = getStoredItem().copyWithCount((int) Math.min(maximum, getAvailableItemCount()));
+        if (!simulate) {
+            contents.remove(batch.getCount());
+            sync();
+        }
+        return batch;
+    }
+
+    protected void returnTransferItems(ItemStack remainder, boolean copied) {
+        if (remainder.isEmpty() || copied) return;
+        if (!isRemoved() && !contentsDropped) {
+            int restored = contents.add(remainder, remainder.getCount(), getItemCapacity());
+            remainder = remainder.copyWithCount(remainder.getCount() - restored);
+            if (restored > 0) sync();
+        }
+        while (!remainder.isEmpty()) {
+            ItemStack drop = remainder.split(remainder.getMaxStackSize());
+            Block.popResource(level, worldPosition, drop);
+        }
     }
 
     protected boolean hasItemStorage() {
@@ -1119,33 +1167,41 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (wires.isEmpty() && upgrades.values().stream().noneMatch(upgrade -> upgrade.transferType() != null)) return;
         long[] budget = { getEnergyCapacity() / 10L, Math.max(1, getItemCapacity() / 10), getFluidCapacity() / 10,
             getExperienceCapacity() / 10 };
-        if (upgrades.get(PylonUpgrade.Slot.STORAGE) == PylonUpgrade.STORAGE_6) {
+        if (hasBulkTransfer()) {
             Arrays.fill(budget, Long.MAX_VALUE);
         }
         boolean removed = false;
+        List<ItemStack> detached = new ArrayList<>();
         for (Iterator<PylonWire> it = wires.iterator(); it.hasNext();) {
             PylonWire wire = it.next();
             if (!server.hasChunkAt(wire.target())) continue;
             if (!(server.getBlockEntity(wire.target()) instanceof PylonBlockEntityBase target) ||
                 !wire.targetId().equals(target.wireId)) {
                 it.remove();
+                detached.add(wire.type().itemStack());
                 removed = true;
                 continue;
             }
             int slot = wire.type().ordinal();
-            if (budget[slot] <= 0 || !supportsTransfer(wire.type(), false) ||
+            target.recordWireInput(wire.type(), this);
+            boolean bulk = hasBulkTransfer() || target.hasBulkTransfer();
+            if ((!bulk && budget[slot] <= 0) || !supportsTransfer(wire.type(), false) ||
                 !target.supportsTransfer(wire.type(), true)) continue;
-            budget[slot] -= moveToPylon(server, wire.type(), target, budget[slot]);
+            long moved = moveToPylon(server, wire.type(), target, bulk ? Long.MAX_VALUE : budget[slot]);
+            if (!bulk) budget[slot] -= moved;
         }
         if (removed) sync();
+        for (ItemStack wire : detached) Block.popResource(server, worldPosition, wire);
         BlockPos adjacent = workTarget();
         if (!server.hasChunkAt(adjacent)) return;
         var neighbor = server.getBlockEntity(adjacent);
         for (PylonUpgrade upgrade : upgrades.values()) {
             PylonWire.Type type = upgrade.transferType();
             boolean importing = upgrade.importsResource();
-            if (type == null || !supportsTransfer(type, importing) || budget[type.ordinal()] == 0) continue;
-            long limit = isVoid() && importing ? Long.MAX_VALUE : budget[type.ordinal()];
+            if (type == null || !supportsTransfer(type, importing)) continue;
+            boolean bulk = hasBulkTransfer() || neighbor instanceof PylonBlockEntityBase pylon && pylon.hasBulkTransfer();
+            if (!bulk && budget[type.ordinal()] == 0) continue;
+            long limit = bulk || isVoid() && importing ? Long.MAX_VALUE : budget[type.ordinal()];
             if (neighbor instanceof PylonBlockEntityBase pylon && pylon.supportsTransfer(type, !importing)) {
                 if (importing) pylon.moveToPylon(server, type, this, limit);
                 else moveToPylon(server, type, pylon, limit);
@@ -1219,7 +1275,9 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private int moveWireEnergy(ServerLevel server, PylonBlockEntityBase target, int limit) {
-        int amount = target.energyLimit(true, energyLimit(false, limit));
+        boolean bulk = hasBulkTransfer() || target.hasBulkTransfer();
+        int amount = bulk ? Math.max(0, Math.min(limit, Math.min(getAvailableEnergy(),
+            target.getEnergyCapacity() - target.getEnergy()))) : target.energyLimit(true, energyLimit(false, limit));
         if (amount <= 0) return 0;
         long now = server.getGameTime();
         energy.transfer(false, amount, now);
@@ -1573,7 +1631,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         contentsDropped = true;
         updateChunkLoading(server, 0);
         clearFluid();
-        wires.clear();
+        dropConnectedWires(server);
         clearWorkshopLinks();
         for (ItemStack output : outputBuffer) Block.popResource(level, worldPosition, output);
         outputBuffer.clear();
@@ -1594,6 +1652,47 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         breakTool = ItemStack.EMPTY;
         shelves.clear();
         upgrades.clear();
+    }
+
+    private void dropConnectedWires(ServerLevel server) {
+        List<ItemStack> drops = new ArrayList<>();
+        for (PylonWire wire : wires) {
+            drops.add(wire.type().itemStack());
+            if (server.hasChunkAt(wire.target()) && server.getBlockEntity(wire.target()) instanceof PylonBlockEntityBase target &&
+                target.wireId.equals(wire.targetId())) {
+                target.wireInputs.remove(new PylonWire(wire.type(), worldPosition, wireId));
+                target.sync();
+            }
+        }
+        wires.clear();
+        for (PylonWire input : new ArrayList<>(wireInputs)) {
+            server.getChunk(input.target());
+            if (server.getBlockEntity(input.target()) instanceof PylonBlockEntityBase source && source.wireId.equals(input.targetId())) {
+                detachWireSource(source, drops);
+            }
+        }
+        wireInputs.clear();
+        int reach = PylonWire.MAX_LENGTH;
+        for (int x = (worldPosition.getX() - reach) >> 4; x <= (worldPosition.getX() + reach) >> 4; x++) {
+            for (int z = (worldPosition.getZ() - reach) >> 4; z <= (worldPosition.getZ() + reach) >> 4; z++) {
+                var chunk = server.getChunkSource().getChunkNow(x, z);
+                if (chunk == null) continue;
+                for (BlockEntity entity : new ArrayList<>(chunk.getBlockEntities().values())) {
+                    if (!(entity instanceof PylonBlockEntityBase source) || source == this) continue;
+                    detachWireSource(source, drops);
+                }
+            }
+        }
+        for (ItemStack wire : drops) Block.popResource(server, worldPosition, wire);
+    }
+
+    private void detachWireSource(PylonBlockEntityBase source, List<ItemStack> drops) {
+        boolean detached = source.wires.removeIf(wire -> {
+            if (!wire.target().equals(worldPosition) || !wire.targetId().equals(wireId)) return false;
+            drops.add(wire.type().itemStack());
+            return true;
+        });
+        if (detached) source.sync();
     }
 
     protected void sync() {

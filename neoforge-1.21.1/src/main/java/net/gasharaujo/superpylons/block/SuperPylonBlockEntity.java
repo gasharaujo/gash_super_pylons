@@ -23,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -65,6 +66,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         tag.putString("paint", savePaint());
         tag.putString("wire_id", saveWireId());
         tag.putString("wires", saveWires());
+        tag.putString("wire_inputs", saveWireInputs());
         tag.putString("auxiliaries", saveAuxiliaries());
         tag.putString("workshop_owner", saveWorkshopOwner());
         tag.putString("workshop_status", getWorkshopStatus());
@@ -117,6 +119,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         loadWorkDirection(tag.getString("work_direction"));
         loadForcedRadius(tag.getInt("forced_radius"));
         loadDecorations(tag.getString("paint"), tag.getString("wire_id"), tag.getString("wires"));
+        loadWireInputs(tag.getString("wire_inputs"));
         CompoundTag filterData = tag.getCompound("filter");
         NonNullList<ItemStack> filterEntries = NonNullList.withSize(FILTER_SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(filterData, filterEntries, registries);
@@ -254,75 +257,136 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected long transferAdjacentExternal(ServerLevel server, BlockPos neighbor, PylonWire.Type type,
                                             boolean importing, long limit) {
-        int maximum = (int) Math.min(Integer.MAX_VALUE, limit);
+        if (!importing && hasBulkTransfer()) {
+            long accepted = insertIntoCondenser(server.getBlockEntity(neighbor), type, limit);
+            if (accepted >= 0) return accepted;
+        }
         return switch (type) {
-            case ITEM -> moveItems(server, neighbor, importing, maximum);
+            case ITEM -> moveItems(server, neighbor, importing, limit);
             case FLUID -> {
                 var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, workDirection().getOpposite());
-                yield moveFluid(importing ? other : fluidHandler, importing ? fluidHandler : other, maximum);
+                yield moveFluid(importing ? other : fluidHandler, importing ? fluidHandler : other, limit);
             }
             case ENERGY -> {
                 var other = energyAt(server, neighbor, workDirection().getOpposite());
-                yield moveEnergy(importing ? other : energyInternal, importing ? energyInternal : other, maximum);
+                yield moveEnergy(importing ? other : energyInternal, importing ? energyInternal : other, limit);
             }
             case XP -> moveLiquidXp(server, neighbor, importing,
-                (int) Math.min(Integer.MAX_VALUE, PylonXpFluids.millibuckets(limit)));
+                PylonXpFluids.millibuckets(limit));
         };
     }
 
-    private int moveLiquidXp(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
+    private long insertIntoCondenser(BlockEntity target, PylonWire.Type type, long limit) {
+        Object template;
+        long available;
+        Fluid fluid = preferredXpFluid();
+        switch (type) {
+            case ITEM -> { template = getStoredItem(); available = getAvailableItemCount(); }
+            case FLUID -> { template = tank.resource(); available = tank.available(); }
+            case XP -> {
+                if (fluid == net.minecraft.world.level.material.Fluids.EMPTY) return -1;
+                template = new FluidStack(fluid, 1);
+                available = availableXpFluid();
+                limit = PylonXpFluids.millibuckets(limit);
+            }
+            default -> { return -1; }
+        }
+        var port = PylonCondenserCompat.port(target, type != PylonWire.Type.ITEM, template);
+        if (port == null) return -1;
+        long moved = port.insert(Math.min(limit, available));
+        if (moved > 0) {
+            switch (type) {
+                case ITEM -> contents.remove(moved);
+                case FLUID -> tank.discard(moved);
+                case XP -> moveXpFluid(false, fluid, moved);
+                default -> { }
+            }
+            sync();
+        }
+        return moved;
+    }
+
+    private long moveLiquidXp(ServerLevel server, BlockPos neighbor, boolean importing, long limit) {
         var other = server.getCapability(Capabilities.FluidHandler.BLOCK, neighbor, workDirection().getOpposite());
         if (other == null) return 0;
         if (importing) return moveFluid(other, xpFluidPort, limit);
         Fluid preferred = preferredXpFluid();
-        int moved = moveFluid(xpFluidPort, other, new FluidStack(preferred, limit));
+        long moved = moveFluidKind(xpFluidPort, other, new FluidStack(preferred, 1), limit);
         if (moved > 0) return moved;
         for (Fluid fluid : PylonXpFluids.available()) {
             if (fluid == preferred) continue;
-            moved = moveFluid(xpFluidPort, other, new FluidStack(fluid, limit));
+            moved = moveFluidKind(xpFluidPort, other, new FluidStack(fluid, 1), limit);
             if (moved > 0) return moved;
         }
         return 0;
     }
 
-    private int moveItems(ServerLevel server, BlockPos neighbor, boolean importing, int limit) {
+    private long moveItems(ServerLevel server, BlockPos neighbor, boolean importing, long limit) {
         var handler = server.getCapability(Capabilities.ItemHandler.BLOCK, neighbor, workDirection().getOpposite());
         if (handler == null) return 0;
-        int moved = 0;
+        long moved = 0;
         for (int slot = 0; slot < handler.getSlots() && moved < limit; slot++) {
-            if (importing) {
-                ItemStack offered = handler.extractItem(slot, limit - moved, true);
-                int wanted = offered.getCount() - insertAutomation(offered, true).getCount();
-                if (wanted == 0) continue;
-                ItemStack extracted = handler.extractItem(slot, wanted, false);
-                ItemStack remaining = insertAutomation(extracted, false);
-                moved += extracted.getCount() - remaining.getCount();
-                if (!remaining.isEmpty()) {
-                    Block.popResource(server, neighbor, ItemHandlerHelper.insertItemStacked(handler, remaining, false));
-                }
-            } else {
-                ItemStack offered = extractAutomation(limit - moved, true);
+            while (moved < limit) {
+                long before = importing ? handler.getStackInSlot(slot).getCount() : getStoredCount();
+                long targetBefore = importing ? getStoredCount() : handler.getStackInSlot(slot).getCount();
+                ItemStack offered = importing ? handler.extractItem(slot, (int) Math.min(Integer.MAX_VALUE, limit - moved), true) : transferItemBatch((int) Math.min(Integer.MAX_VALUE, limit - moved), true);
                 if (offered.isEmpty()) break;
-                int wanted = offered.getCount() - handler.insertItem(slot, offered, true).getCount();
-                if (wanted == 0) continue;
-                ItemStack extracted = extractAutomation(wanted, false);
-                ItemStack remaining = handler.insertItem(slot, extracted, false);
-                moved += extracted.getCount() - remaining.getCount();
-                if (!remaining.isEmpty()) Block.popResource(server, worldPosition, insertAutomation(remaining, false));
+                ItemStack rejected = importing ? insertAutomation(offered, true) : handler.insertItem(slot, offered, true);
+                int wanted = offered.getCount() - rejected.getCount();
+                if (wanted <= 0) break;
+                boolean copied = !importing && isCreativeStorage();
+                ItemStack extracted = importing ? handler.extractItem(slot, wanted, false) : transferItemBatch(wanted, false);
+                int reserved = extracted.getCount();
+                ItemStack remaining = importing ? insertAutomation(extracted, false) : handler.insertItem(slot, extracted, false);
+                int accepted = reserved - remaining.getCount();
+                moved += Math.max(0, accepted);
+                if (importing) {
+                    if (!remaining.isEmpty()) Block.popResource(server, neighbor, ItemHandlerHelper.insertItemStacked(handler, remaining, false));
+                } else returnTransferItems(remaining, copied);
+                long after = importing ? handler.getStackInSlot(slot).getCount() : getStoredCount();
+                // A non-depleting source has no finite remainder to drain in a loop.
+                long targetAfter = importing ? getStoredCount() : handler.getStackInSlot(slot).getCount();
+                boolean targetProgress = targetAfter > targetBefore && (!importing || !hasBulkTransfer());
+                if (accepted <= 0 || limit == Long.MAX_VALUE && after >= before && !targetProgress) break;
             }
         }
         return moved;
     }
 
-    private static int moveFluid(IFluidHandler source, IFluidHandler target, int limit) {
+    private long moveFluid(IFluidHandler source, IFluidHandler target, long limit) {
         if (source == null || target == null) return 0;
-        for (int slot = 0; slot < source.getTanks(); slot++) {
-            FluidStack available = source.getFluidInTank(slot).copy();
-            available.setAmount(Math.min(available.getAmount(), limit));
-            int moved = moveFluid(source, target, available);
-            if (moved > 0) return moved;
+        long moved = 0;
+        for (int slot = 0; slot < source.getTanks() && moved < limit; slot++) {
+            FluidStack template = source.getFluidInTank(slot).copy();
+            moved += moveFluidKind(source, target, template, limit - moved);
         }
-        return 0;
+        return moved;
+    }
+
+    private long fluidSourceAmount(IFluidHandler source) {
+        if (source == fluidHandler) return getFluidAmount();
+        if (source == xpFluidPort) return xpFluidAmount();
+        long total = 0;
+        for (int slot = 0; slot < source.getTanks(); slot++) total += source.getFluidInTank(slot).getAmount();
+        return total;
+    }
+
+    private long moveFluidKind(IFluidHandler source, IFluidHandler target, FluidStack template, long limit) {
+        if (source == null || target == null || template.isEmpty()) return 0;
+        long moved = 0;
+        while (moved < limit) {
+            long before = fluidSourceAmount(source);
+            long targetBefore = fluidSourceAmount(target);
+            FluidStack request = template.copy();
+            request.setAmount((int) Math.min(Integer.MAX_VALUE, limit - moved));
+            int step = moveFluid(source, target, request);
+            if (step <= 0) break;
+            moved += step;
+            boolean targetProgress = fluidSourceAmount(target) > targetBefore &&
+                (target != fluidHandler && target != xpFluidPort || !hasBulkTransfer());
+            if (limit == Long.MAX_VALUE && fluidSourceAmount(source) >= before && !targetProgress) break;
+        }
+        return moved;
     }
 
     private static int moveFluid(IFluidHandler source, IFluidHandler target, FluidStack request) {
@@ -340,7 +404,21 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return moved;
     }
 
-    private static int moveEnergy(IEnergyStorage source, IEnergyStorage target, int limit) {
+    private static long moveEnergy(IEnergyStorage source, IEnergyStorage target, long limit) {
+        if (source == null || target == null) return 0;
+        long moved = 0;
+        while (moved < limit) {
+            int before = source.getEnergyStored();
+            int targetBefore = target.getEnergyStored();
+            int step = moveEnergyBatch(source, target, (int) Math.min(Integer.MAX_VALUE, limit - moved));
+            if (step <= 0) break;
+            moved += step;
+            if (limit == Long.MAX_VALUE && source.getEnergyStored() >= before && target.getEnergyStored() <= targetBefore) break;
+        }
+        return moved;
+    }
+
+    private static int moveEnergyBatch(IEnergyStorage source, IEnergyStorage target, int limit) {
         if (source == null || target == null) return 0;
         int offered = source.extractEnergy(limit, true);
         int accepted = target.receiveEnergy(offered, true);
