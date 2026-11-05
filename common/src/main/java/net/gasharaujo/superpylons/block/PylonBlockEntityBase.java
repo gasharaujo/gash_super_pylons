@@ -1313,8 +1313,14 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     private void tickTransfers(ServerLevel server) {
         if (wires.isEmpty() && upgrades.values().stream().noneMatch(upgrade -> upgrade.transferType() != null)) return;
-        long[] budget = { getEnergyCapacity() / 10L, Math.max(1, getItemCapacity() / 10), getFluidCapacity() / 10,
-            getExperienceCapacity() / 10 };
+        PylonUpgrade capacity = upgrades.get(PylonUpgrade.Slot.STORAGE);
+        int tier = capacity == null ? 0 : capacity.tier();
+        long[] budget = {
+            getEnergyCapacity() / 10L,
+            PylonUpgrade.itemTransfer(tier, server.getGameTime(), worldPosition.hashCode()),
+            PylonUpgrade.fluidTransfer(tier),
+            getExperienceCapacity() / 10
+        };
         if (hasBulkTransfer()) {
             Arrays.fill(budget, Long.MAX_VALUE);
         }
@@ -1349,7 +1355,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             if (type == null || !supportsTransfer(type, importing)) continue;
             boolean bulk = hasBulkTransfer() || neighbor instanceof PylonBlockEntityBase pylon && pylon.hasBulkTransfer();
             if (!bulk && budget[type.ordinal()] == 0) continue;
-            long limit = bulk || isVoid() && importing ? Long.MAX_VALUE : budget[type.ordinal()];
+            boolean unboundedVoid = isVoid() && importing && (type == PylonWire.Type.ENERGY || type == PylonWire.Type.XP);
+            long limit = bulk || unboundedVoid ? Long.MAX_VALUE : budget[type.ordinal()];
             if (neighbor instanceof PylonBlockEntityBase pylon && pylon.supportsTransfer(type, !importing)) {
                 if (importing) pylon.moveToPylon(server, type, this, limit);
                 else moveToPylon(server, type, pylon, limit);

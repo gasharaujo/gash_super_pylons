@@ -28,4 +28,18 @@ item_ids:
 
 Install one direction per resource. Insert and Extract for the same resource can be converted into each other in crafting. Pylons also expose their storage to compatible external automation.
 
-The normal budget is **10% of the pylon's capacity for that resource per tick**, shared with [Wires](wires.md) for that resource. **Capacity VI** enables bulk, so either direction can move the available stock until the destination stops accepting it. Either endpoint having Capacity VI enables bulk on a direct connection between pylons. The destination's own limits and item filter still apply.
+Insert, Extract and [Wires](wires.md) share the budget of the pylon doing the transfer.
+
+| Capacity | Items | Fluids |
+| --- | --- | --- |
+| 0 | 5/s | 250 mB/t |
+| I | 10/s | 1 B/t |
+| II | 1/t | 2 B/t |
+| III | 16/t | 4 B/t |
+| IV | 64/t | 16 B/t |
+| V | 256/t | 64 B/t |
+| VI | Bulk | Bulk |
+
+B = bucket (1,000 mB), t = tick and s = game second (20 ticks). Energy and XP retain the 10% capacity budget per tick, subject to their resource limits.
+
+**Capacity VI** enables bulk, so either direction can move the available stock until the destination stops accepting it. Either endpoint having Capacity VI enables bulk on a direct connection between pylons. The destination's own limits and item filter still apply.

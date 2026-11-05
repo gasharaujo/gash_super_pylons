@@ -23,4 +23,4 @@ Clique primeiro no pylon de **origem**, depois no de **destino**. Eles precisam 
 
 Cada par de pylons aceita uma conexão. Clique no mesmo par em qualquer ordem para desconectar e recuperar o cabo. Agache e clique com o botão direito num pylon para cancelar uma seleção. Quebrar qualquer ponta também devolve o cabo uma única vez.
 
-Os cabos compartilham a taxa de [automação](automation.md) de 10% da capacidade da origem por tick. Capacidade VI em qualquer ponta ativa bulk.
+Os cabos compartilham as [taxas de automação](automation.md) do pylon de origem. Capacidade VI em qualquer ponta ativa bulk.

@@ -28,4 +28,18 @@ item_ids:
 
 Instale um sentido por recurso. Insert e Extract do mesmo recurso podem ser convertidos um no outro na bancada. O estoque também fica disponível para automação externa compatível.
 
-A taxa normal é **10% da capacidade do pylon para aquele recurso por tick**, compartilhada com os [cabos](wires.md) desse recurso. **Capacidade VI** ativa bulk nos dois sentidos. O pylon transfere o estoque disponível até o destino parar de aceitar. Capacidade VI em qualquer ponta ativa bulk numa conexão direta entre pylons. Os limites próprios do destino e o filtro de itens ainda se aplicam.
+Insert, Extract e [Cabos](wires.md) compartilham a taxa do pylon que faz a transferência.
+
+| Capacidade | Itens | Fluidos |
+| --- | --- | --- |
+| 0 | 5/s | 250 mB/t |
+| I | 10/s | 1 B/t |
+| II | 1/t | 2 B/t |
+| III | 16/t | 4 B/t |
+| IV | 64/t | 16 B/t |
+| V | 256/t | 64 B/t |
+| VI | Bulk | Bulk |
+
+B = balde (1.000 mB), t = tick e s = segundo de jogo (20 ticks). Energia e XP continuam com taxa de 10% da capacidade por tick, sujeita aos limites do recurso.
+
+**Capacidade VI** ativa bulk nos dois sentidos. O pylon transfere o estoque disponível até o destino parar de aceitar. Capacidade VI em qualquer ponta ativa bulk numa conexão direta entre pylons. Os limites próprios do destino e o filtro de itens ainda se aplicam.

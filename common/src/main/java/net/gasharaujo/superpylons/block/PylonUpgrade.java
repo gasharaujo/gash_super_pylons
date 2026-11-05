@@ -150,6 +150,34 @@ public enum PylonUpgrade {
         };
     }
 
+    static long itemTransfer(int tier, long gameTime, int phase) {
+        return switch (tier) {
+            case 0, 1 -> {
+                int interval = 4 >> tier;
+                yield Math.floorMod(gameTime, interval) == Math.floorMod(phase, interval) ? 1 : 0;
+            }
+            case 2 -> 1;
+            case 3 -> 16;
+            case 4 -> 64;
+            case 5 -> 256;
+            case 6 -> Long.MAX_VALUE;
+            default -> throw new IllegalArgumentException("Invalid Capacity tier: " + tier);
+        };
+    }
+
+    static long fluidTransfer(int tier) {
+        return switch (tier) {
+            case 0 -> 250;
+            case 1 -> 1_000;
+            case 2 -> 2_000;
+            case 3 -> 4_000;
+            case 4 -> 16_000;
+            case 5 -> 64_000;
+            case 6 -> Long.MAX_VALUE;
+            default -> throw new IllegalArgumentException("Invalid Capacity tier: " + tier);
+        };
+    }
+
     public static PylonUpgrade byId(String id) {
         for (PylonUpgrade upgrade : values()) {
             if (upgrade.id.equals(id)) return upgrade;

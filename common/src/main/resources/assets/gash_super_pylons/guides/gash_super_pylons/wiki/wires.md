@@ -23,4 +23,4 @@ Click the **source** pylon and then the **destination**. They must be within 32 
 
 One pair of pylons can have one connection. Click the same pair again in either order to disconnect and recover the cable. Sneak and right-click a pylon to cancel a selection. Breaking either endpoint also drops the wire once.
 
-Wires share the [automation](automation.md) budget of 10% of source capacity per tick. Capacity VI on either endpoint enables bulk.
+Wires share the [automation transfer rates](automation.md) of their source pylon. Capacity VI on either endpoint enables bulk.
