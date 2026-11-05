@@ -1,70 +1,21 @@
 ---
 navigation:
   title: Upgrades
-  icon: planter_upgrade
-  parent: index.md
+  icon: gash_super_pylons:upgrade_base
   position: 2
 item_ids:
-  - gash_super_pylons:planter_upgrade
-  - gash_super_pylons:harvester_upgrade
-  - gash_super_pylons:placer_upgrade
-  - gash_super_pylons:dropper_upgrade
-  - gash_super_pylons:super_upgrade
-  - gash_super_pylons:void_upgrade
-  - gash_super_pylons:chunk_loader_upgrade
-  - gash_super_pylons:xp_tank_upgrade
-  - gash_super_pylons:energy_upgrade_1
+  - gash_super_pylons:upgrade_base
 ---
 
 # Upgrades
 
-Faça o Upgrade Base com cinco pedregulhos em cruz. Use a base no centro para o tier I e o upgrade anterior nos tiers seguintes. Com o JEI instalado, consulte as receitas nele.
+Clique no pylon com um upgrade na mão para instalá-lo. Um tier maior do mesmo modificador troca o anterior e o devolve ao jogador. Agache e clique com o botão direito com a mão principal vazia para retirar o próximo upgrade. Os ícones na borda inferior indicam a ordem da direita para a esquerda. Super sai primeiro, e os geradores saem antes dos processadores.
 
-**Speed** controla o intervalo. **Quantity** controla a quantidade por operação. **Range** expande a área na horizontal e na vertical. **Capacidade** aumenta o armazenamento. **Energia** adiciona um estoque de FE independente da especialidade e aceita energia por todas as faces.
+A Base de Upgrade leva cinco pedregulhos em cruz. Receitas de tier I usam a base, e as de tiers superiores usam o tier anterior.
 
-- **Planter** planta as sementes ou mudas armazenadas. **Fertilizer** acelera o crescimento.
-- **Harvester** é feito com uma base de upgrade e um machado de diamante. Replanta cultivos e derruba árvores. O que couber dos drops das árvores fica no pylon. O excedente cai no mundo.
-- **Placer** coloca um bloco armazenado no lado de trabalho. **Break** minera esse lado. **Clicker** interage com ele, inclusive de mão vazia.
-- **Dropper** solta itens armazenados no centro do bloco adjacente no lado de trabalho. Speed e Quantity controlam o ciclo e cada tier de Range estende a ejeção em um bloco.
-- **Super** adiciona quatro Nether Stars que orbitam o núcleo e sai primeiro ao remover upgrades.
-- **Void** destrói itens, fluidos, FE e XP recebidos. **Chunk Loader** mantém chunks ativos em um quadrado com raio inicial de um chunk.
-- **XP Tank** converte um frasco de experiência em sete pontos de XP e um frasco de vidro. Use um frasco de vidro no tanque para fazer a conversão inversa.
-- **Fluid Storage** começa com 32 baldes de capacidade. Os geradores de água e lava também funcionam como tanques.
+<RecipeFor id="gash_super_pylons:upgrade_base" />
 
-Geradores de itens podem abastecer Smelt ou Pulverize. Cada item processado custa 1.000 FE. O pylon tenta usar sua própria energia e depois a de um pylon vizinho. Quando falta FE, usa combustível de fornalha. Clique no pylon com um alto-forno ou defumador para selecionar apenas receitas desse tipo no Smelt.
-
-Geradores têm espaço próprio: só é permitido um gerador, independente da utilidade/tipo e do processamento. A geração funciona junto com os outros upgrades instalados. Um item diferente no estoque pausa a geração em vez de impedir a instalação. Geradores de água/lava podem guardar itens e fluido; o tipo instalado ainda pode bloquear a entrada de itens. Com XP Tank, a automação de fluidos enxerga dois reservatórios separados.
-
-## Creative Storage
-
-Use botão direito com um Command Block vanilla para instalar Creative Storage em espaço próprio. Insira um item, fluido, FE ou XP para configurar o estoque. Depois disso, a extração fornece cópias e preserva o conteúdo original. Vale para retirada manual, funis, automação, wires, upgrades de transferência, outros pylons e consumo pelas máquinas. Estoques vazios não produzem nada. Fluidos, energia e XP ainda precisam dos respectivos upgrades; os limites de capacidade e transferência continuam valendo.
-
-O Command Block aparece na barra e no overlay, com quantidades infinitas indicadas por ∞. Shift + botão direito com a mão vazia remove e devolve o Command Block na ordem normal, depois de Super e da ferramenta de Break instalada. A remoção restaura o estoque finito. Copy Paste inclui o upgrade e exige um Command Block no inventário. Quebrar preserva o setup e os conteúdos reais de itens/FE/XP no pylon que cai; fluidos continuam sendo descartados.
-
-## Enchanter e Anvil
-
-Com a Wrench no modo Vincular, use Shift + botão direito no principal e botão direito num XP Tank e num auxiliar de itens. A ordem desses dois auxiliares é livre. Eles podem ficar entre 1 e 5 blocos do principal, medidos entre centros, inclusive na vertical e na diagonal. As duas máquinas trabalham com um item por vez; o resultado vai automaticamente para o inventário do lado de trabalho (abaixo por padrão). Sem espaço na saída, o item pronto fica no núcleo até poder sair ou ser retirado manualmente. Speed controla o intervalo. Uma operação incompleta não consome recursos.
-
-### Enchanter
-
-Coloque o item no principal e lápis-lazúli no auxiliar de itens. Cada operação gasta um lápis e **27 pontos de XP**, equivalentes a três níveis contados a partir de zero, em qualquer poder. Capacidade 0/I/II/III/IV/V/VI define poder base **1/10/20/30/40/50/100**. Quantity no principal define mínimo de **1/2/3/4/5/6/7 encantamentos**, respeitando compatibilidade e disponibilidade. Itens já encantados não são reencantados.
-
-Com Super, vincule um terceiro pylon opcional contendo um item ou livro encantado. Os encantamentos dele formam uma blacklist. Ele não é consumido e continua aparecendo no núcleo normal. Só os dois primeiros auxiliares mostram livros de mesa. Remover Super libera o terceiro vínculo.
-
-Use botão direito com estantes do Apotheosis/Apothic Enchanting para instalar até 64 estantes. A integração usa os valores e a seleção de encantamentos do próprio mod, incluindo Eterna, Quanta, Arcana, tesouros, estabilidade/retificação e blacklist de estantes, conforme a versão. Pistas da interface não afetam o processo automático. As estantes são salvas, aparecem na barra e saem antes do Enchanter quando ele for o próximo na ordem de remoção.
-
-### Anvil
-
-Coloque o primeiro item no principal e o segundo item ou material de reparo no auxiliar de itens. Encantamentos do mesmo nível sobem um nível, inclusive acima do máximo normal; níveis diferentes preservam o maior. Os encantamentos devem ser compatíveis. O limite técnico é 255.
-
-O preço soma **nível resultante × raridade**: comum 1, incomum 2, raro 3 e muito raro 4. Para cada encantamento acima do máximo normal, multiplique seu preço novamente pela raridade, com multiplicador mínimo dois. Reparos custam ao menos um nível. O total é convertido em pontos de XP pela curva vanilla a partir do zero e pago pelo auxiliar de XP.
-
-Super preserva um livro encantado usado como segundo item. Outros itens e materiais de reparo continuam sendo consumidos. Só há gasto quando a operação melhora encantamentos ou repara dano. Jade, WTHIT e The One Probe mostram o estado, o custo e as estantes instaladas.
-
-## Combinações com Super
-
-- **Smelt e Pulverize** processam todos os stacks elegíveis do inventário do lado oposto à saída no mesmo ciclo, conforme o espaço e a energia ou combustível disponíveis.
-- **Fertilizer** avança os estágios das plantas diretamente. **Harvester** ataca mobs na área, começando pelos mais próximos. Quantity dá até 1 + tier alvos. Use agachar e clicar com uma arma para equipá-la. A arma padrão é um machado de diamante.
-- **Break e Fluid Storage** varrem o chunk por camadas, começando três blocos abaixo do pylon. Cada tier de Range acrescenta um chunk de raio. Break envia os drops para o inventário do lado de trabalho. Fluid Storage coleta fontes e pode enviá-las ao tanque do lado de trabalho.
-- **Magnet** insere os itens no inventário do lado de trabalho. **Placer** preenche espaços vazios de um plano três blocos abaixo. Range amplia esse plano.
-- **Dropper** usa os comportamentos do ejetor do Minecraft e alinha a trajetória inicial dos projéteis com a direção de trabalho.
+- [Geradores](generators.md) produzem itens e fluidos.
+- [Modificadores](modifiers.md) alteram velocidade, quantidade, alcance, capacidade e energia.
+- [Utilidades](utility.md) descreve os tipos de armazenamento, máquinas, processadores e combinações com Super.
+- [Automação](automation.md) cobre Insert e Extract para os quatro recursos.

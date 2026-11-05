@@ -8,6 +8,7 @@ group = mod_group_id
 
 sourceSets.main {
     java.srcDir '../common/src/main/java'
+    java.srcDir '../common/src/ponderContent/java'
     java.srcDir '../common/src/ponder/java'
     resources.srcDir '../common/src/main/resources'
 }

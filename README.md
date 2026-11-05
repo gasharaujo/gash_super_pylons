@@ -127,7 +127,7 @@ O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.js
 
 ### Wiki dentro do jogo
 
-Com GuideME instalado, abra a wiki pelo atalho de guia ao apontar para um Super Pylon no inventário. Também é possível pegar o livro com `/guideme give @s gash_super_pylons:wiki`. A wiki inclui páginas em português e inglês nas três versões. Ponder é opcional e oferece uma cena de introdução no Forge 1.20.1 e no NeoForge 1.21.1.
+Com GuideME instalado, abra a wiki pelo atalho de guia ao apontar para um Super Pylon no inventário. Também é possível pegar o livro com `/guideme give @s gash_super_pylons:wiki`. A wiki tem capítulos sobre o pylon, geradores, modificadores, utilidades, automação, cabos e ferramentas, em português e inglês. Com Ponder compatível instalado, use a tecla indicada no tooltip do pylon ou de um item do mod para abrir as cenas nas três versões.
 
 ### Overlays opcionais
 

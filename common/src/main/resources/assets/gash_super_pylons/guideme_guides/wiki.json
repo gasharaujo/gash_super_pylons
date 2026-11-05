@@ -1,5 +1,5 @@
 {
   "item_settings": {
-    "display_name": { "translate": "guide.gash_super_pylons.title" }
+    "display_name": { "type": "translatable", "translate": "guide.gash_super_pylons.title" }
   }
 }

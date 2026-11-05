@@ -22,3 +22,10 @@ mandatory = true
 versionRange = "[${minecraft_version},)"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "ponder"
+mandatory = false
+versionRange = "[1.0.0,)"
+ordering = "AFTER"
+side = "CLIENT"
