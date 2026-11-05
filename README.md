@@ -138,6 +138,14 @@ Jade e WTHIT leem o conteúdo que o pylon sincroniza com o cliente. The One Prob
 Cada módulo gera um JAR próprio. Todas as dependências declaradas no mod usam apenas versão mínima, sem limite máximo. Isso não substitui a validação em outras versões de Minecraft ou do loader.
 
 
+## Creative Storage
+
+Use um **Command Block vanilla** com botão direito no pylon para instalar Creative Storage em um espaço próprio. Ele aparece na barra de upgrades e nas informações de Jade/WTHIT/The One Probe. Com permissão de operador, o Command Block também aparece na aba criativa do mod, com tooltip azul explicando a função.
+
+Depois de inserir um item, fluido, FE ou XP, as retiradas passam a fornecer cópias sem diminuir o conteúdo inicial. A função vale para retirada manual, funis, cabos, wires, Insert/Extract, outros pylons e consumo pelas máquinas do mod. Um armazenamento vazio não produz recursos. Fluidos, FE e XP ainda precisam dos respectivos upgrades para ter armazenamento, e os limites de capacidade e transferência continuam aplicáveis. A configuração de item e fluido mantém a correspondência exata existente.
+
+Shift + botão direito com a mão vazia devolve o Command Block na ordem normal de remoção, após Super e a ferramenta de Break quando presentes. Ao removê-lo, o conteúdo inicial volta a ser finito. A Copy Paste Tool inclui o Command Block no setup e exige um no inventário para aplicá-lo. Ao quebrar um pylon com Creative Storage, ele guarda seu setup, itens, FE e XP num pylon com dados; os fluidos continuam sendo descartados ao quebrar, como nos outros pylons.
+
 ## Enchanter e Anvil
 
 Os dois upgrades trabalham com um item de entrada por vez no pylon principal e exigem dois auxiliares vinculados com a Wrench: um com **XP Tank** e outro com os materiais. Os dois primeiros vínculos definem esses auxiliares, em qualquer ordem. O alcance é de 1 a 5 blocos entre centros, em qualquer direção. Speed define o intervalo de operação: 60/40/30/20/10/5/1 ticks. O resultado substitui o item no núcleo e fica disponível para retirada manual ou por automação. Se faltar XP, material ou uma combinação válida, nada é consumido. Jade, WTHIT e The One Probe mostram o estado e o custo em pontos de XP.

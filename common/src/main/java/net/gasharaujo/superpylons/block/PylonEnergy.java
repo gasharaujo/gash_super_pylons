@@ -1,5 +1,7 @@
 package net.gasharaujo.superpylons.block;
 
+import java.util.function.BooleanSupplier;
+
 final class PylonEnergy {
     record State(int amount, long tick, int received, int sent) {}
 
@@ -7,12 +9,17 @@ final class PylonEnergy {
     private long tick = Long.MIN_VALUE;
     private int received;
     private int sent;
+    private final BooleanSupplier creative;
+
+    PylonEnergy() { this(() -> false); }
+    PylonEnergy(BooleanSupplier creative) { this.creative = creative; }
+    int available(int capacity) { return amount > 0 && creative.getAsBoolean() ? Math.max(amount, capacity) : amount; }
 
     int amount() { return amount; }
 
     int limit(boolean input, int requested, int capacity, int rate, long now) {
         int used = rate != Integer.MAX_VALUE && now == tick ? (input ? received : sent) : 0;
-        int available = input ? capacity - amount : amount;
+        int available = input ? capacity - amount : available(capacity);
         return Math.max(0, Math.min(requested, Math.min(available, rate - used)));
     }
 
@@ -27,7 +34,7 @@ final class PylonEnergy {
             amount += moved;
         } else {
             sent += Math.min(moved, Integer.MAX_VALUE - sent);
-            amount -= moved;
+            if (!creative.getAsBoolean()) amount -= moved;
         }
     }
 

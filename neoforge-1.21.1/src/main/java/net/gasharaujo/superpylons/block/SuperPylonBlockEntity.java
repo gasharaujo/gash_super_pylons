@@ -39,7 +39,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public static final TicketController CHUNK_TICKETS = new TicketController(
         ResourceLocation.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "pylon"));
     private final ItemPort itemPort = new ItemPort();
-    private final PylonTank<FluidStack> tank = new PylonTank<>();
+    private final PylonTank<FluidStack> tank = new PylonTank<>(this::isCreativeStorage, this::getFluidCapacity);
     private final TankHandler fluidHandler = new TankHandler();
     private final XpFluidPort xpFluidPort = new XpFluidPort();
     private final IFluidHandler combinedFluids = new CombinedFluids();
@@ -385,7 +385,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override public int getSlots() { return 1; }
         @Override public ItemStack getStackInSlot(int slot) {
             return slot == 0 && canExtractItems() ?
-                getStoredItem().copyWithCount((int) Math.min(Integer.MAX_VALUE, getStoredCount())) : ItemStack.EMPTY;
+                getStoredItem().copyWithCount((int) Math.min(Integer.MAX_VALUE, getAvailableItemCount())) : ItemStack.EMPTY;
         }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             return slot == 0 ? insertAutomation(stack, simulate) : stack;
@@ -406,7 +406,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
         @Override public boolean canReceive() { return (isEnergy() || isVoid()) && side != Direction.DOWN; }
         @Override public boolean canExtract() { return isEnergy() && !isVoid() && side != Direction.UP; }
-        @Override public int getEnergyStored() { return isEnergy() ? getEnergy() : 0; }
+        @Override public int getEnergyStored() { return isEnergy() ? getAvailableEnergy() : 0; }
         @Override public int getMaxEnergyStored() { return getEnergyCapacity(); }
 
         @Override
@@ -433,7 +433,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override public int getTanks() { return 1; }
         @Override public FluidStack getFluidInTank(int tank) {
             return tank == 0 && isXpTank() && !PylonXpFluids.available().isEmpty() ?
-                new FluidStack(preferredXpFluid(), (int) Math.min(Integer.MAX_VALUE, xpFluidAmount())) : FluidStack.EMPTY;
+                new FluidStack(preferredXpFluid(), (int) Math.min(Integer.MAX_VALUE, availableXpFluid())) : FluidStack.EMPTY;
         }
         @Override public int getTankCapacity(int tank) {
             return tank == 0 ? (int) Math.min(Integer.MAX_VALUE, xpFluidCapacity()) : 0;
@@ -494,7 +494,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         public FluidStack getFluidInTank(int index) {
             if (index != 0 || !isTank() || tank.amount() == 0) return FluidStack.EMPTY;
             FluidStack stack = tank.resource().copy();
-            stack.setAmount((int) Math.min(Integer.MAX_VALUE, tank.amount()));
+            stack.setAmount((int) Math.min(Integer.MAX_VALUE, tank.available()));
             return stack;
         }
 

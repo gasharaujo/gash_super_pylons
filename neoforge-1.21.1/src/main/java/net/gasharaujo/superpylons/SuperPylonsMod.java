@@ -95,12 +95,19 @@ public final class SuperPylonsMod {
     public static final Supplier<CreativeModeTab> CREATIVE_TAB = CREATIVE_TABS.register("main", () -> CreativeModeTab.builder()
         .title(Component.translatable("item_group.gash_super_pylons.main"))
         .icon(() -> new ItemStack(SUPER_PYLON_ITEM.get()))
-        .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> output.accept(item.get())))
+        .displayItems((parameters, output) -> {
+            ITEMS.getEntries().forEach(item -> output.accept(item.get()));
+            if (parameters.hasPermissions()) output.accept(net.minecraft.world.item.Items.COMMAND_BLOCK);
+        })
         .build());
 
     private static Map<PylonUpgrade, Supplier<? extends Item>> registerUpgrades() {
         Map<PylonUpgrade, Supplier<? extends Item>> items = new EnumMap<>(PylonUpgrade.class);
         for (PylonUpgrade upgrade : PylonUpgrade.values()) {
+            if (upgrade == PylonUpgrade.CREATIVE_STORAGE) {
+                items.put(upgrade, () -> net.minecraft.world.item.Items.COMMAND_BLOCK);
+                continue;
+            }
             items.put(upgrade, ITEMS.registerItem(upgrade.id(), properties -> new PylonUpgradeItem(upgrade, properties)));
         }
         return items;

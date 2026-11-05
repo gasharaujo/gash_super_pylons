@@ -69,7 +69,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         } else {
             var atlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.ITEMS);
             state.stamps = PylonUpgradeStamps.sprites(upgrades,
-                id -> atlas.getSprite(Identifier.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "item/" + id)));
+                id -> atlas.getSprite(Identifier.parse(id)));
         }
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.storedItem,
             entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());

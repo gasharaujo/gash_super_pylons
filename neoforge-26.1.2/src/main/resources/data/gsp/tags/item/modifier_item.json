@@ -67,6 +67,7 @@
     "gash_super_pylons:super_upgrade",
     "gash_super_pylons:water_generator_upgrade",
     "gash_super_pylons:wrench",
-    "gash_super_pylons:xp_tank_upgrade"
+    "gash_super_pylons:xp_tank_upgrade",
+    "minecraft:command_block"
   ]
 }

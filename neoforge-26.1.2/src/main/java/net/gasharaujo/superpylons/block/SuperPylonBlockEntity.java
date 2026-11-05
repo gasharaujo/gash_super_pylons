@@ -50,7 +50,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public static final TicketController CHUNK_TICKETS = new TicketController(
         Identifier.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "pylon"));
     private final ItemPort itemPort = new ItemPort();
-    private final PylonTank<FluidResource> tank = new PylonTank<>();
+    private final PylonTank<FluidResource> tank = new PylonTank<>(this::isCreativeStorage, this::getFluidCapacity);
     private final TankHandler fluidHandler = new TankHandler();
     private final XpFluidPort xpFluidPort = new XpFluidPort();
     private final ResourceHandler<FluidResource> combinedFluids = new CombinedFluids();
@@ -336,7 +336,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override public ItemResource getResource(int index) {
             return index == 0 && canExtractItems() ? ItemResource.of(getStoredItem()) : ItemResource.EMPTY;
         }
-        @Override public long getAmountAsLong(int index) { return index == 0 && canExtractItems() ? getStoredCount() : 0; }
+        @Override public long getAmountAsLong(int index) { return index == 0 && canExtractItems() ? getAvailableItemCount() : 0; }
         @Override public long getCapacityAsLong(int index, ItemResource resource) {
             if (resource.isEmpty()) return index == 0 && (hasItemStorage() || isVoid()) ? getItemCapacity() : 0;
             return isValid(index, resource) ? getItemCapacity() : 0;
@@ -362,7 +362,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             TransferPreconditions.checkNonNegative(amount);
             if (!(level instanceof ServerLevel) || index != 0 || !canExtractItems() ||
                 resource.isEmpty() || !resource.equals(getResource(index))) return 0;
-            int extracted = (int) Math.min(amount, getStoredCount());
+            int extracted = (int) Math.min(amount, getAvailableItemCount());
             if (extracted == 0) return 0;
             updateSnapshots(transaction);
             contents.remove(extracted);
@@ -379,7 +379,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
         private EnergyPort(Direction side) { this.side = side; }
 
-        @Override public long getAmountAsLong() { return isEnergy() ? getEnergy() : 0; }
+        @Override public long getAmountAsLong() { return isEnergy() ? getAvailableEnergy() : 0; }
         @Override public long getCapacityAsLong() { return getEnergyCapacity(); }
 
         @Override
@@ -416,7 +416,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             return getAmountAsLong(index) == 0 ? FluidResource.EMPTY : FluidResource.of(preferredXpFluid());
         }
         @Override public long getAmountAsLong(int index) {
-            return index == 0 && isXpTank() && !PylonXpFluids.available().isEmpty() ? xpFluidAmount() : 0;
+            return index == 0 && isXpTank() && !PylonXpFluids.available().isEmpty() ? availableXpFluid() : 0;
         }
         @Override public long getCapacityAsLong(int index, FluidResource resource) {
             return index == 0 && isXpTank() && (resource.isEmpty() || isValid(index, resource)) ? xpFluidCapacity() : 0;
@@ -477,7 +477,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             return index == 0 && isTank() && tank.amount() > 0 ? tank.resource() : FluidResource.EMPTY;
         }
 
-        @Override public long getAmountAsLong(int index) { return index == 0 && isTank() ? tank.amount() : 0; }
+        @Override public long getAmountAsLong(int index) { return index == 0 && isTank() ? tank.available() : 0; }
         @Override public long getCapacityAsLong(int index, FluidResource resource) { return index == 0 ? getFluidCapacity() : 0; }
 
         @Override

@@ -61,6 +61,7 @@ public enum PylonUpgrade {
     VOID("void_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     CHUNK_LOADER("chunk_loader_upgrade", Slot.CHUNK_LOADER, 1, 0, null, null),
     SUPER("super_upgrade", Slot.SUPER, 1, 0, null, null),
+    CREATIVE_STORAGE("creative_storage_upgrade", Slot.CREATIVE, 1, 0, null, null),
     SMELT("smelt_upgrade", Slot.PROCESSING, 1, 0, null, null),
     PULVERIZE("pulverize_upgrade", Slot.PROCESSING, 1, 0, null, null),
     INSERT_ITEM("insert_item_upgrade", Slot.ITEM_TRANSFER, PylonWire.Type.ITEM, true),
@@ -74,7 +75,7 @@ public enum PylonUpgrade {
 
     // Default removal order. Generators are removed before processing.
     public enum Slot {
-        SUPER, FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
+        SUPER, CREATIVE, FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
         CHUNK_LOADER, GENERATOR, PROCESSING, SPECIALTY, STORAGE
     }
 
@@ -118,7 +119,7 @@ public enum PylonUpgrade {
             case STORAGE, SPEED, QUANTITY, RANGE, ENERGY -> "modifier";
             case PROCESSING -> "processing";
             case GENERATOR -> "generator";
-            case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER, CHUNK_LOADER, SUPER -> "utility";
+            case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER, CHUNK_LOADER, SUPER, CREATIVE -> "utility";
             case SPECIALTY -> {
                 if (this == FLUID_STORAGE || this == XP_TANK) yield "type";
                 yield "utility";

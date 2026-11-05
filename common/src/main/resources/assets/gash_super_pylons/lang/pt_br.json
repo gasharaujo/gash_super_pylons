@@ -152,5 +152,7 @@
   "tooltip.gash_super_pylons.workshop_cost": "Custo da operação: %s pontos de XP",
   "tooltip.gash_super_pylons.enchanting_power": "Poder base de encantamento: %s | Mínimo de encantamentos: %s",
   "tooltip.gash_super_pylons.shelves": "Estantes do Apotheosis instaladas: %s",
-  "tooltip.gash_super_pylons.shelf": "%s × %s"
+  "tooltip.gash_super_pylons.shelf": "%s × %s",
+  "item.gash_super_pylons.creative_storage_upgrade": "Creative Storage (Bloco de Comando)",
+  "tooltip.gash_super_pylons.creative_storage": "Instale num Super Pylon: itens, fluidos, FE e XP armazenados não são consumidos ao extrair."
 }

@@ -18,9 +18,10 @@ final class PylonUpgradeStamps {
 
     static List<TextureAtlasSprite> sprites(List<PylonUpgrade> upgrades, Function<String, TextureAtlasSprite> lookup) {
         return upgrades.stream().map(upgrade -> {
-            TextureAtlasSprite sprite = lookup.apply(upgrade.id());
+            TextureAtlasSprite sprite = lookup.apply(upgrade == PylonUpgrade.CREATIVE_STORAGE ?
+                "minecraft:block/command_block_front" : "gash_super_pylons:item/" + upgrade.id());
             return sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation())
-                ? lookup.apply("upgrade_base") : sprite;
+                ? lookup.apply("gash_super_pylons:item/upgrade_base") : sprite;
         }).toList();
     }
 

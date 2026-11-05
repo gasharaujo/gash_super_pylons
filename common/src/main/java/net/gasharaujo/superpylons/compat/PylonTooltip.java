@@ -58,7 +58,7 @@ final class PylonTooltip {
         Component storage = primaryStorage(pylon);
         if (!pylon.isEnergy() || pylon.isVoid()) return storage;
         return Component.empty().append(storage).append(" | ").append(Component.translatable("tooltip.gash_super_pylons.energy",
-            pylon.getEnergy(), pylon.getEnergyCapacity()));
+            amountLabel(pylon, pylon.getAvailableEnergy()), pylon.getEnergyCapacity()));
     }
 
     private static Component primaryStorage(PylonBlockEntityBase pylon) {
@@ -68,14 +68,14 @@ final class PylonTooltip {
         boolean hasMode = false;
         if (specialty == PylonUpgrade.XP_TANK) {
             modes = Component.translatable("tooltip.gash_super_pylons.experience",
-                pylon.getExperience(), capacityLabel(pylon.getExperienceCapacity()));
+                amountLabel(pylon, pylon.getAvailableExperience()), capacityLabel(pylon.getExperienceCapacity()));
             hasMode = true;
         }
         if (pylon.isTank()) {
             long amount = pylon.getFluidAmount();
             Object capacity = capacityLabel(pylon.getFluidCapacity());
             Component fluid = amount == 0 ? Component.translatable("tooltip.gash_super_pylons.empty_tank", capacity) :
-                Component.translatable("tooltip.gash_super_pylons.fluid", pylon.getFluidName(), amount, capacity);
+                Component.translatable("tooltip.gash_super_pylons.fluid", pylon.getFluidName(), amountLabel(pylon, amount), capacity);
             modes = hasMode ? Component.empty().append(modes).append(" | ").append(fluid) : fluid;
             hasMode = true;
         }
@@ -98,7 +98,11 @@ final class PylonTooltip {
             return Component.translatable("tooltip.gash_super_pylons.empty", capacity);
         }
         return Component.translatable("tooltip.gash_super_pylons.storage",
-            pylon.getStoredItem().getHoverName(), count, capacity);
+            pylon.getStoredItem().getHoverName(), amountLabel(pylon, count), capacity);
+    }
+
+    private static Object amountLabel(PylonBlockEntityBase pylon, long amount) {
+        return pylon.isCreativeStorage() && amount > 0 ? Component.literal("∞") : amount;
     }
 
     private static Object capacityLabel(long capacity) {

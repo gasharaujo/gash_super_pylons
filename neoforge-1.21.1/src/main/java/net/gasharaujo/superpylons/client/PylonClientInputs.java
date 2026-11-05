@@ -21,4 +21,13 @@ public final class PylonClientInputs {
         PylonControls.send(PylonControlRequest.wrench());
         event.setCanceled(true);
     }
+
+    @SubscribeEvent
+    public static void commandBlockTooltip(net.neoforged.neoforge.event.entity.player.ItemTooltipEvent event) {
+        if (!event.getItemStack().is(net.minecraft.world.item.Items.COMMAND_BLOCK)) return;
+        event.getToolTip().add(net.minecraft.network.chat.Component.translatable("tooltip.gash_super_pylons.category.utility")
+            .withStyle(net.minecraft.ChatFormatting.BLUE));
+        event.getToolTip().add(net.minecraft.network.chat.Component.translatable("tooltip.gash_super_pylons.creative_storage")
+            .withStyle(net.minecraft.ChatFormatting.BLUE));
+    }
 }

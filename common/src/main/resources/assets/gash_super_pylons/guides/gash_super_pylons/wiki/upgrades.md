@@ -35,6 +35,12 @@ Item generators can feed Smelt or Pulverize. Processing uses 1,000 FE or one sme
 
 Generators have their own slot: only one generator is allowed, independently of utility/type and processing upgrades. Generation runs alongside the other installed upgrades. A different stored item pauses item generation instead of blocking installation. Water/lava generators can hold items as well as fluid; an installed type may still block item input. With XP Tank, fluid automation exposes two separate reservoirs.
 
+## Creative Storage
+
+Right-click a Super Pylon with a vanilla Command Block to install Creative Storage in its own slot. Seed the storage with an item, fluid, FE or XP. Extraction then creates copies while preserving the original contents. This applies to manual withdrawal, hoppers, automation, wires, transfer upgrades, other pylons and machine consumption. Empty stores produce nothing. The fluid, energy and XP upgrades are still needed for their respective stores; capacity and transfer limits still apply.
+
+The Command Block is shown in the upgrade bar and overlay, with infinite amounts marked as ∞. Shift-right-click with an empty hand removes and refunds it in the normal removal order, after Super and an installed Break tool. Removal restores finite storage. Copy Paste includes it and requires a Command Block from the player's inventory. Breaking preserves the setup and real item/FE/XP contents in the dropped pylon; fluids are still discarded.
+
 ## Enchanter and Anvil
 
 Shift-right-click the main pylon with the Wrench in Bind mode, then right-click an XP Tank and an item pylon. Either order works. Auxiliaries may be 1–5 blocks from the main pylon, measured between centers, vertically, horizontally or diagonally. Both machines work on one item at a time; the finished item replaces the input in the core and can be extracted by automation. Speed sets the operation interval. Nothing is consumed when an operation cannot finish.

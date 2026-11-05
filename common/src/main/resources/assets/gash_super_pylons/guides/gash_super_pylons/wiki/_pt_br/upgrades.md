@@ -35,6 +35,12 @@ Geradores de itens podem abastecer Smelt ou Pulverize. O processamento gasta 1.0
 
 Geradores têm espaço próprio: só é permitido um gerador, independente da utilidade/tipo e do processamento. A geração funciona junto com os outros upgrades instalados. Um item diferente no estoque pausa a geração em vez de impedir a instalação. Geradores de água/lava podem guardar itens e fluido; o tipo instalado ainda pode bloquear a entrada de itens. Com XP Tank, a automação de fluidos enxerga dois reservatórios separados.
 
+## Creative Storage
+
+Use botão direito com um Command Block vanilla para instalar Creative Storage em espaço próprio. Insira um item, fluido, FE ou XP para configurar o estoque. Depois disso, a extração fornece cópias e preserva o conteúdo original. Vale para retirada manual, funis, automação, wires, upgrades de transferência, outros pylons e consumo pelas máquinas. Estoques vazios não produzem nada. Fluidos, energia e XP ainda precisam dos respectivos upgrades; os limites de capacidade e transferência continuam valendo.
+
+O Command Block aparece na barra e no overlay, com quantidades infinitas indicadas por ∞. Shift + botão direito com a mão vazia remove e devolve o Command Block na ordem normal, depois de Super e da ferramenta de Break instalada. A remoção restaura o estoque finito. Copy Paste inclui o upgrade e exige um Command Block no inventário. Quebrar preserva o setup e os conteúdos reais de itens/FE/XP no pylon que cai; fluidos continuam sendo descartados.
+
 ## Enchanter e Anvil
 
 Com a Wrench no modo Vincular, use Shift + botão direito no principal e botão direito num XP Tank e num auxiliar de itens. A ordem desses dois auxiliares é livre. Eles podem ficar entre 1 e 5 blocos do principal, medidos entre centros, inclusive na vertical e na diagonal. As duas máquinas trabalham com um item por vez; o resultado substitui a entrada no núcleo e pode ser retirado por automação. Speed controla o intervalo. Uma operação incompleta não consome recursos.

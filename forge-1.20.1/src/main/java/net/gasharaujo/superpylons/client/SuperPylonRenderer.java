@@ -82,7 +82,7 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         int shelfSlot = PylonUpgradeStamps.shelfSlot(upgrades, toolSlot);
         int total = upgrades.size() + (toolSlot >= 0 ? 1 : 0) + shelves.size();
         var atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
-        var sprites = PylonUpgradeStamps.sprites(upgrades, id -> atlas.apply(new ResourceLocation(SuperPylonsMod.MOD_ID, "item/" + id)));
+        var sprites = PylonUpgradeStamps.sprites(upgrades, id -> atlas.apply(new ResourceLocation(id)));
         var buffer = buffers.getBuffer(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
         var matrix = pose.last();
         PylonUpgradeStamps.draw(sprites, toolSlot, shelfSlot, shelves.size(), (x, y, z, normal, u, v) -> buffer.vertex(matrix.pose(), x, y, z)
