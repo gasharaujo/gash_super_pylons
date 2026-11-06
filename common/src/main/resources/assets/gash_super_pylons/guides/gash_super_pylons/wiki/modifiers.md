@@ -40,9 +40,9 @@ item_ids:
 # Modifiers
 
 - **Speed** sets the interval between operations. Fertilizer also gets more growth attempts and XP Tank transfers more levels per tick.
-- **Quantity** sets the number of units per operation. Some machines use the tier directly, such as the minimum enchantments on Enchanter and targets on Super Harvester.
+- **Quantity** sets the number of units per operation. Some machines use the tier directly, such as the minimum enchantments on [Enchanter](enchanter.md) with Super and targets on Super Harvester.
 - **Range** expands the working area horizontally and vertically. On Dropper, each tier adds one block of reach. On Chunk Loader, it sets the radius in chunks.
-- **Capacity** increases item, fluid and XP storage. Tier VI enables [bulk transfer](automation.md). Capacity increases [Enchanter](enchanter.md) base power only when Super is installed on the same pylon.
+- **Capacity** increases item, fluid and XP storage. Tier VI enables [bulk transfer](automation.md). Capacity also increases [Enchanter](enchanter.md) base power.
 - **Energy** adds Forge Energy storage to any pylon. It can pull from the side opposite the working side, charge a compatible item on the pedestal and send FE to the working side.
 
 | Tier | Speed (ticks) | Quantity | Range | Capacity |

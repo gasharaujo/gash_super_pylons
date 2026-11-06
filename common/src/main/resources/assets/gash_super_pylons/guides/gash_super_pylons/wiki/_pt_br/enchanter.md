@@ -18,14 +18,14 @@ item_ids:
 
 ## Ajustar os encantamentos
 
-Instale os modificadores no **pylon principal**. Velocidade reduz o intervalo entre tentativas. Quantidade define o mínimo de encantamentos compatíveis que o Encantador tenta aplicar. Se houver menos opções compatíveis, ele usa as que estiverem disponíveis.
+Instale os modificadores no **pylon principal**. Velocidade reduz o intervalo entre tentativas. O mínimo do sorteio começa em **1** encantamento. Com **Super** instalado no pylon principal, Quantidade aumenta esse mínimo. Se houver menos opções compatíveis, ele usa as que estiverem disponíveis.
 
-O poder base de encantamento é **1**. Instale **Super** no pylon principal para que Capacidade aumente esse poder.
+Capacidade aumenta o poder base de encantamento a partir de **1**.
 
 | Tier | Sem upgrade | I | II | III | IV | V | VI |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Poder com Super e Capacidade | 1 | 10 | 20 | 30 | 40 | 50 | 100 |
-| Mínimo com Quantidade | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| Poder com Capacidade | 1 | 10 | 20 | 30 | 40 | 50 | 100 |
+| Mínimo com Super e Quantidade | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 
 Com Apotheosis ou Apothic Enchanting instalado, clique com o botão direito no pylon principal segurando uma estante compatível para adicionar seus efeitos. O Encantador aceita até 64 estantes.
 

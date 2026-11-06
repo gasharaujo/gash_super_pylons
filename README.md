@@ -153,8 +153,8 @@ Os dois upgrades trabalham com um item de entrada por vez no pylon principal e e
 ### Enchanter
 
 - O item a encantar fica no principal; lápis-lazúli fica no auxiliar de itens. Cada operação consome **um lápis-lazúli e 27 pontos de XP**, equivalentes a três níveis contados a partir de zero, independentemente do poder.
-- O poder base é **1**. Com **Super** no Enchanter, Capacidade I/II/III/IV/V/VI eleva o poder base para **10/20/30/40/50/100**, respectivamente.
-- Quantity no principal define o mínimo de **1/2/3/4/5/6/7 encantamentos**. A máquina respeita compatibilidade e disponibilidade: se não houver encantamentos suficientes, aplica os possíveis. Um item já encantado não é reencantado automaticamente.
+- O poder base é **1**. Capacidade I/II/III/IV/V/VI eleva o poder base para **10/20/30/40/50/100**, respectivamente.
+- Com **Super** no principal, Quantity define o mínimo de **1/2/3/4/5/6/7 encantamentos** para os tiers 0 a VI. Sem Super, o mínimo é **1**. A máquina respeita compatibilidade e disponibilidade: se não houver encantamentos suficientes, aplica os possíveis. Um item já encantado não é reencantado automaticamente.
 - Com **Super**, um terceiro auxiliar pode conter um item ou livro encantado. Os encantamentos nele formam uma blacklist; esse item não é consumido e continua visível no núcleo. Remover Super libera esse terceiro vínculo.
 - Estantes do Apotheosis/Apothic Enchanting podem ser instaladas com botão direito, até 64 estantes. A integração consulta os valores e a seleção de encantamentos do próprio mod para aplicar Eterna, Quanta, Arcana, tesouros, estabilidade/retificação e blacklist, conforme a versão. Pistas de interface não alteram o processamento automático. As estantes são salvas, aparecem na barra e saem antes do Enchanter, quando ele for o próximo upgrade a remover.
 

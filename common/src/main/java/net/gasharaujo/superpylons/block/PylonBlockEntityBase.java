@@ -129,11 +129,11 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         return contents.isWorkshopOutput() || workshopStatus.equals("xp") ? workshopCost : 0;
     }
     public int getEnchantmentPower() {
-        if (!hasSuperUpgrade()) return 1;
         PylonUpgrade capacity = upgrades.get(PylonUpgrade.Slot.STORAGE);
         return capacity == null ? 1 : capacity.tier() == 6 ? 100 : capacity.tier() * 10;
     }
     public int getMinimumEnchantments() {
+        if (!hasSuperUpgrade()) return 1;
         PylonUpgrade quantity = upgrades.get(PylonUpgrade.Slot.QUANTITY);
         return quantity == null ? 1 : quantity.tier() + 1;
     }
