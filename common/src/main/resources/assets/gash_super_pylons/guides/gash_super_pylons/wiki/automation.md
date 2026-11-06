@@ -42,4 +42,4 @@ Insert, Extract and [Wires](wires.md) share the budget of the pylon doing the tr
 
 B = bucket (1,000 mB), t = tick and s = game second (20 ticks). Energy and XP retain the 10% capacity budget per tick, subject to their resource limits.
 
-**Capacity VI** enables bulk, so either direction can move the available stock until the destination stops accepting it. Either endpoint having Capacity VI enables bulk on a direct connection between pylons. The destination's own limits and item filter still apply.
+**Capacity VI** enables bulk, so either direction can move the available stock until the destination stops accepting it. Either endpoint having Capacity VI enables bulk on a direct connection between pylons. The destination's own limits and item filter still apply. External inventories may send or receive items in batches over several ticks.

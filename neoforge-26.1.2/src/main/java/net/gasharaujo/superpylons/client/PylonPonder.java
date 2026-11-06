@@ -19,11 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 final class PylonPonder implements PonderPlugin {
-    private static final String SCHEMATIC = "pylon_basics";
     private static final String TAG = "super_pylons";
-    private static final BlockPos PYLON = new BlockPos(1, 2, 2);
-    private static final BlockPos CHEST = PYLON.below();
-    private static final BlockPos OTHER = new BlockPos(3, 2, 2);
 
     static void register() { PonderIndex.addPlugin(new PylonPonder()); }
 
@@ -33,10 +29,10 @@ final class PylonPonder implements PonderPlugin {
     public void registerScenes(PonderSceneRegistrationHelper<Identifier> helper) {
         var tag = helper.asIdentifier(TAG);
         for (var chapter : PylonPonderContent.CHAPTERS) {
-            helper.addStoryBoard(helper.asIdentifier("super_pylon"), SCHEMATIC,
+            helper.addStoryBoard(helper.asIdentifier("super_pylon"), chapter.layout().schematic,
                 (scene, util) -> build(scene, util, chapter), tag);
             for (String item : chapter.items()) {
-                helper.addStoryBoard(helper.asIdentifier(item), SCHEMATIC, (scene, util) -> build(scene, util, chapter), tag);
+                helper.addStoryBoard(helper.asIdentifier(item), chapter.layout().schematic, (scene, util) -> build(scene, util, chapter), tag);
             }
         }
     }
@@ -54,19 +50,21 @@ final class PylonPonder implements PonderPlugin {
     }
 
     private static void build(SceneBuilder scene, SceneBuildingUtil util, PylonPonderContent.Chapter chapter) {
+        var layout = chapter.layout();
         scene.title(chapter.id(), chapter.title());
         scene.configureBasePlate(0, 0, 5);
+        scene.scaleSceneView(0.85f);
         scene.showBasePlate();
         scene.idle(10);
-        if (chapter.chest()) scene.world().showSection(util.select().position(CHEST), Direction.DOWN);
-        scene.world().showSection(util.select().position(PYLON), Direction.DOWN);
-        if (chapter.other()) scene.world().showSection(util.select().position(OTHER), Direction.DOWN);
+        if (layout.chest != null) scene.world().showSection(util.select().position(layout.chest), Direction.DOWN);
+        scene.world().showSection(util.select().position(layout.pylon), Direction.DOWN);
+        if (layout.other != null) scene.world().showSection(util.select().position(layout.other), Direction.DOWN);
         scene.idle(10);
         for (var step : chapter.steps()) {
             BlockPos pos = switch (step.focus()) {
-                case PYLON -> PYLON;
-                case CHEST -> CHEST;
-                case OTHER -> OTHER;
+                case PYLON -> layout.pylon;
+                case CHEST -> layout.chest;
+                case OTHER -> layout.other;
             };
             Vec3 center = Vec3.atCenterOf(pos);
             int time = Math.max(70, 35 + step.text().length() / 2);
@@ -82,7 +80,7 @@ final class PylonPonder implements PonderPlugin {
                     default -> { }
                 }
             }
-            scene.overlay().showText(time).attachKeyFrame().pointAt(center).text(step.text());
+            scene.overlay().showText(time).attachKeyFrame().independent(58).text(step.text());
             if (step.display() != null) {
                 scene.idle(15);
                 var display = step.display();
@@ -98,8 +96,8 @@ final class PylonPonder implements PonderPlugin {
                         tag.put("stored_item", item);
                     }
                 });
-                if (chapter.id().equals("wires") && pos.equals(OTHER)) {
-                    scene.overlay().showLine(PonderPalette.MEDIUM, Vec3.atCenterOf(PYLON), center, time - 15);
+                if (chapter.id().equals("wires") && pos.equals(layout.other)) {
+                    scene.overlay().showLine(PonderPalette.MEDIUM, Vec3.atCenterOf(layout.pylon), center, time - 15);
                 }
                 scene.idle(time - 15);
             } else {

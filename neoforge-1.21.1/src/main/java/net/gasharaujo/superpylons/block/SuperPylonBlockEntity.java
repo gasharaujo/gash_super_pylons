@@ -388,33 +388,31 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private long moveItems(ServerLevel server, BlockPos neighbor, boolean importing, long limit) {
         var handler = server.getCapability(Capabilities.ItemHandler.BLOCK, neighbor, workDirection().getOpposite());
         if (handler == null) return 0;
-        long moved = 0;
-        for (int slot = 0; slot < handler.getSlots() && moved < limit; slot++) {
-            while (moved < limit) {
-                long before = importing ? handler.getStackInSlot(slot).getCount() : getStoredCount();
-                long targetBefore = importing ? getStoredCount() : handler.getStackInSlot(slot).getCount();
-                ItemStack offered = importing ? handler.extractItem(slot, (int) Math.min(Integer.MAX_VALUE, limit - moved), true) : transferItemBatch((int) Math.min(Integer.MAX_VALUE, limit - moved), true);
-                if (offered.isEmpty()) break;
-                ItemStack rejected = importing ? insertAutomation(offered, true) : handler.insertItem(slot, offered, true);
-                int wanted = offered.getCount() - rejected.getCount();
-                if (wanted <= 0) break;
-                boolean copied = !importing && isCreativeStorage();
-                ItemStack extracted = importing ? handler.extractItem(slot, wanted, false) : transferItemBatch(wanted, false);
-                int reserved = extracted.getCount();
-                ItemStack remaining = importing ? insertAutomation(extracted, false) : handler.insertItem(slot, extracted, false);
-                int accepted = reserved - remaining.getCount();
-                moved += Math.max(0, accepted);
-                if (importing) {
-                    if (!remaining.isEmpty()) Block.popResource(server, neighbor, ItemHandlerHelper.insertItemStacked(handler, remaining, false));
-                } else returnTransferItems(remaining, copied);
-                long after = importing ? handler.getStackInSlot(slot).getCount() : getStoredCount();
-                // A non-depleting source has no finite remainder to drain in a loop.
-                long targetAfter = importing ? getStoredCount() : handler.getStackInSlot(slot).getCount();
-                boolean targetProgress = targetAfter > targetBefore && (!importing || !hasBulkTransfer());
-                if (accepted <= 0 || limit == Long.MAX_VALUE && after >= before && !targetProgress) break;
+        return scanExternalItemSlots(handler.getSlots(), importing, limit, (slot, request) -> {
+            if (slot >= handler.getSlots()) return 0;
+            ItemStack offered = importing ? handler.extractItem(slot, request, true) : transferItemBatch(request, true);
+            if (offered.isEmpty()) return 0;
+            ItemStack rejected = importing ? insertAutomation(offered, true) : handler.insertItem(slot, offered, true);
+            int wanted = offered.getCount() - rejected.getCount();
+            if (wanted <= 0) return 0;
+
+            boolean copied = !importing && isCreativeStorage();
+            boolean workshopOutput = !importing && contents.isWorkshopOutput();
+            ItemStack extracted = importing ? handler.extractItem(slot, wanted, false) : transferItemBatch(wanted, false);
+            if (extracted.isEmpty()) return 0;
+            int reserved = extracted.getCount();
+            ItemStack remaining = importing ? insertAutomation(extracted, false) : handler.insertItem(slot, extracted, false);
+            int accepted = Math.max(0, reserved - remaining.getCount());
+            if (importing) {
+                if (!remaining.isEmpty()) {
+                    dropTransferItems(neighbor, handler.insertItem(slot, remaining, false));
+                }
+            } else {
+                returnTransferItems(remaining, copied);
+                if (workshopOutput && !copied && !isRemoved()) contents.markWorkshopOutput();
             }
-        }
-        return moved;
+            return accepted;
+        });
     }
 
     private long moveFluid(IFluidHandler source, IFluidHandler target, long limit) {

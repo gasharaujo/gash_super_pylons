@@ -104,7 +104,7 @@ public final class SuperPylonsMod {
 
     private static Map<PylonUpgrade, Supplier<? extends Item>> registerUpgrades() {
         Map<PylonUpgrade, Supplier<? extends Item>> items = new EnumMap<>(PylonUpgrade.class);
-        for (PylonUpgrade upgrade : PylonUpgrade.values()) {
+        for (PylonUpgrade upgrade : PylonUpgrade.registrationOrder()) {
             if (upgrade == PylonUpgrade.CREATIVE_STORAGE) {
                 items.put(upgrade, () -> net.minecraft.world.item.Items.COMMAND_BLOCK);
                 continue;

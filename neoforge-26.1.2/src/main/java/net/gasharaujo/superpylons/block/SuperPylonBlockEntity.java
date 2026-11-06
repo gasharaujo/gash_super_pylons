@@ -342,7 +342,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return switch (type) {
             case ITEM -> {
                 var other = server.getCapability(Capabilities.Item.BLOCK, neighbor, workDirection().getOpposite());
-                yield moveResources(importing ? other : itemPort, importing ? itemPort : other, limit);
+                yield moveItems(other, importing, limit);
             }
             case FLUID -> {
                 var other = server.getCapability(Capabilities.Fluid.BLOCK, neighbor, workDirection().getOpposite());
@@ -355,6 +355,37 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             case XP -> moveLiquidXp(server, neighbor, importing,
                 PylonXpFluids.millibuckets(limit));
         };
+    }
+
+    private long moveItems(ResourceHandler<ItemResource> other, boolean importing, long limit) {
+        if (other == null) return 0;
+        ResourceHandler<ItemResource> source = importing ? other : itemPort;
+        ResourceHandler<ItemResource> target = importing ? itemPort : other;
+        return scanExternalItemSlots(other.size(), importing, limit, (slot, request) -> {
+            if (slot >= other.size()) return 0;
+            int from = importing ? slot : 0;
+            int to = importing ? 0 : slot;
+            ItemResource resource = source.getResource(from);
+            if (resource.isEmpty()) return 0;
+            int accepted;
+            try (Transaction tx = Transaction.openRoot()) {
+                int extracted = source.extract(from, resource, request, tx);
+                if (extracted == 0) return 0;
+                accepted = target.insert(to, resource, extracted, tx);
+                if (accepted == extracted) {
+                    tx.commit();
+                    return accepted;
+                }
+            }
+            if (accepted == 0) return 0;
+            // Retry the partial offer after rolling back the tentative extraction and insertion.
+            try (Transaction tx = Transaction.openRoot()) {
+                if (source.extract(from, resource, accepted, tx) != accepted ||
+                    target.insert(to, resource, accepted, tx) != accepted) return 0;
+                tx.commit();
+                return accepted;
+            }
+        });
     }
 
     private static <T extends net.neoforged.neoforge.transfer.resource.Resource> long moveResources(

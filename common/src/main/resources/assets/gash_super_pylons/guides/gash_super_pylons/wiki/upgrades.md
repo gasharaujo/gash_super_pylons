@@ -9,7 +9,11 @@ item_ids:
 
 # Upgrades
 
-Use an upgrade on a pylon to install it. A higher tier of the same modifier replaces the previous tier and returns it to you. Sneak and right-click with your main hand empty to remove the next upgrade. The icons on the lower frame show removal order from right to left. Super comes out first, and generators come out before processors.
+Use an upgrade on a pylon to install it. A higher tier of the same modifier replaces the previous tier and returns it to you. Sneak and right-click with your main hand empty to remove the next upgrade. The icons on the lower frame show removal order from right to left.
+
+Removal starts with Super, then the equipped tool or weapon, Creative Storage, Filter, Speed, Quantity, Range and Energy. Insert and Extract upgrades follow in item, fluid, energy and XP order. Then come Chunk Loader, the generator, the processor, the specialty and finally Capacity.
+
+A furnace attachment comes out before Smelt, and installed Apotheosis shelves come out before Enchanter.
 
 The Upgrade Base is made with five cobblestone in a cross. Tier I recipes use the base, and higher tiers use the preceding tier.
 

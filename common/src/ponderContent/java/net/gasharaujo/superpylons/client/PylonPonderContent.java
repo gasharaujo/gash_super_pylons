@@ -1,6 +1,7 @@
 package net.gasharaujo.superpylons.client;
 
 import java.util.List;
+import net.minecraft.core.BlockPos;
 
 final class PylonPonderContent {
     enum Action { HOLD, RIGHT, LEFT, SNEAK_RIGHT, SNEAK_LEFT, SCROLL }
@@ -8,7 +9,26 @@ final class PylonPonderContent {
 
     record Display(String upgrades, String item, int count) {}
     record Step(String icon, String text, Action action, Focus focus, Display display) {}
-    record Chapter(String id, String title, List<String> items, boolean chest, boolean other, List<Step> steps) {}
+    record Chapter(String id, String title, List<String> items, Layout layout, List<Step> steps) {}
+
+    enum Layout {
+        SINGLE("pylon_basics", new BlockPos(2, 1, 2), null, null),
+        AUTOMATION("pylon_automation", new BlockPos(2, 2, 2), new BlockPos(2, 1, 2), null),
+        PAIR("pylon_pair", new BlockPos(1, 1, 2), null, new BlockPos(3, 1, 2)),
+        WORKSHOP("pylon_workshop", new BlockPos(1, 2, 2), new BlockPos(1, 1, 2), new BlockPos(3, 1, 2));
+
+        final String schematic;
+        final BlockPos pylon;
+        final BlockPos chest;
+        final BlockPos other;
+
+        Layout(String schematic, BlockPos pylon, BlockPos chest, BlockPos other) {
+            this.schematic = schematic;
+            this.pylon = pylon;
+            this.chest = chest;
+            this.other = other;
+        }
+    }
 
     private PylonPonderContent() {}
 
@@ -16,7 +36,7 @@ final class PylonPonderContent {
 
     static final List<Chapter> CHAPTERS = List.of(
         new Chapter("pylon_basics", "Pylon: Item Storage",
-            List.of(), false, false, List.of(
+            List.of(), Layout.SINGLE, List.of(
             new Step("minecraft:iron_ingot",
                 "Right-click the Super Pylon to deposit items. It holds 2,048 items of one exact kind by default.",
                 Action.RIGHT, Focus.PYLON, new Display("", "minecraft:iron_ingot", 32)),
@@ -31,7 +51,7 @@ final class PylonPonderContent {
                 Action.SNEAK_LEFT, Focus.PYLON, new Display("", "", 0))
         )),
         new Chapter("upgrade_setup", "Upgrades: Installation",
-            items("upgrade_base"), false, false, List.of(
+            items("upgrade_base"), Layout.SINGLE, List.of(
             new Step("upgrade_base",
                 "Craft the Upgrade Base with five cobblestone in a cross. Tier I uses the base, and later tiers use the preceding tier.",
                 Action.HOLD, Focus.PYLON, null),
@@ -42,13 +62,22 @@ final class PylonPonderContent {
                 "Installing a higher tier returns the older one. Sneak and right-click with an empty hand to remove the rightmost upgrade.",
                 Action.RIGHT, Focus.PYLON, new Display("speed_upgrade_2", "", 0)),
             new Step("super_upgrade",
-                "Super is removed first. When a generator and processor are installed together, the generator comes out before the processor.",
+                "Removal order starts with Super, then the equipped tool or weapon, Creative Storage, Filter, Speed, Quantity, Range and Energy.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("extract_item_upgrade",
+                "Insert and Extract are next in this order: items, fluids, energy, then XP. Chunk Loader follows.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("storage_upgrade_1",
+                "Then remove the generator, processor, specialty and finally Capacity. The rightmost installed icon comes out first.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("smelt_upgrade",
+                "A furnace attachment comes out before Smelt. Apotheosis shelves come out before Enchanter.",
                 Action.HOLD, Focus.PYLON, null)
         )),
         new Chapter("generators", "Upgrades: Generators",
             items("cobblestone_generator_upgrade deepslate_generator_upgrade " +
                 "blackstone_generator_upgrade netherrack_generator_upgrade sand_generator_upgrade " +
-                "glass_generator_upgrade water_generator_upgrade lava_generator_upgrade"), false, false, List.of(
+                "glass_generator_upgrade water_generator_upgrade lava_generator_upgrade"), Layout.SINGLE, List.of(
             new Step("cobblestone_generator_upgrade",
                 "A generator makes one unit every 60 ticks by default. Speed shortens the interval and Quantity increases the output.",
                 Action.RIGHT, Focus.PYLON, new Display("cobblestone_generator_upgrade", "minecraft:cobblestone", 1)),
@@ -69,7 +98,7 @@ final class PylonPonderContent {
                 "range_upgrade_2 range_upgrade_3 range_upgrade_4 range_upgrade_5 range_upgrade_6 " +
                 "storage_upgrade_1 storage_upgrade_2 storage_upgrade_3 storage_upgrade_4 " +
                 "storage_upgrade_5 storage_upgrade_6 energy_upgrade_1 energy_upgrade_2 " +
-                "energy_upgrade_3 energy_upgrade_4 energy_upgrade_5 energy_upgrade_6"), false, false, List.of(
+                "energy_upgrade_3 energy_upgrade_4 energy_upgrade_5 energy_upgrade_6"), Layout.SINGLE, List.of(
             new Step("speed_upgrade_1",
                 "Speed controls the cycle. At tiers 0 to VI the interval is 60, 40, 30, 20, 10, 5 or 1 tick.",
                 Action.RIGHT, Focus.PYLON, new Display("speed_upgrade_1", "", 0)),
@@ -88,7 +117,7 @@ final class PylonPonderContent {
         )),
         new Chapter("utility_field", "Utility: Work in the World",
             items("fertilizer_upgrade harvester_upgrade planter_upgrade magnet_upgrade placer_upgrade " +
-                "break_upgrade clicker_upgrade dropper_upgrade"), false, false, List.of(
+                "break_upgrade clicker_upgrade dropper_upgrade"), Layout.SINGLE, List.of(
             new Step("fertilizer_upgrade",
                 "Fertilizer gives plants random ticks. Speed controls attempts and Quantity controls the number of plants.",
                 Action.HOLD, Focus.PYLON, null),
@@ -110,7 +139,7 @@ final class PylonPonderContent {
         )),
         new Chapter("utility_storage", "Utility: Storage and Control",
             items("fluid_storage_upgrade xp_tank_upgrade filter_upgrade void_upgrade " +
-                "chunk_loader_upgrade super_upgrade"), false, false, List.of(
+                "chunk_loader_upgrade super_upgrade"), Layout.SINGLE, List.of(
             new Step("fluid_storage_upgrade",
                 "Fluid Storage holds one fluid and starts at 32 buckets. Empty the tank before removing it.",
                 Action.HOLD, Focus.PYLON, null),
@@ -131,7 +160,7 @@ final class PylonPonderContent {
                 Action.RIGHT, Focus.PYLON, new Display("super_upgrade", "", 0))
         )),
         new Chapter("utility_processing", "Utility: Processing and Workshops",
-            items("smelt_upgrade pulverize_upgrade enchanting_upgrade anvil_upgrade"), true, true, List.of(
+            items("smelt_upgrade pulverize_upgrade enchanting_upgrade anvil_upgrade"), Layout.WORKSHOP, List.of(
             new Step("smelt_upgrade",
                 "Smelt uses furnace recipes. Install a blast furnace or smoker to select its recipe type.",
                 Action.HOLD, Focus.PYLON, null),
@@ -150,7 +179,7 @@ final class PylonPonderContent {
         )),
         new Chapter("automation", "Upgrades: Automation",
             items("insert_item_upgrade insert_fluid_upgrade insert_energy_upgrade insert_xp_upgrade " +
-                "extract_item_upgrade extract_fluid_upgrade extract_energy_upgrade extract_xp_upgrade"), true, false, List.of(
+                "extract_item_upgrade extract_fluid_upgrade extract_energy_upgrade extract_xp_upgrade"), Layout.AUTOMATION, List.of(
             new Step("insert_item_upgrade",
                 "Insert pulls from the adjacent inventory into the pylon. The working side is down by default.",
                 Action.RIGHT, Focus.PYLON, new Display("insert_item_upgrade", "minecraft:iron_ingot", 32)),
@@ -167,11 +196,11 @@ final class PylonPonderContent {
                 "Fluid rates at tiers 0–V are 250 mB/t, then 1, 2, 4, 16 and 64 buckets per tick.",
                 Action.HOLD, Focus.PYLON, null),
             new Step("storage_upgrade_6",
-                "Capacity VI enables bulk up to what the destination accepts.",
+                "Capacity VI enables bulk. External inventories may move items in batches across several ticks.",
                 Action.HOLD, Focus.PYLON, null)
         )),
         new Chapter("wires", "Wires: Connect Two Pylons",
-            items("item_wire fluid_wire energy_wire xp_wire"), false, true, List.of(
+            items("item_wire fluid_wire energy_wire xp_wire"), Layout.PAIR, List.of(
             new Step("item_wire",
                 "Right-click the source first. Then right-click the destination up to 32 blocks away in the same dimension.",
                 Action.RIGHT, Focus.PYLON, new Display("", "minecraft:iron_ingot", 32)),
@@ -186,7 +215,7 @@ final class PylonPonderContent {
                 Action.RIGHT, Focus.OTHER, null)
         )),
         new Chapter("tools", "Tools: Wrench, Copy and Paint",
-            items("wrench copy_paste_tool paint_tool"), false, true, List.of(
+            items("wrench copy_paste_tool paint_tool"), Layout.PAIR, List.of(
             new Step("wrench",
                 "Sneak-scroll to switch Wrench modes. In Bind, sneak-right-click the main workshop, then right-click its auxiliaries.",
                 Action.SCROLL, Focus.PYLON, null),

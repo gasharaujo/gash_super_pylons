@@ -11,6 +11,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntBinaryOperator;
 import java.util.stream.Collectors;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.core.BlockPos;
@@ -59,6 +60,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private static final int FURNACE_TICKS_PER_ITEM = 200;
     private static final int XP_PER_BOTTLE = 7;
     private static final int EXCAVATION_SCAN_BUDGET = 4096;
+    private static final int EXTERNAL_ITEM_ATTEMPTS = 256;
+    private static final int EXTERNAL_ITEM_BATCH = 4096;
     static final int FILTER_SIZE = 27;
 
     protected final PylonContents contents = new PylonContents(this::isCreativeStorage, this::getItemCapacity);
@@ -90,6 +93,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private UUID warnedPlayer;
     private long warningExpires;
     private boolean contentsDropped;
+    private int itemImportSlot;
+    private int itemExportSlot;
+    private boolean scanningExternalItems;
+    private boolean syncAfterItemScan;
     private boolean packedDrop;
 
     protected PylonBlockEntityBase(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -805,6 +812,37 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                                                      boolean importing, long limit);
     protected abstract PylonExperienceStorage experienceAt(ServerLevel server, BlockPos pos);
 
+    protected long scanExternalItemSlots(int slots, boolean importing, long limit, IntBinaryOperator move) {
+        if (slots <= 0 || limit <= 0 || scanningExternalItems) return 0;
+        int slot = (importing ? itemImportSlot : itemExportSlot) % slots;
+        long moved = 0;
+        int misses = 0;
+        // Foreign inventories may expose huge slot counts or accept only part of each request.
+        scanningExternalItems = true;
+        try {
+            for (int attempts = 0; attempts < EXTERNAL_ITEM_ATTEMPTS && misses < slots && moved < limit; attempts++) {
+                int request = (int) Math.min(EXTERNAL_ITEM_BATCH, limit - moved);
+                int accepted = move.applyAsInt(slot, request);
+                if (accepted > 0) {
+                    moved += accepted;
+                    misses = 0;
+                } else {
+                    slot = (slot + 1) % slots;
+                    misses++;
+                }
+            }
+        } finally {
+            if (importing) itemImportSlot = slot;
+            else itemExportSlot = slot;
+            scanningExternalItems = false;
+            if (syncAfterItemScan) {
+                syncAfterItemScan = false;
+                sync();
+            }
+        }
+        return moved;
+    }
+
     public int insertFrom(ItemStack input) {
         int inserted = insertItems(input, input.getCount(), false);
         input.shrink(inserted);
@@ -853,9 +891,12 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             remainder = remainder.copyWithCount(remainder.getCount() - restored);
             if (restored > 0) sync();
         }
-        while (!remainder.isEmpty()) {
-            ItemStack drop = remainder.split(remainder.getMaxStackSize());
-            Block.popResource(level, worldPosition, drop);
+        dropTransferItems(worldPosition, remainder);
+    }
+
+    protected void dropTransferItems(BlockPos pos, ItemStack stack) {
+        while (!stack.isEmpty()) {
+            Block.popResource(level, pos, stack.split(stack.getMaxStackSize()));
         }
     }
 
@@ -2024,6 +2065,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected void sync() {
+        if (scanningExternalItems) {
+            syncAfterItemScan = true;
+            return;
+        }
         setChanged();
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
     }

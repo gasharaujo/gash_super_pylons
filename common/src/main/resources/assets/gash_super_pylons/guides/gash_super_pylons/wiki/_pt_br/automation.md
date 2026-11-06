@@ -42,4 +42,4 @@ Insert, Extract e [Cabos](wires.md) compartilham a taxa do pylon que faz a trans
 
 B = balde (1.000 mB), t = tick e s = segundo de jogo (20 ticks). Energia e XP continuam com taxa de 10% da capacidade por tick, sujeita aos limites do recurso.
 
-**Capacidade VI** ativa bulk nos dois sentidos. O pylon transfere o estoque disponível até o destino parar de aceitar. Capacidade VI em qualquer ponta ativa bulk numa conexão direta entre pylons. Os limites próprios do destino e o filtro de itens ainda se aplicam.
+**Capacidade VI** ativa bulk nos dois sentidos. O pylon transfere o estoque disponível até o destino parar de aceitar. Capacidade VI em qualquer ponta ativa bulk numa conexão direta entre pylons. Os limites próprios do destino e o filtro de itens ainda se aplicam. Inventários externos podem receber ou entregar itens em lotes por vários ticks.

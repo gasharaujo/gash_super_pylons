@@ -1,5 +1,8 @@
 package net.gasharaujo.superpylons.block;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Supplier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -79,6 +82,10 @@ public enum PylonUpgrade {
         CHUNK_LOADER, GENERATOR, PROCESSING, SPECIALTY, STORAGE
     }
 
+    private static final List<PylonUpgrade> REGISTRATION_ORDER = Arrays.stream(values())
+        .sorted(Comparator.comparingInt(PylonUpgrade::registrationGroup))
+        .toList();
+
     private final String id;
     private final Slot slot;
     private final int tier;
@@ -106,6 +113,20 @@ public enum PylonUpgrade {
         this.fluid = fluid;
         this.transferType = transferType;
         this.insert = insert;
+    }
+
+    public static List<PylonUpgrade> registrationOrder() { return REGISTRATION_ORDER; }
+
+    private int registrationGroup() {
+        if (transferType != null) return 5;
+        return switch (category()) {
+            case "modifier" -> 0;
+            case "type" -> 1;
+            case "utility" -> 2;
+            case "generator" -> 3;
+            case "processing" -> 4;
+            default -> throw new IllegalStateException("Unknown upgrade category: " + category());
+        };
     }
 
     public String id() { return id; }
