@@ -8,7 +8,7 @@ navigation:
 # Gash's Super Pylons
 
 - [Pylon](pylon.md) explica como fabricar o bloco, guardar itens e retirá-los.
-- [Upgrades](upgrades.md) reúne [Geradores](generators.md), [Modificadores](modifiers.md), [Utilidades](utility.md) e [Automação](automation.md).
+- [Upgrades](upgrades.md) reúne [Geradores](generators.md), [Modificadores](modifiers.md), [Utilidades](utility.md), [Oficinas avançadas](workshops.md) e [Automação](automation.md).
 - [Cabos](wires.md) ligam dois pylons para transferir recursos.
 - [Ferramentas](tools.md) mostra como configurar, copiar e pintar pylons.
 

@@ -7,8 +7,6 @@ navigation:
 item_ids:
   - gash_super_pylons:fluid_storage_upgrade
   - gash_super_pylons:xp_tank_upgrade
-  - gash_super_pylons:anvil_upgrade
-  - gash_super_pylons:enchanting_upgrade
   - gash_super_pylons:clicker_upgrade
   - gash_super_pylons:fertilizer_upgrade
   - gash_super_pylons:harvester_upgrade
@@ -54,18 +52,11 @@ item_ids:
 
 Ambos enviam os resultados ao inventário no lado de trabalho e custam **1.000 FE por item processado**. Usam primeiro o FE do próprio pylon, depois o de um pylon vizinho e por fim combustível de fornalha de um inventário lateral. Um carvão rende oito usos. Geradores podem abastecer ambos quando houver receita para o produto.
 
-## Enchanter e Anvil
-
-Com a [Wrench](tools.md) no modo Vincular, agache e clique no pylon principal, depois clique num XP Tank e num auxiliar de itens. Os auxiliares podem ficar a 1–5 blocos em qualquer direção. O principal processa um item por vez. O resultado sai para o inventário do lado de trabalho ou fica no núcleo até haver espaço.
-
-**Enchanter** recebe o item no principal e lápis-lazúli no auxiliar. Gasta um lápis e 27 pontos de XP por item. Capacidade define poder 1, 10, 20, 30, 40, 50 ou 100. Quantidade define o mínimo de 1 a 7 encantamentos compatíveis, conforme disponibilidade. Clique com o botão direito para instalar até 64 estantes compatíveis de Apotheosis ou Apothic Enchanting.
-
-**Anvil** recebe o primeiro item no principal e o segundo item ou material de reparo no auxiliar. Encantamentos do mesmo nível sobem um nível. Cada melhoria custa o nível resultante multiplicado pela raridade. Acima do máximo normal, o preço é multiplicado pela raridade outra vez, com multiplicador mínimo de dois.
-
 ## Combinações com Super
 
 - **Smelt e Pulverize** processam todos os stacks elegíveis no inventário oposto à saída enquanto houver espaço e energia ou combustível.
 - **Fertilizer** avança os estágios das plantas diretamente. **Harvester** ataca até 1 + tier de Quantidade mobs por operação. Agache e clique com uma arma para equipá-la. A arma padrão é um machado de diamante.
 - **Break e Fluid Storage** varrem o chunk a partir de três blocos abaixo do pylon. Cada tier de Alcance soma um chunk ao raio. Break envia drops ao inventário da saída, e Fluid Storage coleta fontes e pode enviá-las ao tanque adjacente.
 - **Magnet** deposita diretamente no inventário de saída. **Placer** preenche espaços de um plano três blocos abaixo. **Dropper** funciona como ejetor e mira os projéteis na direção de trabalho.
-- **Enchanter** pode usar os encantamentos do item de um terceiro auxiliar como blacklist. **Anvil** preserva o livro encantado usado como segundo item.
+
+Veja [Oficinas avançadas](workshops.md) para as combinações de Super com Encantador e Bigorna.

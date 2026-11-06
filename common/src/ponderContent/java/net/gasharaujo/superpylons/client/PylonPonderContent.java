@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 
 final class PylonPonderContent {
     enum Action { HOLD, RIGHT, LEFT, SNEAK_RIGHT, SNEAK_LEFT, SCROLL }
-    enum Focus { PYLON, CHEST, OTHER }
+    enum Focus { PYLON, CHEST, OTHER, XP, BLACKLIST }
 
     record Display(String upgrades, String item, int count) {}
     record Step(String icon, String text, Action action, Focus focus, Display display) {}
@@ -15,7 +15,10 @@ final class PylonPonderContent {
         SINGLE("pylon_basics", new BlockPos(2, 1, 2), null, null),
         AUTOMATION("pylon_automation", new BlockPos(2, 2, 2), new BlockPos(2, 1, 2), null),
         PAIR("pylon_pair", new BlockPos(1, 1, 2), null, new BlockPos(3, 1, 2)),
-        WORKSHOP("pylon_workshop", new BlockPos(1, 2, 2), new BlockPos(1, 1, 2), new BlockPos(3, 1, 2));
+        WORKSHOP("pylon_workshop", new BlockPos(2, 2, 2), new BlockPos(2, 1, 2), new BlockPos(0, 1, 2));
+
+        static final BlockPos XP = new BlockPos(4, 1, 2);
+        static final BlockPos BLACKLIST = new BlockPos(2, 1, 0);
 
         final String schematic;
         final BlockPos pylon;
@@ -159,23 +162,95 @@ final class PylonPonderContent {
                 "Super changes other utilities. For example, Harvester attacks mobs and Break mines the chunk starting three blocks below.",
                 Action.RIGHT, Focus.PYLON, new Display("super_upgrade", "", 0))
         )),
-        new Chapter("utility_processing", "Utility: Processing and Workshops",
-            items("smelt_upgrade pulverize_upgrade enchanting_upgrade anvil_upgrade"), Layout.WORKSHOP, List.of(
+        new Chapter("utility_processing", "Utility: Processing",
+            items("smelt_upgrade pulverize_upgrade"), Layout.AUTOMATION, List.of(
             new Step("smelt_upgrade",
                 "Smelt uses furnace recipes. Install a blast furnace or smoker to select its recipe type.",
                 Action.HOLD, Focus.PYLON, null),
             new Step("pulverize_upgrade",
                 "Pulverize crushes blocks and ores. Both processors spend 1,000 FE per item, then use furnace fuel if FE runs out.",
                 Action.HOLD, Focus.PYLON, null),
-            new Step("enchanting_upgrade",
-                "Enchanter needs lapis and 27 XP points from two auxiliaries. Put the item to enchant in the main pylon.",
-                Action.HOLD, Focus.PYLON, null),
-            new Step("anvil_upgrade",
-                "Anvil needs the second item or repair material plus XP. Use the Wrench to bind both auxiliaries 1–5 blocks away.",
-                Action.HOLD, Focus.PYLON, null),
             new Step("minecraft:chest",
-                "The finished item goes to the inventory on the working side. If it is full, the result waits in the core.",
+                "Processing outputs go to the inventory on the working side. A compatible generator can supply input.",
                 Action.HOLD, Focus.CHEST, null)
+        )),
+        new Chapter("enchanter", "Advanced Workshops — Enchanter",
+            items("enchanting_upgrade"), Layout.WORKSHOP, List.of(
+            new Step("enchanting_upgrade",
+                "Install Enchanter on the main pylon. Put two auxiliary pylons 1 to 5 blocks away, in any direction.",
+                Action.RIGHT, Focus.PYLON, new Display("enchanting_upgrade", "", 0)),
+            new Step("xp_tank_upgrade",
+                "Install XP Tank in one auxiliary. Feed it XP from orbs, players above it or bottles of enchanting.",
+                Action.RIGHT, Focus.XP, new Display("xp_tank_upgrade", "", 0)),
+            new Step("wrench",
+                "Sneak-scroll with the Wrench until it says Bind. Sneak and right-click the main pylon to select it.",
+                Action.SNEAK_RIGHT, Focus.PYLON, null),
+            new Step("wrench",
+                "Release Sneak and right-click the XP Tank with the Wrench.",
+                Action.RIGHT, Focus.XP, null),
+            new Step("wrench",
+                "Still in Bind mode, right-click the item auxiliary. Both required pylons are now linked.",
+                Action.RIGHT, Focus.OTHER, null),
+            new Step("minecraft:lapis_lazuli",
+                "Put lapis in the item auxiliary. Each enchantment operation uses one lapis and 27 XP points.",
+                Action.RIGHT, Focus.OTHER, new Display("", "minecraft:lapis_lazuli", 16)),
+            new Step("minecraft:book",
+                "Put one enchantable item or book in the main pylon. It enchants automatically when both supplies are ready.",
+                Action.RIGHT, Focus.PYLON, new Display("enchanting_upgrade", "minecraft:book", 1)),
+            new Step("minecraft:chest",
+                "Collect the result from the chest on the working side, down by default. Hit the main pylon if the result waits in the core.",
+                Action.HOLD, Focus.CHEST, null),
+            new Step("storage_upgrade_6",
+                "Speed shortens the cycle. Capacity sets power to 1, 10, 20, 30, 40, 50 or 100. Quantity sets a minimum of 1 to 7 compatible enchants.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("",
+                "Right-click the main pylon with supported Apotheosis or Apothic Enchanting shelves to apply their effects.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("super_upgrade",
+                "Install Super to enable a third auxiliary that can exclude unwanted enchantments.",
+                Action.RIGHT, Focus.PYLON, new Display("enchanting_upgrade,super_upgrade", "", 0)),
+            new Step("wrench",
+                "With the first two pylons linked, sneak and right-click the main pylon again in Bind mode.",
+                Action.SNEAK_RIGHT, Focus.PYLON, null),
+            new Step("wrench",
+                "Right-click the third auxiliary with the Wrench after the first two are linked.",
+                Action.RIGHT, Focus.BLACKLIST, null),
+            new Step("minecraft:enchanted_book",
+                "Put an enchanted book or item in the third auxiliary. Its enchantments are excluded from future rolls, and the sample stays.",
+                Action.RIGHT, Focus.BLACKLIST, new Display("", "minecraft:enchanted_book", 1))
+        )),
+        new Chapter("anvil", "Advanced Workshops — Anvil",
+            items("anvil_upgrade"), Layout.WORKSHOP, List.of(
+            new Step("anvil_upgrade",
+                "Install Anvil on the main pylon. Put two auxiliary pylons 1 to 5 blocks away, in any direction.",
+                Action.RIGHT, Focus.PYLON, new Display("anvil_upgrade", "", 0)),
+            new Step("xp_tank_upgrade",
+                "Install XP Tank in one auxiliary and fill it with XP.",
+                Action.RIGHT, Focus.XP, new Display("xp_tank_upgrade", "", 0)),
+            new Step("wrench",
+                "Sneak-scroll to Bind mode. Sneak and right-click the main pylon with the Wrench.",
+                Action.SNEAK_RIGHT, Focus.PYLON, null),
+            new Step("wrench",
+                "Release Sneak and right-click the XP Tank with the Wrench.",
+                Action.RIGHT, Focus.XP, null),
+            new Step("wrench",
+                "Right-click the item auxiliary with the Wrench to finish linking.",
+                Action.RIGHT, Focus.OTHER, null),
+            new Step("minecraft:enchanted_book",
+                "Put an enchanted book, a compatible second item or repair material into the item auxiliary.",
+                Action.RIGHT, Focus.OTHER, new Display("", "minecraft:enchanted_book", 1)),
+            new Step("minecraft:diamond_pickaxe",
+                "Put the item to upgrade or repair in the main pylon. Anvil works automatically once it has a valid pair and enough XP.",
+                Action.RIGHT, Focus.PYLON, new Display("anvil_upgrade", "minecraft:diamond_pickaxe", 1)),
+            new Step("minecraft:experience_bottle",
+                "Matching enchantment levels combine into the next level. Cost grows with the resulting levels, rarity and exceeding normal caps.",
+                Action.HOLD, Focus.XP, null),
+            new Step("minecraft:chest",
+                "The result goes to the working-side chest. If it waits in the core, hit the main pylon to collect it.",
+                Action.HOLD, Focus.CHEST, null),
+            new Step("super_upgrade",
+                "Super keeps an enchanted book in the item auxiliary for repeated use. Each operation still spends XP.",
+                Action.HOLD, Focus.PYLON, new Display("anvil_upgrade,super_upgrade", "", 0))
         )),
         new Chapter("automation", "Upgrades: Automation",
             items("insert_item_upgrade insert_fluid_upgrade insert_energy_upgrade insert_xp_upgrade " +

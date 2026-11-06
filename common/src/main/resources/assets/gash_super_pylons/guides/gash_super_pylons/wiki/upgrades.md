@@ -23,3 +23,4 @@ The Upgrade Base is made with five cobblestone in a cross. Tier I recipes use th
 - [Modifiers](modifiers.md) change speed, quantity, range, capacity and energy.
 - [Utility](utility.md) covers storage types, machines, processing and Super combinations.
 - [Automation](automation.md) covers Insert and Extract for the four resources.
+- [Advanced Workshops](workshops.md) explains how to bind and use the Enchanter and Anvil.

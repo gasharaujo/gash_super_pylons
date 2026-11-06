@@ -15,7 +15,7 @@ item_ids:
 
 Sneak and scroll to switch modes.
 
-- **Bind:** sneak and right-click an Enchanter or Anvil, then right-click each auxiliary 1–5 blocks away. Both machines need an XP and an item auxiliary.
+- **Bind:** Follow the steps in [Advanced Workshops](workshops.md) to select the main pylon and link its auxiliaries.
 - **Direction:** sneak and right-click in the air to cycle the six directions. Right-click the pylon to set its working side. The default is down.
 
 ## Copy Paste Tool

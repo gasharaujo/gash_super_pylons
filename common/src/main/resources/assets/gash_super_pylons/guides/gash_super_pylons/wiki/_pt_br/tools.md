@@ -15,7 +15,7 @@ item_ids:
 
 Agache e use a rolagem do mouse para alternar os modos.
 
-- **Vincular:** agache e clique com o botão direito no Enchanter ou Anvil. Depois clique em cada auxiliar a 1–5 blocos de distância. Os dois precisam de um auxiliar de XP e um de itens.
+- **Vincular:** Siga o passo a passo de [Oficinas avançadas](workshops.md) para selecionar o pylon principal e vincular os auxiliares.
 - **Direção:** agache e clique com o botão direito no ar para percorrer os seis lados. Clique com o botão direito no pylon para aplicar o lado de trabalho. O padrão é embaixo.
 
 ## Copy Paste Tool

@@ -7,8 +7,6 @@ navigation:
 item_ids:
   - gash_super_pylons:fluid_storage_upgrade
   - gash_super_pylons:xp_tank_upgrade
-  - gash_super_pylons:anvil_upgrade
-  - gash_super_pylons:enchanting_upgrade
   - gash_super_pylons:clicker_upgrade
   - gash_super_pylons:fertilizer_upgrade
   - gash_super_pylons:harvester_upgrade
@@ -54,18 +52,11 @@ item_ids:
 
 Both send outputs to the inventory on the working side and cost **1,000 FE per input item**. They try the pylon's FE first, then adjacent pylons, then furnace fuel from a side inventory. One coal supplies eight uses. Valid generator products can feed either processor.
 
-## Enchanter and Anvil
-
-With the [Wrench](tools.md) in Bind mode, sneak and right-click the main pylon, then right-click an XP Tank and an item auxiliary. The auxiliaries can be 1–5 blocks away in any direction. The main pylon takes one input at a time. It sends the finished item to the working-side inventory, or keeps it in the core until space opens.
-
-**Enchanter** takes the item in the main pylon and lapis in the auxiliary. It spends one lapis and 27 XP points per item. Capacity sets enchanting power to 1, 10, 20, 30, 40, 50 or 100. Quantity sets a minimum of 1–7 compatible enchantments when available. Right-click to install up to 64 supported Apotheosis or Apothic Enchanting shelves.
-
-**Anvil** takes the first item in the main pylon and the second item or repair material in the auxiliary. Equal levels combine into the next level. Each improved enchantment costs its resulting level times its rarity. Going above the normal maximum multiplies that price again by rarity, with a minimum multiplier of two.
-
 ## Super combinations
 
 - **Smelt and Pulverize** work through every eligible stack in the inventory opposite the output as space and fuel allow.
 - **Fertilizer** advances plant stages directly. **Harvester** attacks nearby mobs, up to 1 + Quantity tier per operation. Sneak and right-click with a weapon to equip it. The default weapon is a diamond axe.
 - **Break and Fluid Storage** scan the pylon's chunk from three blocks below it. Each Range tier adds one chunk to the radius. Break sends drops to the output inventory, and Fluid Storage collects sources and can send them to the adjacent tank.
 - **Magnet** puts items directly in the output inventory. **Placer** fills gaps in a plane three blocks below. **Dropper** uses dispenser behaviors and aims projectiles along the working direction.
-- **Enchanter** can read a blacklist from an optional third auxiliary's enchanted item. **Anvil** keeps an enchanted book used as its second item.
+
+See [Advanced Workshops](workshops.md) for the Enchanter and Anvil combinations with Super.

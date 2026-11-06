@@ -20,6 +20,7 @@ import net.minecraft.world.phys.Vec3;
 
 final class PylonPonder implements PonderPlugin {
     private static final String TAG = "super_pylons";
+    private static final String WORKSHOP_TAG = "advanced_workshops";
 
     static void register() { PonderIndex.addPlugin(new PylonPonder()); }
 
@@ -28,11 +29,14 @@ final class PylonPonder implements PonderPlugin {
     @Override
     public void registerScenes(PonderSceneRegistrationHelper<ResourceLocation> helper) {
         var tag = helper.asLocation(TAG);
+        var workshopTag = helper.asLocation(WORKSHOP_TAG);
         for (var chapter : PylonPonderContent.CHAPTERS) {
+            var tags = chapter.layout() == PylonPonderContent.Layout.WORKSHOP ?
+                new ResourceLocation[] {tag, workshopTag} : new ResourceLocation[] {tag};
             helper.addStoryBoard(helper.asLocation("super_pylon"), chapter.layout().schematic,
-                (scene, util) -> build(scene, util, chapter), tag);
+                (scene, util) -> build(scene, util, chapter), tags);
             for (String item : chapter.items()) {
-                helper.addStoryBoard(helper.asLocation(item), chapter.layout().schematic, (scene, util) -> build(scene, util, chapter), tag);
+                helper.addStoryBoard(helper.asLocation(item), chapter.layout().schematic, (scene, util) -> build(scene, util, chapter), tags);
             }
         }
     }
@@ -42,10 +46,19 @@ final class PylonPonder implements PonderPlugin {
         helper.registerTag(TAG).title("Gash's Super Pylons")
             .description("Storage, upgrades, automation, wires and tools.")
             .idAsIcon().addToIndex().register();
+        helper.registerTag(WORKSHOP_TAG).title("Advanced Workshops")
+            .description("Bind auxiliary pylons to enchant and repair items.")
+            .item(BuiltInRegistries.ITEM.get(itemId("enchanting_upgrade"))).addToIndex().register();
         var tag = itemId(TAG);
+        var workshopTag = itemId(WORKSHOP_TAG);
         helper.addTagToComponent(itemId("super_pylon"), tag);
         for (var chapter : PylonPonderContent.CHAPTERS) {
-            for (String item : chapter.items()) helper.addTagToComponent(itemId(item), tag);
+            for (String item : chapter.items()) {
+                helper.addTagToComponent(itemId(item), tag);
+                if (chapter.layout() == PylonPonderContent.Layout.WORKSHOP) {
+                    helper.addTagToComponent(itemId(item), workshopTag);
+                }
+            }
         }
     }
 
@@ -59,13 +72,24 @@ final class PylonPonder implements PonderPlugin {
         if (layout.chest != null) scene.world().showSection(util.select().position(layout.chest), Direction.DOWN);
         scene.world().showSection(util.select().position(layout.pylon), Direction.DOWN);
         if (layout.other != null) scene.world().showSection(util.select().position(layout.other), Direction.DOWN);
+        if (layout == PylonPonderContent.Layout.WORKSHOP) {
+            scene.world().showSection(util.select().position(PylonPonderContent.Layout.XP), Direction.DOWN);
+        }
         scene.idle(10);
+        boolean blacklistShown = false;
         for (var step : chapter.steps()) {
             BlockPos pos = switch (step.focus()) {
                 case PYLON -> layout.pylon;
                 case CHEST -> layout.chest;
                 case OTHER -> layout.other;
+                case XP -> PylonPonderContent.Layout.XP;
+                case BLACKLIST -> PylonPonderContent.Layout.BLACKLIST;
             };
+            if (step.focus() == PylonPonderContent.Focus.BLACKLIST && !blacklistShown) {
+                scene.world().showSection(util.select().position(pos), Direction.DOWN);
+                scene.idle(10);
+                blacklistShown = true;
+            }
             Vec3 center = Vec3.atCenterOf(pos);
             int time = Math.max(70, 35 + step.text().length() / 2);
             if (!step.icon().isEmpty() || step.action() != PylonPonderContent.Action.HOLD) {
@@ -79,6 +103,10 @@ final class PylonPonder implements PonderPlugin {
                     case SCROLL -> control.scroll().whileSneaking();
                     default -> { }
                 }
+            }
+            if (layout == PylonPonderContent.Layout.WORKSHOP && step.icon().equals("wrench") &&
+                step.action() == PylonPonderContent.Action.RIGHT) {
+                scene.overlay().showLine(PonderPalette.MEDIUM, Vec3.atCenterOf(layout.pylon), center, 38);
             }
             scene.overlay().showText(time).attachKeyFrame().independent(58).text(step.text());
             if (step.display() != null) {

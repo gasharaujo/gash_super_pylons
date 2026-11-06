@@ -23,3 +23,4 @@ A Base de Upgrade leva cinco pedregulhos em cruz. Receitas de tier I usam a base
 - [Modificadores](modifiers.md) alteram velocidade, quantidade, alcance, capacidade e energia.
 - [Utilidades](utility.md) descreve os tipos de armazenamento, máquinas, processadores e combinações com Super.
 - [Automação](automation.md) cobre Insert e Extract para os quatro recursos.
+- [Oficinas avançadas](workshops.md) ensina a vincular e usar o Encantador e a Bigorna.
