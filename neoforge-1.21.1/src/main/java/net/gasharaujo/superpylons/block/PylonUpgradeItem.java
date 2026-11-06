@@ -21,5 +21,8 @@ public final class PylonUpgradeItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
         lines.add(Component.translatable("tooltip.gash_super_pylons.category." + upgrade.category())
             .withStyle(ChatFormatting.BLUE));
+        if (upgrade == PylonUpgrade.ENCHANTING) {
+            lines.add(Component.translatable("tooltip.gash_super_pylons.enchanting_capacity_requires_super"));
+        }
     }
 }

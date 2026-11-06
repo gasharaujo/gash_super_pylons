@@ -18,11 +18,13 @@ item_ids:
 
 ## Tune the enchantments
 
-Install the modifiers on the **main pylon**. Speed shortens the time between attempts. Capacity sets the base enchanting power and Quantity sets the minimum number of compatible enchantments the roll tries to include. The Enchanter uses the available compatible enchantments when it cannot reach that minimum.
+Install the modifiers on the **main pylon**. Speed shortens the time between attempts. Quantity sets the minimum number of compatible enchantments the roll tries to include. The Enchanter uses the available compatible enchantments when it cannot reach that minimum.
+
+The base enchanting power is **1**. Install **Super** on the main pylon to let Capacity raise that power.
 
 | Tier | None | I | II | III | IV | V | VI |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Power with Capacity | 1 | 10 | 20 | 30 | 40 | 50 | 100 |
+| Power with Super and Capacity | 1 | 10 | 20 | 30 | 40 | 50 | 100 |
 | Minimum with Quantity | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 
 With Apotheosis or Apothic Enchanting installed, right-click the main pylon with a supported shelf to add its effects. The Enchanter holds up to 64 shelves.

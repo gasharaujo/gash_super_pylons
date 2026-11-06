@@ -42,7 +42,7 @@ item_ids:
 - **Velocidade (Speed)** define o intervalo entre operações. O Fertilizer também recebe mais tentativas de crescimento, e o XP Tank transfere mais níveis por tick.
 - **Quantidade (Quantity)** define quantas unidades entram em cada operação. Algumas máquinas usam o próprio tier, como o mínimo de encantamentos no Enchanter e o número de alvos no Super Harvester.
 - **Alcance (Range)** amplia a área horizontal e vertical. No Dropper, cada tier soma um bloco à distância. No Chunk Loader, define o raio em chunks.
-- **Capacidade (Capacity)** aumenta o estoque de itens, fluidos e XP. O tier VI ativa [transferências bulk](automation.md). No Enchanter, Capacidade define o poder de encantamento.
+- **Capacidade (Capacity)** aumenta o estoque de itens, fluidos e XP. O tier VI ativa [transferências bulk](automation.md). No [Encantador](enchanter.md), Capacidade só aumenta o poder base com Super instalado no mesmo pylon.
 - **Energia (Energy)** adiciona armazenamento de Forge Energy a qualquer pylon. Puxa do lado oposto ao de trabalho, carrega um item compatível no pedestal e envia FE para o lado de trabalho.
 
 | Tier | Velocidade (ticks) | Quantidade | Alcance | Capacidade |

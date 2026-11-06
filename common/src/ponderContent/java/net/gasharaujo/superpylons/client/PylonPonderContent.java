@@ -201,7 +201,7 @@ final class PylonPonderContent {
                 "Collect the result from the chest on the working side, down by default. Hit the main pylon if the result waits in the core.",
                 Action.HOLD, Focus.CHEST, null),
             new Step("storage_upgrade_6",
-                "Speed shortens the cycle. Capacity sets power to 1, 10, 20, 30, 40, 50 or 100. Quantity sets a minimum of 1 to 7 compatible enchants.",
+                "Capacity only raises base power with Super. Tiers I to VI give 10/20/30/40/50/100. Speed sets the interval and Quantity sets a minimum of 1 to 7 enchantments.",
                 Action.HOLD, Focus.PYLON, null),
             new Step("",
                 "Right-click the main pylon with supported Apotheosis or Apothic Enchanting shelves to apply their effects.",

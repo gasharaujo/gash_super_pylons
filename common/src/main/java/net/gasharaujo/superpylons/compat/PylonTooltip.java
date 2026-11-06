@@ -52,6 +52,9 @@ final class PylonTooltip {
             if (pylon.getSpecialty() == PylonUpgrade.ENCHANTING) {
                 lines.accept(Component.translatable("tooltip.gash_super_pylons.enchanting_power",
                     pylon.getEnchantmentPower(), pylon.getMinimumEnchantments()));
+                if (!pylon.hasSuperUpgrade()) {
+                    lines.accept(Component.translatable("tooltip.gash_super_pylons.enchanting_capacity_requires_super"));
+                }
                 if (!pylon.getShelfItems().isEmpty()) {
                     lines.accept(Component.translatable("tooltip.gash_super_pylons.shelves", pylon.getShelfItems().size()));
                     java.util.Map<net.minecraft.world.item.Item, Integer> counts = new java.util.LinkedHashMap<>();
