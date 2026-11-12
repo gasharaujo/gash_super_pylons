@@ -24,6 +24,7 @@ public record PylonControls(PylonControlRequest request) implements CustomPacket
             ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer), buffer.readUtf(256))));
 
     static void register(RegisterPayloadHandlersEvent event) {
+        PylonCrushData.register(event);
         event.registrar("1").playToServer(TYPE, CODEC, (packet, context) -> packet.request().handle(context.player()));
     }
 

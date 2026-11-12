@@ -48,13 +48,13 @@ item_ids:
 
 ## Processing
 
-**Smelt** uses furnace recipes. Install a blast furnace or smoker on the pylon to specialize its recipes. **Pulverize** turns cobblestone into gravel, gravel into sand with a chance of flint, terracotta into red sand and supported stone into cobblestone. It also processes ore blocks and makes equivalent dusts if they exist in the modpack. Quantity changes some yields and chances. Datapacks can add pulverizing recipes.
+**Smelt** uses furnace recipes. Install a blast furnace or smoker on the pylon to specialize its recipes. **Crush** turns cobblestone into gravel, gravel into sand with a chance of flint, terracotta into red sand and supported stone into cobblestone. It also processes ore blocks and makes equivalent dusts if they exist in the modpack. Quantity changes some yields and chances. Datapacks can add pulverizing recipes. Recipes appear in the Crush category in JEI and viewers compatible with JEI plugins, with yields and chances for each Quantity tier. For EMI, install JEI alongside it to use this integration.
 
 Both send outputs to the inventory on the working side and cost **1,000 FE per input item**. They try the pylon's FE first, then adjacent pylons, then furnace fuel from a side inventory. One coal supplies eight uses. Valid generator products can feed either processor.
 
 ## Super combinations
 
-- **Smelt and Pulverize** work through every eligible stack in the inventory opposite the output as space and fuel allow.
+- **Smelt and Crush** work through every eligible stack in the inventory opposite the output as space and fuel allow.
 - **Fertilizer** advances plant stages directly. **Harvester** attacks nearby mobs, up to 1 + Quantity tier per operation. Sneak and right-click with a weapon to equip it. The default weapon is a diamond axe.
 - **Break and Fluid Storage** scan the pylon's chunk from three blocks below it. Each Range tier adds one chunk to the radius. Break sends drops to the output inventory, and Fluid Storage collects sources and can send them to the adjacent tank.
 - **Magnet** puts items directly in the output inventory. **Placer** fills gaps in a plane three blocks below. **Dropper** uses dispenser behaviors and aims projectiles along the working direction.

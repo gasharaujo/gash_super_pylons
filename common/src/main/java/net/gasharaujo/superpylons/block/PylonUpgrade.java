@@ -76,10 +76,10 @@ public enum PylonUpgrade {
     INSERT_XP("insert_xp_upgrade", Slot.XP_TRANSFER, PylonWire.Type.XP, true),
     EXTRACT_XP("extract_xp_upgrade", Slot.XP_TRANSFER, PylonWire.Type.XP, false);
 
-    // Default removal order. Generators are removed before processing.
+    // Transfers are removed before resource storage, and generators before processing.
     public enum Slot {
-        SUPER, CREATIVE, FILTER, SPEED, QUANTITY, RANGE, ENERGY, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
-        CHUNK_LOADER, GENERATOR, PROCESSING, SPECIALTY, STORAGE
+        SUPER, CREATIVE, FILTER, SPEED, QUANTITY, RANGE, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
+        ENERGY, CHUNK_LOADER, GENERATOR, PROCESSING, SPECIALTY, STORAGE
     }
 
     private static final List<PylonUpgrade> REGISTRATION_ORDER = Arrays.stream(values())

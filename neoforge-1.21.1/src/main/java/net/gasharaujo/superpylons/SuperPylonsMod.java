@@ -121,6 +121,8 @@ public final class SuperPylonsMod {
         MENUS.register(bus);
         CREATIVE_TABS.register(bus);
         bus.addListener(PylonControls::register);
+        NeoForge.EVENT_BUS.addListener(PylonCrushData::sync);
+        NeoForge.EVENT_BUS.addListener(PylonCrushData::tagsUpdated);
         bus.addListener((RegisterTicketControllersEvent event) -> event.register(SuperPylonBlockEntity.CHUNK_TICKETS));
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> {

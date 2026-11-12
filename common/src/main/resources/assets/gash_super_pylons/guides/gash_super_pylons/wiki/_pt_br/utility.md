@@ -48,13 +48,13 @@ item_ids:
 
 ## Processamento
 
-**Smelt** usa receitas de fornalha. Instale um alto-forno ou defumador no pylon para especializar as receitas. **Pulverize** transforma pedregulho em cascalho, cascalho em areia com chance de sílex, terracota em areia vermelha e pedras compatíveis em pedregulho. Também processa blocos de minério e gera pós equivalentes quando existem no modpack. Quantidade altera alguns rendimentos e chances. Datapacks podem adicionar receitas.
+**Smelt** usa receitas de fornalha. Instale um alto-forno ou defumador no pylon para especializar as receitas. **Crush** transforma pedregulho em cascalho, cascalho em areia com chance de sílex, terracota em areia vermelha e pedras compatíveis em pedregulho. Também processa blocos de minério e gera pós equivalentes quando existem no modpack. Quantidade altera alguns rendimentos e chances. Datapacks podem adicionar receitas. As receitas aparecem na categoria Crush do JEI e de visualizadores compatíveis com plugins JEI, com rendimentos e chances por tier de Quantidade. No EMI, instale o JEI junto para usar esta integração.
 
 Ambos enviam os resultados ao inventário no lado de trabalho e custam **1.000 FE por item processado**. Usam primeiro o FE do próprio pylon, depois o de um pylon vizinho e por fim combustível de fornalha de um inventário lateral. Um carvão rende oito usos. Geradores podem abastecer ambos quando houver receita para o produto.
 
 ## Combinações com Super
 
-- **Smelt e Pulverize** processam todos os stacks elegíveis no inventário oposto à saída enquanto houver espaço e energia ou combustível.
+- **Smelt e Crush** processam todos os stacks elegíveis no inventário oposto à saída enquanto houver espaço e energia ou combustível.
 - **Fertilizer** avança os estágios das plantas diretamente. **Harvester** ataca até 1 + tier de Quantidade mobs por operação. Agache e clique com uma arma para equipá-la. A arma padrão é um machado de diamante.
 - **Break e Fluid Storage** varrem o chunk a partir de três blocos abaixo do pylon. Cada tier de Alcance soma um chunk ao raio. Break envia drops ao inventário da saída, e Fluid Storage coleta fontes e pode enviá-las ao tanque adjacente.
 - **Magnet** deposita diretamente no inventário de saída. **Placer** preenche espaços de um plano três blocos abaixo. **Dropper** funciona como ejetor e mira os projéteis na direção de trabalho.

@@ -7,6 +7,10 @@ import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
+import mezz.jei.api.registration.IRecipeCategoryRegistration;
+import mezz.jei.api.registration.IRecipeCatalystRegistration;
+import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.Identifier;
@@ -14,6 +18,12 @@ import net.minecraft.resources.Identifier;
 @JeiPlugin
 public final class PylonJeiPlugin implements IModPlugin {
     @Override public Identifier getPluginUid() { return Identifier.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "jei"); }
+
+    @Override public void registerCategories(IRecipeCategoryRegistration registration) { PylonCrushJei.categories(registration); }
+    @Override public void registerRecipes(IRecipeRegistration registration) { PylonCrushJei.recipes(registration); }
+    @Override public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) { PylonCrushJei.catalysts(registration); }
+    @Override public void onRuntimeAvailable(IJeiRuntime runtime) { PylonCrushJei.available(runtime); }
+    @Override public void onRuntimeUnavailable() { PylonCrushJei.unavailable(); }
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {

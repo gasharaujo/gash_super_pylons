@@ -47,7 +47,7 @@ Funis e cabos de itens podem inserir e extrair do estoque por qualquer face. Lei
 
 Os upgrades, ferramentas e cabos estão na aba **Gash's Super Pylons** do Criativo, identificada pelo ícone do Super Pylon. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. Quando há um gerador e um processador, o gerador sai primeiro.
 
-Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
+Insert e Extract saem antes dos upgrades que armazenam seus respectivos recursos. Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
 
 | Tier | Intervalo em ticks | Produção por ciclo | Capacidade de armazenamento |
 | --- | ---: | ---: | ---: |
@@ -98,11 +98,13 @@ Os upgrades com receita também aparecem no JEI quando o mod está instalado.
 
 - **Filter** abre com botão direito e as mãos vazias. Use um item no cursor ou arraste do JEI para preencher um dos 27 slots. Botão direito limpa o slot e botão do meio permite selecionar uma tag do item. O filtro começa em modo de bloqueio e pode alternar para permissão.
 - **Magnet** coleta itens caídos em uma área inicial de 3×3×3, com o pylon no centro. Começa com um item a cada 60 ticks e segue os valores de Speed, Quantity e Range. Os itens entram no armazenamento e seguem o filtro e a regra de correspondência exata.
-- **Smelt** usa receitas de fornalha. **Pulverize** tritura cobbles em cascalho, cascalho em areia e sílex, terracota em areia vermelha e pedras nas variantes quebradas disponíveis. Também processa blocos de minério e usa os pós equivalentes de `c:dust` quando disponíveis.
-- No Pulverize, blocos de minério rendem 2, 3, 4 ou 5 unidades de minério bruto ou gema nos tiers Quantity 0, II, IV e VI. Redstone e lápis-lazúli rendem seis vezes esse valor. Lingotes e gemas rendem um pó. Minério bruto rende 2, 4 ou 6 pós nos tiers 0, IV e VI. O tier intermediário mantém o rendimento do tier anterior.
+- **Smelt** usa receitas de fornalha. **Crush** tritura cobbles em cascalho, cascalho em areia e sílex, terracota em areia vermelha e pedras nas variantes quebradas disponíveis. Também processa blocos de minério e usa os pós equivalentes de `c:dust` quando disponíveis.
+- No Crush, blocos de minério rendem 2, 3, 4 ou 5 unidades de minério bruto ou gema nos tiers Quantity 0, II, IV e VI. Redstone e lápis-lazúli rendem seis vezes esse valor. Lingotes e gemas rendem um pó. Minério bruto rende 2, 4 ou 6 pós nos tiers 0, IV e VI. O tier intermediário mantém o rendimento do tier anterior.
 - O processamento envia os resultados para o inventário abaixo e funciona com geradores de itens quando existe uma receita para o produto gerado. Speed define o intervalo e Quantity define o máximo de itens processados por ciclo. Cada item custa 1.000 FE, consumidos primeiro do próprio pylon ou de um pylon Energy vizinho. Se não houver FE suficiente, gasta um uso da reserva de combustível ou busca combustível de um inventário lateral. Um carvão rende 8 usos. O saldo só diminui ao processar.
 
-O Pulverize aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.json`. Uma receita de datapack tem prioridade sobre as regras padrão. Use IDs de itens ou tags com prefixo `#`. `count` e `chance` aceitam um número ou uma lista na ordem Quantity 0 a VI. A chance é percentual e os valores padrão são 1 item e 100%.
+As receitas de processamento aparecem na categoria **Crush** do JEI, com rendimentos e chances por tier de Quantity. O EMI usa essa integração com o JEI instalado junto.
+
+O Crush aceita arquivos de datapack em `data/<namespace>/pulverizing/<id>.json`. Uma receita de datapack tem prioridade sobre as regras padrão. Use IDs de itens ou tags com prefixo `#`. `count` e `chance` aceitam um número ou uma lista na ordem Quantity 0 a VI. A chance é percentual e os valores padrão são 1 item e 100%.
 
 ```json
 {

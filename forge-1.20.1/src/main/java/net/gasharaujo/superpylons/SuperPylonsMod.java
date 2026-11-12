@@ -121,6 +121,8 @@ public final class SuperPylonsMod {
         MENUS.register(bus);
         CREATIVE_TABS.register(bus);
         PylonControls.register();
+        MinecraftForge.EVENT_BUS.addListener(PylonControls::syncCrush);
+        MinecraftForge.EVENT_BUS.addListener(PylonControls::tagsUpdated);
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(PylonExperienceStorage.class));
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST,
             (EntityJoinLevelEvent event) -> {

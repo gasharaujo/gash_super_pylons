@@ -1,5 +1,6 @@
 package net.gasharaujo.superpylons.block;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -13,21 +14,25 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.item.ItemStack;
 
-final class PylonPulverizing {
+public final class PylonPulverizing {
     private static final int[] FLINT_CHANCE = {30, 40, 50, 60, 80, 90, 100};
     private static final int[] RAW_DUST = {2, 2, 2, 2, 4, 4, 6};
     private static final int[] ORE_YIELD = {2, 2, 3, 3, 4, 4, 5};
     private static final Map<ResourceManager, List<Recipe>> RECIPES = new WeakHashMap<>();
 
-    record Result(ItemStack stack, int chance) {}
+    public record Result(ItemStack stack, int chance) {}
 
-    private record Output(String selector, int[] counts, int[] chances) {}
-    private record Recipe(String ingredient, List<Output> outputs) {}
+    public record Output(String selector, int[] counts, int[] chances) {}
+    public record Recipe(String ingredient, List<Output> outputs) {}
 
     private PylonPulverizing() {}
 
     static List<Result> find(ServerLevel server, ItemStack input, int tier) {
-        for (Recipe recipe : customRecipes(server.getServer().getResourceManager())) {
+        return find(customRecipes(server.getServer().getResourceManager()), input, tier);
+    }
+
+    public static List<Result> find(List<Recipe> recipes, ItemStack input, int tier) {
+        for (Recipe recipe : recipes) {
             if (!PylonItemRules.matches(input, recipe.ingredient())) continue;
             List<Result> results = new ArrayList<>();
             for (Output output : recipe.outputs()) {
@@ -151,20 +156,56 @@ final class PylonPulverizing {
         var files = resources.listResources("pulverizing", id -> id.getPath().endsWith(".json"));
         files.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(file -> {
             try (var reader = file.getValue().openAsReader()) {
-                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-                List<Output> outputs = new ArrayList<>();
-                for (JsonElement entry : json.getAsJsonArray("results")) {
-                    JsonObject output = entry.getAsJsonObject();
-                    if (outputs.size() == 8) throw new IllegalArgumentException("At most 8 results are allowed");
-                    outputs.add(new Output(output.get("item").getAsString(),
-                        tiers(output.get("count"), 1, 64), tiers(output.get("chance"), 100, 100)));
-                }
-                recipes.add(new Recipe(json.get("ingredient").getAsString(), List.copyOf(outputs)));
+                recipes.add(parseRecipe(JsonParser.parseReader(reader).getAsJsonObject()));
             } catch (IOException | RuntimeException ex) {
-                LogUtils.getLogger().warn("Skipping Pulverize recipe {}", file.getKey(), ex);
+                LogUtils.getLogger().warn("Skipping Crush recipe {}", file.getKey(), ex);
             }
         });
         return List.copyOf(recipes);
+    }
+
+    public static String exportRecipes(ResourceManager resources) {
+        JsonArray recipes = new JsonArray();
+        for (Recipe recipe : customRecipes(resources)) {
+            JsonObject json = new JsonObject();
+            json.addProperty("ingredient", recipe.ingredient());
+            JsonArray results = new JsonArray();
+            for (Output output : recipe.outputs()) {
+                JsonObject result = new JsonObject();
+                result.addProperty("item", output.selector());
+                JsonArray counts = new JsonArray();
+                JsonArray chances = new JsonArray();
+                for (int tier = 0; tier <= 6; tier++) {
+                    counts.add(output.counts()[tier]);
+                    chances.add(output.chances()[tier]);
+                }
+                result.add("count", counts);
+                result.add("chance", chances);
+                results.add(result);
+            }
+            json.add("results", results);
+            recipes.add(json);
+        }
+        return recipes.toString();
+    }
+
+    public static List<Recipe> importRecipes(String data) {
+        List<Recipe> recipes = new ArrayList<>();
+        for (JsonElement element : JsonParser.parseString(data).getAsJsonArray()) {
+            recipes.add(parseRecipe(element.getAsJsonObject()));
+        }
+        return List.copyOf(recipes);
+    }
+
+    private static Recipe parseRecipe(JsonObject json) {
+        List<Output> outputs = new ArrayList<>();
+        for (JsonElement entry : json.getAsJsonArray("results")) {
+            JsonObject output = entry.getAsJsonObject();
+            if (outputs.size() == 8) throw new IllegalArgumentException("At most 8 results are allowed");
+            outputs.add(new Output(output.get("item").getAsString(),
+                tiers(output.get("count"), 1, 64), tiers(output.get("chance"), 100, 100)));
+        }
+        return new Recipe(json.get("ingredient").getAsString(), List.copyOf(outputs));
     }
 
     private static int[] tiers(JsonElement value, int fallback, int max) {
