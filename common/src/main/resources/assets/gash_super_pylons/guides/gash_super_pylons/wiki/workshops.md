@@ -8,11 +8,11 @@ navigation:
 
 # Advanced Workshops
 
-The [Enchanter](enchanter.md) enchants items and books. The [Anvil](anvil.md) repairs gear and combines enchantments. Each workshop uses a main pylon and two linked auxiliary pylons.
+The [Enchanter](enchanter.md) enchants items and books. The [Anvil](anvil.md) repairs gear and combines enchantments. The [Grindstone](grindstone.md) removes enchantments. Each workshop uses a main pylon and two linked auxiliary pylons.
 
 ## Link the pylons
 
-1. Install Enchanter or Anvil on the **main pylon**. Leave its core empty while you set up the workshop.
+1. Install Enchanter, Anvil or Grindstone on the **main pylon**. Leave its core empty while you set up the workshop.
 2. Place **two auxiliaries** in the same dimension, 1 to 5 blocks from the main pylon. They may be above, below or to the side. Install **XP Tank** on one and leave the other able to store items. Use pylons that are free to join this workshop.
 3. Hold the [Wrench](tools.md) in your main hand. **Sneak and scroll** until its tooltip shows **Bind**.
 4. **Sneak and right-click the main pylon** with the Wrench. The chat confirms the selection.

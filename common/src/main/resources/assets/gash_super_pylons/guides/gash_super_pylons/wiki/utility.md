@@ -4,23 +4,6 @@ navigation:
   icon: gash_super_pylons:harvester_upgrade
   position: 2
   parent: upgrades.md
-item_ids:
-  - gash_super_pylons:fluid_storage_upgrade
-  - gash_super_pylons:xp_tank_upgrade
-  - gash_super_pylons:clicker_upgrade
-  - gash_super_pylons:fertilizer_upgrade
-  - gash_super_pylons:harvester_upgrade
-  - gash_super_pylons:break_upgrade
-  - gash_super_pylons:filter_upgrade
-  - gash_super_pylons:magnet_upgrade
-  - gash_super_pylons:planter_upgrade
-  - gash_super_pylons:placer_upgrade
-  - gash_super_pylons:dropper_upgrade
-  - gash_super_pylons:void_upgrade
-  - gash_super_pylons:chunk_loader_upgrade
-  - gash_super_pylons:super_upgrade
-  - gash_super_pylons:smelt_upgrade
-  - gash_super_pylons:pulverize_upgrade
 ---
 
 # Utility
@@ -60,3 +43,5 @@ Both send outputs to the inventory on the working side and cost **1,000 FE per i
 - **Magnet** puts items directly in the output inventory. **Placer** fills gaps in a plane three blocks below. **Dropper** uses dispenser behaviors and aims projectiles along the working direction.
 
 See [Advanced Workshops](workshops.md) for the Enchanter and Anvil combinations with Super.
+
+The [Super upgrade](super.md) also affects [Anvil](anvil.md), [Grindstone](grindstone.md), [Enchanter](enchanter.md) and the [HUB](pylon_hub.md).

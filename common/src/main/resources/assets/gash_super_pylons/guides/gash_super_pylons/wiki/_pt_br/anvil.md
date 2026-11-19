@@ -27,4 +27,6 @@ Para cada encantamento do resultado, multiplique o nível pelo fator de raridade
 
 Instale **Super** no pylon principal. Um livro encantado no auxiliar de itens permanece no núcleo depois do uso. A Bigorna continua gastando XP a cada operação e consome normalmente os outros itens e materiais de reparo.
 
+Coloque um livro em branco no pylon principal para fazer uma cópia do livro encantado vinculado. A cópia mantém os encantamentos do doador e ainda custa XP.
+
 <RecipeFor id="gash_super_pylons:anvil_upgrade" />

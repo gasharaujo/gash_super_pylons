@@ -11,7 +11,7 @@ item_ids:
 
 Use an upgrade on a pylon to install it. A higher tier of the same modifier replaces the previous tier and returns it to you. Sneak and right-click with your main hand empty to remove the next upgrade. The icons on the lower frame show removal order from right to left.
 
-Removal starts with Super, then the equipped tool or weapon, Creative Storage, Filter, Speed, Quantity and Range. Insert and Extract upgrades follow in item, fluid, energy and XP order, before the upgrades that store those resources. Then come Energy, Chunk Loader, the generator, the processor, the specialty and finally Capacity.
+Removal starts with Super, then the equipped tool or weapon, Creative Storage, Redstone, Redstone Level, Filter, Speed, Quantity and Range. Insert and Extract upgrades follow in item, fluid, energy and XP order, before the upgrades that store those resources. Then come Energy, Chunk Loader, the generator, the processor, the specialty and finally Capacity.
 
 A furnace attachment comes out before Smelt, and installed Apotheosis shelves come out before Enchanter.
 
@@ -23,4 +23,6 @@ The Upgrade Base is made with five cobblestone in a cross. Tier I recipes use th
 - [Modifiers](modifiers.md) change speed, quantity, range, capacity and energy.
 - [Utility](utility.md) covers storage types, machines, processing and Super combinations.
 - [Automation](automation.md) covers Insert and Extract for the four resources.
-- [Advanced Workshops](workshops.md) explains how to bind and use the Enchanter and Anvil.
+- [Advanced Workshops](workshops.md) explains how to bind and use the Enchanter, Anvil and Grindstone.
+
+- [Super](super.md) covers the functions unlocked by the Super upgrade.

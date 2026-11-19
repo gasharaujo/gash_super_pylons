@@ -4,15 +4,6 @@ navigation:
   icon: gash_super_pylons:cobblestone_generator_upgrade
   position: 0
   parent: upgrades.md
-item_ids:
-  - gash_super_pylons:cobblestone_generator_upgrade
-  - gash_super_pylons:deepslate_generator_upgrade
-  - gash_super_pylons:blackstone_generator_upgrade
-  - gash_super_pylons:netherrack_generator_upgrade
-  - gash_super_pylons:sand_generator_upgrade
-  - gash_super_pylons:glass_generator_upgrade
-  - gash_super_pylons:water_generator_upgrade
-  - gash_super_pylons:lava_generator_upgrade
 ---
 
 # Geradores

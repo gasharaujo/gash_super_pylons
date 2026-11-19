@@ -1,8 +1,12 @@
 package net.gasharaujo.superpylons;
 
 import java.util.EnumMap;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.Map;
 import java.util.function.Supplier;
+import net.gasharaujo.superpylons.block.PylonAe2Storage;
 import net.gasharaujo.superpylons.block.PylonFilterMenu;
 import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
 import net.gasharaujo.superpylons.block.PylonToolItem;
@@ -54,6 +58,16 @@ import org.slf4j.Logger;
 @Mod(SuperPylonsMod.MOD_ID)
 public final class SuperPylonsMod {
     public static final String MOD_ID = "gash_super_pylons";
+    private static final ModConfigSpec SERVER_CONFIG;
+    public static final ModConfigSpec.BooleanValue GRINDSTONE_CONSUMES_BOOKS;
+
+    static {
+        var builder = new ModConfigSpec.Builder();
+        GRINDSTONE_CONSUMES_BOOKS = builder.comment("Require and consume one plain book per enchanted book made by Super Grindstone.")
+            .define("grindstoneConsumesBooks", false);
+        SERVER_CONFIG = builder.build();
+    }
+
     public static final BlockCapability<PylonExperienceStorage, Direction> EXPERIENCE = BlockCapability.createSided(
         Identifier.fromNamespaceAndPath(MOD_ID, "experience"), PylonExperienceStorage.class);
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -66,9 +80,13 @@ public final class SuperPylonsMod {
         "super_pylon", SuperPylonBlock::new,
         () -> BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion().explosionResistance(3600000.0F));
     public static final DeferredItem<BlockItem> SUPER_PYLON_ITEM = ITEMS.registerSimpleBlockItem(SUPER_PYLON);
+    public static final DeferredBlock<SuperPylonBlock> PYLON_HUB = BLOCKS.registerBlock(
+        "pylon_hub", SuperPylonBlock::new,
+        () -> BlockBehaviour.Properties.ofFullCopy(Blocks.REINFORCED_DEEPSLATE).noOcclusion());
+    public static final DeferredItem<BlockItem> PYLON_HUB_ITEM = ITEMS.registerSimpleBlockItem(PYLON_HUB);
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SuperPylonBlockEntity>> SUPER_PYLON_ENTITY =
         BLOCK_ENTITIES.register("super_pylon", () ->
-            new BlockEntityType<>(SuperPylonBlockEntity::new, SUPER_PYLON.get()));
+            new BlockEntityType<>(SuperPylonBlockEntity::new, SUPER_PYLON.get(), PYLON_HUB.get()));
 
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MOD_ID);
     public static final DeferredHolder<MenuType<?>, MenuType<PylonFilterMenu>> FILTER_MENU = MENUS.register("pylon_filter",
@@ -115,7 +133,8 @@ public final class SuperPylonsMod {
         return items;
     }
 
-    public SuperPylonsMod(IEventBus bus) {
+    public SuperPylonsMod(IEventBus bus, ModContainer container) {
+        container.registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
         BLOCKS.register(bus);
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
@@ -154,6 +173,7 @@ public final class SuperPylonsMod {
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
+        if (ModList.get().isLoaded("ae2")) PylonAe2Storage.register(event);
         event.registerBlockEntity(EXPERIENCE, SUPER_PYLON_ENTITY.get(), (pylon, side) -> pylon);
         event.registerBlockEntity(Capabilities.Item.BLOCK, SUPER_PYLON_ENTITY.get(),
             (pylon, side) -> pylon.getItemHandler());

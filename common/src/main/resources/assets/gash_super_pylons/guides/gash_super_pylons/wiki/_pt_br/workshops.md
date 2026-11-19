@@ -8,11 +8,11 @@ navigation:
 
 # Oficinas avançadas
 
-O [Encantador](enchanter.md) encanta itens e livros. A [Bigorna](anvil.md) repara equipamentos e combina encantamentos. Cada oficina usa um pylon principal e dois auxiliares vinculados.
+O [Encantador](enchanter.md) encanta itens e livros. A [Bigorna](anvil.md) repara equipamentos e combina encantamentos. O [Rebolo](grindstone.md) remove encantamentos. Cada oficina usa um pylon principal e dois auxiliares vinculados.
 
 ## Vincular os pylons
 
-1. Instale **Enchanter** ou **Anvil** no **pylon principal**. Deixe o núcleo vazio durante a montagem.
+1. Instale **Encantador**, **Bigorna** ou **Rebolo** no **pylon principal**. Deixe o núcleo vazio durante a montagem.
 2. Coloque **dois auxiliares** na mesma dimensão, de 1 a 5 blocos do principal. Eles podem ficar acima, abaixo ou dos lados. Instale **XP Tank** em um deles e deixe o outro com armazenamento de itens. Use pylons livres para vincular à oficina.
 3. Segure a [Wrench](tools.md) na mão principal. **Agache e role o mouse** até a descrição mostrar o modo **Vincular**.
 4. **Agache e clique com o botão direito no pylon principal** usando a Wrench. O chat confirma a seleção.

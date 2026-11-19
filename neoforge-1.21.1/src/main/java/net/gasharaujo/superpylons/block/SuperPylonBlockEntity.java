@@ -44,6 +44,7 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public static final TicketController CHUNK_TICKETS = new TicketController(
         ResourceLocation.fromNamespaceAndPath(SuperPylonsMod.MOD_ID, "pylon"));
+    private final PylonHubPorts hubPorts = new PylonHubPorts(hub());
     private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidStack> tank = new PylonTank<>(this::isCreativeStorage, this::getFluidCapacity);
     private final TankHandler fluidHandler = new TankHandler();
@@ -52,12 +53,36 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final IEnergyStorage energyInput = new EnergyPort(Direction.UP);
     private final IEnergyStorage energyInternal = new EnergyPort(null);
 
+    FluidStack storedFluidResource() { return tank.resource(); }
+
+    long availableTankAmount() { return tank.available(); }
+
+    long exchangeLinkedFluid(FluidStack fluid, long amount, boolean insert, boolean simulate) {
+        if (isXpTank() && PylonXpFluids.supports(fluid.getFluid())) {
+            long moved = xpFluidLimit(insert, fluid.getFluid(), amount);
+            if (!simulate && moved > 0) {
+                moveXpFluid(insert, fluid.getFluid(), moved);
+                sync();
+            }
+            return moved;
+        }
+        long moved = 0;
+        if (insert && canFillFluid(fluid.getFluid())) {
+            moved = tank.insert(fluid.copyWithAmount(1), amount, getFluidCapacity(), FluidStack::isSameFluidSameComponents, simulate);
+        } else if (!insert && tank.amount() > 0 && FluidStack.isSameFluidSameComponents(tank.resource(), fluid)) {
+            moved = tank.extract(amount, simulate);
+        }
+        if (!simulate && moved > 0) sync();
+        return moved;
+    }
+
     public IFluidHandler getFluidHandler() {
+        if (isHub()) return hubPorts.fluids();
         if (isTank() && isXpTank()) return combinedFluids;
         return isTank() || isVoid() ? fluidHandler : isXpTank() ? xpFluidPort : null;
     }
 
-    public IItemHandler getItemHandler() { return isRemoved() ? null : itemPort; }
+    public IItemHandler getItemHandler() { return isRemoved() ? null : isHub() ? hubPorts.items() : itemPort; }
 
     public SuperPylonBlockEntity(BlockPos pos, BlockState state) {
         super(SuperPylonsMod.SUPER_PYLON_ENTITY.get(), pos, state);
@@ -67,6 +92,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putString("upgrades", saveUpgrades());
+        if (isHub()) {
+            tag.putString("wire_id", saveWireId());
+            tag.putString("hub_links", hub().save());
+            return;
+        }
         if (!getBreakTool().isEmpty()) tag.put("break_tool", getBreakTool().save(registries));
         if (!getFurnaceAttachment().isEmpty()) tag.put("furnace_attachment", getFurnaceAttachment().save(registries));
         if (excavationCursor() != 0) tag.putInt("excavation_cursor", excavationCursor());
@@ -112,6 +142,10 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        if (isHub()) {
+            loadHub(tag.getString("upgrades"), tag.getString("wire_id"), tag.getString("hub_links"));
+            return;
+        }
         loadUpgrades(tag.getString("upgrades"));
         loadBreakTool(ItemStack.parseOptional(registries, tag.getCompound("break_tool")));
         loadFurnaceAttachment(ItemStack.parseOptional(registries, tag.getCompound("furnace_attachment")));
@@ -184,6 +218,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
+    protected void notifyRedstoneNeighbors(ServerLevel server) {
+        server.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+    }
+
+    @Override
     protected void capabilitiesChanged() {
         if (level != null) level.invalidateCapabilities(worldPosition);
     }
@@ -206,6 +245,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     public IEnergyStorage getEnergyHandler(Direction side) {
+        if (isHub()) return isRemoved() ? null : hubPorts.energy();
         if (!isEnergy() && !isVoid()) return null;
         return side == null || side == workDirection() ? energyInternal : energyInput;
     }

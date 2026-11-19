@@ -37,6 +37,9 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
 
     public static final class State extends BlockEntityRenderState {
         public float ticks;
+        boolean hub;
+        final ItemStackRenderState hubCenter = new ItemStackRenderState();
+        final ItemStackRenderState hubChest = new ItemStackRenderState();
         @Nullable PylonUpgrade auxiliary;
         @Nullable PylonFluidCore fluid;
         PylonDecorationRenderer.@Nullable Frame frame;
@@ -59,6 +62,14 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         BlockEntityRenderer.super.extractRenderState(entity, state, partialTick, camera, breaking);
         state.ticks = entity.getLevel() == null ? 0 :
             PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
+        state.hub = entity.isHub();
+        if (state.hub) {
+            var resolver = Minecraft.getInstance().getItemModelResolver();
+            resolver.updateForTopItem(state.hubCenter, new ItemStack(Items.ENDER_CHEST), ItemDisplayContext.FIXED,
+                entity.getLevel(), null, 0);
+            resolver.updateForTopItem(state.hubChest, new ItemStack(Items.CHEST), ItemDisplayContext.FIXED,
+                entity.getLevel(), null, 0);
+        }
         state.fluid = PylonCoreRenderer.extractFluid(entity, state.lightCoords);
         state.auxiliary = entity.auxiliaryMode();
         state.frame = PylonDecorationRenderer.frame(entity);
@@ -128,7 +139,19 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
                 pose.popPose();
             }
         }
-        if (state.auxiliary == PylonUpgrade.ANVIL) workshop.submitOrbs(state, pose, collector, camera);
+        if (state.hub) {
+            for (int orbit = -1; orbit < 4; orbit++) {
+                pose.pushPose();
+                PylonAnimation.placeHubChest(pose, state.ticks, orbit);
+                (orbit == -1 ? state.hubCenter : state.hubChest).submit(pose, collector,
+                    state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                pose.popPose();
+            }
+            return;
+        }
+        if (state.auxiliary == PylonUpgrade.ANVIL || state.auxiliary == PylonUpgrade.GRINDSTONE) {
+            workshop.submitOrbs(state.auxiliary == PylonUpgrade.GRINDSTONE ? -state.ticks : state.ticks, pose, collector, camera);
+        }
         if (state.auxiliary == PylonUpgrade.ENCHANTING) {
             workshop.submitBook(state, pose, collector, camera);
         } else if (state.fluid != null) {

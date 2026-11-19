@@ -4,15 +4,6 @@ navigation:
   icon: gash_super_pylons:insert_item_upgrade
   position: 3
   parent: upgrades.md
-item_ids:
-  - gash_super_pylons:insert_item_upgrade
-  - gash_super_pylons:insert_fluid_upgrade
-  - gash_super_pylons:insert_energy_upgrade
-  - gash_super_pylons:insert_xp_upgrade
-  - gash_super_pylons:extract_item_upgrade
-  - gash_super_pylons:extract_fluid_upgrade
-  - gash_super_pylons:extract_energy_upgrade
-  - gash_super_pylons:extract_xp_upgrade
 ---
 
 # Automação

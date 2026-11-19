@@ -1,6 +1,9 @@
 package net.gasharaujo.superpylons;
 
 import java.util.EnumMap;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.gasharaujo.superpylons.block.PylonFilterMenu;
@@ -55,6 +58,15 @@ public final class SuperPylonsMod {
     public static final Capability<PylonExperienceStorage> EXPERIENCE =
         CapabilityManager.get(new CapabilityToken<>() {});
     public static final String MOD_ID = "gash_super_pylons";
+    private static final ForgeConfigSpec SERVER_CONFIG;
+    public static final ForgeConfigSpec.BooleanValue GRINDSTONE_CONSUMES_BOOKS;
+
+    static {
+        var builder = new ForgeConfigSpec.Builder();
+        GRINDSTONE_CONSUMES_BOOKS = builder.comment("Require and consume one plain book per enchanted book made by Super Grindstone.")
+            .define("grindstoneConsumesBooks", false);
+        SERVER_CONFIG = builder.build();
+    }
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
@@ -65,9 +77,13 @@ public final class SuperPylonsMod {
         new SuperPylonBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion().explosionResistance(3600000.0F)));
     public static final RegistryObject<BlockItem> SUPER_PYLON_ITEM = ITEMS.register("super_pylon", () ->
         new SuperPylonBlockItem(SUPER_PYLON.get(), new Item.Properties()));
+    public static final RegistryObject<SuperPylonBlock> PYLON_HUB = BLOCKS.register("pylon_hub", () ->
+        new SuperPylonBlock(BlockBehaviour.Properties.copy(Blocks.REINFORCED_DEEPSLATE).noOcclusion()));
+    public static final RegistryObject<BlockItem> PYLON_HUB_ITEM = ITEMS.register("pylon_hub", () ->
+        new BlockItem(PYLON_HUB.get(), new Item.Properties()));
     public static final RegistryObject<BlockEntityType<SuperPylonBlockEntity>> SUPER_PYLON_ENTITY =
         BLOCK_ENTITIES.register("super_pylon", () ->
-            BlockEntityType.Builder.of(SuperPylonBlockEntity::new, SUPER_PYLON.get()).build(null));
+            BlockEntityType.Builder.of(SuperPylonBlockEntity::new, SUPER_PYLON.get(), PYLON_HUB.get()).build(null));
 
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, MOD_ID);
     public static final RegistryObject<MenuType<PylonFilterMenu>> FILTER_MENU = MENUS.register("pylon_filter",
@@ -116,6 +132,7 @@ public final class SuperPylonsMod {
 
     public SuperPylonsMod() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
         BLOCKS.register(bus);
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);

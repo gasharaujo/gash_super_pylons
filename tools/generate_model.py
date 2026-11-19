@@ -60,6 +60,14 @@ def main():
         "textures": {"particle": "minecraft:block/iron_block"},
         "elements": []
     })
+    write_json(assets / "models/block/pylon_hub.json", {
+        "parent": f"{MOD}:block/super_pylon",
+        "textures": {"frame": "minecraft:block/reinforced_deepslate_side",
+                     "particle": "minecraft:block/reinforced_deepslate_side"},
+    })
+    write_json(assets / "blockstates/pylon_hub.json", {
+        "variants": {"": {"model": f"{MOD}:block/pylon_hub"}}
+    })
     for language in ["en_us", "pt_br"]:
         lang_path = assets / f"lang/{language}.json"
         translations = json.loads(lang_path.read_text(encoding="utf-8")) if lang_path.exists() else {}
@@ -96,7 +104,17 @@ def main():
             "textures": {"particle": "minecraft:block/iron_block"},
             "display": display,
         })
+        hub_item = {
+            "parent": f"{MOD}:block/pylon_hub",
+            "gui_light": "side",
+            "display": display,
+        }
+        write_json(resources / f"assets/{MOD}/models/item/pylon_hub.json", hub_item)
         if modern:
+            for item in ("pylon_hub", "grindstone_upgrade", "redstone_upgrade", "redstone_level_upgrade"):
+                write_json(resources / f"assets/{MOD}/items/{item}.json", {
+                    "model": {"type": "minecraft:model", "model": f"{MOD}:item/{item}"},
+                })
             write_json(resources / f"assets/{MOD}/items/super_pylon.json", {
                 "model": {"type": "minecraft:special", "base": f"{MOD}:item/super_pylon",
                           "model": {"type": f"{MOD}:super_pylon"}}
@@ -106,9 +124,14 @@ def main():
             "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{MOD}:super_pylon"}],
                        "conditions": [{"condition": "minecraft:survives_explosion"}]}],
         })
+        write_json(resources / f"data/{MOD}/{'loot_tables' if plural else 'loot_table'}/blocks/pylon_hub.json", {
+            "type": "minecraft:block",
+            "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{MOD}:pylon_hub"}],
+                       "conditions": [{"condition": "minecraft:survives_explosion"}]}],
+        })
         for tag in ["mineable/pickaxe", "needs_stone_tool"]:
             write_json(resources / f"data/minecraft/tags/{'blocks' if plural else 'block'}/{tag}.json",
-                       {"replace": False, "values": [f"{MOD}:super_pylon"]})
+                       {"replace": False, "values": [f"{MOD}:super_pylon", f"{MOD}:pylon_hub"]})
     print("Generated Super Pylon frame, white core texture, item models, loot and tags.")
 
 

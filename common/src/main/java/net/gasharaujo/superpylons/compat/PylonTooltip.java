@@ -66,6 +66,7 @@ final class PylonTooltip {
     }
 
     private static Component rangeInfo(PylonBlockEntityBase pylon, PylonUpgrade upgrade, Component name) {
+        if (pylon.isHub()) return Component.translatable("tooltip.gash_super_pylons.hub_range", name, pylon.hubRange());
         int width = upgrade.value() * 2 + 1;
         var specialty = pylon.getSpecialty();
         if (pylon.hasSuperUpgrade()) {
@@ -83,6 +84,7 @@ final class PylonTooltip {
     }
 
     static Component storageLine(PylonBlockEntityBase pylon) {
+        if (pylon.isHub()) return pylon.hubStatus();
         Component storage = primaryStorage(pylon);
         if (!pylon.isEnergy() || pylon.isVoid()) return storage;
         return Component.empty().append(storage).append(" | ").append(Component.translatable("tooltip.gash_super_pylons.energy",

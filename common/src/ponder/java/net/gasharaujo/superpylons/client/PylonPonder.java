@@ -47,7 +47,7 @@ final class PylonPonder implements PonderPlugin {
             .description("Storage, upgrades, automation, wires and tools.")
             .idAsIcon().addToIndex().register();
         helper.registerTag(WORKSHOP_TAG).title("Advanced Workshops")
-            .description("Bind auxiliary pylons to enchant and repair items.")
+            .description("Bind auxiliary pylons to enchant, repair and disenchant items.")
             .item(BuiltInRegistries.ITEM.get(itemId("enchanting_upgrade"))).addToIndex().register();
         var tag = itemId(TAG);
         var workshopTag = itemId(WORKSHOP_TAG);
@@ -68,6 +68,9 @@ final class PylonPonder implements PonderPlugin {
         scene.configureBasePlate(0, 0, 5);
         scene.scaleSceneView(0.85f);
         scene.showBasePlate();
+        if (chapter.id().equals("pylon_hub")) {
+            scene.world().setBlock(layout.pylon, SuperPylonsMod.PYLON_HUB.get().defaultBlockState(), false);
+        }
         scene.idle(10);
         if (layout.chest != null) scene.world().showSection(util.select().position(layout.chest), Direction.DOWN);
         scene.world().showSection(util.select().position(layout.pylon), Direction.DOWN);
@@ -104,7 +107,8 @@ final class PylonPonder implements PonderPlugin {
                     default -> { }
                 }
             }
-            if (layout == PylonPonderContent.Layout.WORKSHOP && step.icon().equals("wrench") &&
+            if ((layout == PylonPonderContent.Layout.WORKSHOP || chapter.id().equals("pylon_hub")) &&
+                step.icon().equals("wrench") &&
                 step.action() == PylonPonderContent.Action.RIGHT) {
                 scene.overlay().showLine(PonderPalette.MEDIUM, Vec3.atCenterOf(layout.pylon), center, 38);
             }

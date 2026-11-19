@@ -29,16 +29,24 @@ final class PylonTank<T> {
     }
 
     int insert(T resource, int maximum, long capacity, BiPredicate<T, T> matches, boolean simulate) {
+        return (int) insert(resource, (long) maximum, capacity, matches, simulate);
+    }
+
+    long insert(T resource, long maximum, long capacity, BiPredicate<T, T> matches, boolean simulate) {
         if (resource == null || maximum <= 0 ||
             (amount() > 0 && !matches.test(resource(), resource))) return 0;
-        int inserted = (int) Math.min(maximum, Math.max(0, capacity - amount()));
+        long inserted = Math.min(maximum, Math.max(0, capacity - amount()));
         if (!simulate && inserted > 0) state = new State<>(resource, amount() + inserted);
         return inserted;
     }
 
     int extract(int maximum, boolean simulate) {
+        return (int) extract((long) maximum, simulate);
+    }
+
+    long extract(long maximum, boolean simulate) {
         if (maximum <= 0) return 0;
-        int extracted = (int) Math.min(maximum, available());
+        long extracted = Math.min(maximum, available());
         if (!simulate && extracted > 0 && !creative.getAsBoolean()) restore(new State<>(resource(), amount() - extracted));
         return extracted;
     }

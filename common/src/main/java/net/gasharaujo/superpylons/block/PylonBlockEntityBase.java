@@ -64,6 +64,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private static final int EXTERNAL_ITEM_BATCH = 4096;
     static final int FILTER_SIZE = 27;
 
+    private final PylonHub hub = new PylonHub(this);
     protected final PylonContents contents = new PylonContents(this::isCreativeStorage, this::getItemCapacity);
     protected final PylonEnergy energy = new PylonEnergy(this::isCreativeStorage);
     protected final List<ItemStack> outputBuffer = new ArrayList<>();
@@ -90,6 +91,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private int experienceRemainder;
     private String experienceFluid = "";
     private boolean energyUpdatePending;
+    private int lastAnalogSignal = -1;
+    private int lastRedstoneSignal = -1;
     private UUID warnedPlayer;
     private long warningExpires;
     private boolean contentsDropped;
@@ -101,6 +104,27 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     protected PylonBlockEntityBase(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+    }
+
+    public boolean isHub() { return getBlockState().is(SuperPylonsMod.PYLON_HUB.get()); }
+
+    public int hubRange() {
+        PylonUpgrade range = upgrades.get(PylonUpgrade.Slot.RANGE);
+        return 16 * (1 + (range == null ? 0 : range.tier()));
+    }
+
+    protected PylonHub hub() { return hub; }
+
+    public Component hubStatus() { return hub.summary(); }
+
+    protected void loadHub(String upgrades, String anchor, String links) {
+        loadUpgrades(upgrades);
+        loadDecorations("", anchor, "");
+        hub.load(links);
+    }
+
+    private static boolean hubUpgrade(PylonUpgrade upgrade) {
+        return upgrade.slot() == PylonUpgrade.Slot.RANGE || upgrade == PylonUpgrade.SUPER;
     }
 
     public boolean isCreativeStorage() { return upgrades.containsKey(PylonUpgrade.Slot.CREATIVE); }
@@ -143,7 +167,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             contents.markWorkshopOutput();
             status = "input";
         }
-        workshopStatus = List.of("connections", "input", "lapis", "second_item", "no_result", "xp").contains(status)
+        workshopStatus = List.of("connections", "input", "lapis", "second_item", "no_result", "xp", "books", "xp_full").contains(status)
             ? status : "connections";
         workshopCost = Math.max(0, cost);
     }
@@ -217,7 +241,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     private void updateChunkLoading() {
         if (level instanceof ServerLevel server) {
-            updateChunkLoading(server, upgrades.containsKey(PylonUpgrade.Slot.CHUNK_LOADER) ? range() : 0);
+            updateChunkLoading(server, !automationPaused() && upgrades.containsKey(PylonUpgrade.Slot.CHUNK_LOADER) ? range() : 0);
         }
     }
 
@@ -242,11 +266,16 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private record Auxiliary(BlockPos pos, UUID id) {}
 
     public boolean isWorkshop() {
-        return getSpecialty() == PylonUpgrade.ANVIL || getSpecialty() == PylonUpgrade.ENCHANTING;
+        PylonUpgrade specialty = getSpecialty();
+        return specialty != null && specialty.isWorkshop();
     }
 
     boolean linkAuxiliary(PylonBlockEntityBase target, Player player) {
-        if (!isWorkshop() || target.isWorkshop() || !validAuxiliaryPosition(target.worldPosition)) {
+        if (isHub()) {
+            hub.toggle(target, player);
+            return false;
+        }
+        if (!isWorkshop() || target.isHub() || target.isWorkshop() || !validAuxiliaryPosition(target.worldPosition)) {
             warn(player, "workshop_invalid");
             return false;
         }
@@ -364,6 +393,18 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
     }
 
+    private void emitGrindstoneParticles(ServerLevel server) {
+        if (auxiliaries.size() < 2 || getStoredCount() == 0 || contents.isWorkshopOutput() ||
+            server.getGameTime() % 4 != 0) return;
+        for (Auxiliary link : auxiliaries) {
+            if (auxiliary(link) == null) continue;
+            BlockPos target = link.pos();
+            server.sendParticles(ParticleTypes.ENCHANT, target.getX() + .5, target.getY() + .67, target.getZ() + .5,
+                0, worldPosition.getX() - target.getX(), worldPosition.getY() - target.getY(),
+                worldPosition.getZ() - target.getZ(), 1);
+        }
+    }
+
     private boolean suppliesLapis() { return getStoredCount() > 0 && getStoredItem().is(Items.LAPIS_LAZULI); }
 
     private void workshopStatus(String status, long cost) {
@@ -388,6 +429,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         PylonBlockEntityBase xp = first.isXpTank() ? first : second;
         PylonBlockEntityBase material = first.isXpTank() ? second : first;
         if (getStoredCount() == 0) { workshopStatus("input", 0); return; }
+        if (getSpecialty() == PylonUpgrade.GRINDSTONE) {
+            operateGrindstone(server, xp, material);
+            return;
+        }
         boolean enchanting = getSpecialty() == PylonUpgrade.ENCHANTING;
         if (enchanting ? !material.suppliesLapis() : material.getStoredCount() == 0) {
             workshopStatus(enchanting ? "lapis" : "second_item", 0);
@@ -402,7 +447,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         PylonWorkshopResult result = enchanting ?
             PylonEnchanting.enchant(server, worldPosition, getStoredItem(), getEnchantmentPower(),
                 getMinimumEnchantments(), blacklist, shelves) :
-            PylonEnchanting.anvil(getAutomationPlayer(server, AUTOMATION_PROFILE), getStoredItem(), material.getStoredItem());
+            PylonEnchanting.anvil(getAutomationPlayer(server, AUTOMATION_PROFILE), getStoredItem(), material.getStoredItem(),
+                hasSuperUpgrade());
         if (result == null) { workshopStatus("no_result", 0); return; }
         long cost = PylonExperience.pointsAtLevel((int) Math.min(1_000_000, result.levels()));
         if (xp.getAvailableExperience() < cost) { workshopStatus("xp", cost); return; }
@@ -418,6 +464,44 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         workshopCost = cost;
         exportWorkshopOutput(server);
         if (!isRemoved()) sync();
+    }
+
+    private void operateGrindstone(ServerLevel server, PylonBlockEntityBase xp, PylonBlockEntityBase material) {
+        boolean capture = hasSuperUpgrade();
+        var result = PylonEnchanting.grindstone(server, getStoredItem(), capture, getMinimumEnchantments());
+        if (result == null) { workshopStatus("no_result", 0); return; }
+        boolean consumeBooks = capture && SuperPylonsMod.GRINDSTONE_CONSUMES_BOOKS.get();
+        if (consumeBooks && (!material.getStoredItem().is(Items.BOOK) ||
+            material.getAvailableItemCount() < result.books().size())) {
+            workshopStatus("books", 0);
+            return;
+        }
+        if (!capture && xp.receiveExperience(result.experience(), true) < result.experience()) {
+            workshopStatus("xp_full", 0);
+            return;
+        }
+        contents.restore(result.item(), 1, getItemCapacity());
+        contents.markWorkshopOutput();
+        outputBuffer.addAll(result.books());
+        if (consumeBooks) {
+            material.contents.remove(result.books().size());
+            material.sync();
+        }
+        if (!capture) xp.receiveExperience(result.experience(), false);
+        workshopStatus = "input";
+        workshopCost = 0;
+        exportWorkshopOutput(server);
+        flushGrindstoneBooks(server);
+        if (!isRemoved()) sync();
+    }
+
+    private void flushGrindstoneBooks(ServerLevel server) {
+        if (outputBuffer.isEmpty()) return;
+        for (Auxiliary link : auxiliaries) {
+            if (link.pos().equals(workTarget())) return;
+        }
+        var output = workOutput(server);
+        if (output != null) flushOutput(output);
     }
 
     private boolean exportWorkshopOutput(ServerLevel server) {
@@ -629,9 +713,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         Arrays.fill(filterTags, null);
     }
 
-    public long getExperience() { return experience; }
+    public long getExperience() { return isHub() ? hub.experience(false) : experience; }
 
     public long getExperienceCapacity() {
+        if (isHub()) return hub.experience(true);
         if (isVoid()) return Long.MAX_VALUE;
         return getSpecialty() == PylonUpgrade.XP_TANK ?
             PylonUpgrade.storageCapacity(BASE_XP_CAPACITY, upgrades.get(PylonUpgrade.Slot.STORAGE)) : 0;
@@ -679,10 +764,14 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected int xpFluidLimit(boolean input, Fluid fluid, int requested) {
+        return (int) xpFluidLimit(input, fluid, (long) requested);
+    }
+
+    protected long xpFluidLimit(boolean input, Fluid fluid, long requested) {
         if (!(level instanceof ServerLevel) || isRemoved() || !isXpTank() || requested <= 0 ||
             !(input ? PylonXpFluids.supports(fluid) : PylonXpFluids.canExport(fluid))) return 0;
         long available = input ? Math.max(0, PylonXpFluids.millibuckets(experienceSpace()) - experienceRemainder) : availableXpFluid();
-        return (int) Math.min(requested, available);
+        return Math.min(requested, available);
     }
 
     protected void moveXpFluid(boolean input, Fluid fluid, long amount) {
@@ -705,6 +794,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     @Override
     public long receiveExperience(long points, boolean simulate) {
         if (!(level instanceof ServerLevel) || isRemoved() || points <= 0) return 0;
+        if (isHub()) return hub.moveExperience(points, true, simulate);
         if (isVoid()) return points;
         long accepted = Math.min(points, wholeExperienceSpace());
         if (!simulate && accepted > 0) {
@@ -717,6 +807,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     @Override
     public long extractExperience(long points, boolean simulate) {
         if (!(level instanceof ServerLevel) || isRemoved() || points <= 0) return 0;
+        if (isHub()) return hub.moveExperience(points, false, simulate);
         long taken = Math.min(points, getAvailableExperience());
         if (!simulate && taken > 0 && !isCreativeStorage()) {
             experience -= taken;
@@ -740,6 +831,42 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         return amount == 0 || capacity == 0 ? 0 : 1 + (int) Math.floor(14 * Math.min(1, (double) amount / capacity));
     }
+    public boolean hasRedstoneLevel() { return upgrades.containsKey(PylonUpgrade.Slot.REDSTONE_LEVEL); }
+
+    public int redstoneSignal(Direction side) {
+        if (upgrades.containsKey(PylonUpgrade.Slot.REDSTONE) && side != workDirection) return 0;
+        return Math.max(0, lastRedstoneSignal);
+    }
+
+    private boolean automationPaused() {
+        if (!upgrades.containsKey(PylonUpgrade.Slot.REDSTONE) || level == null) return false;
+        if (!hasRedstoneLevel()) return level.hasNeighborSignal(worldPosition);
+        for (Direction side : Direction.values()) {
+            if (side != workDirection && level.getSignal(worldPosition.relative(side), side) > 0) return true;
+        }
+        return false;
+    }
+
+    private void updateRedstone(ServerLevel server) {
+        int analog = comparatorSignal();
+        if (analog != lastAnalogSignal) {
+            lastAnalogSignal = analog;
+            server.updateNeighbourForOutputSignal(worldPosition, getBlockState().getBlock());
+        }
+        BlockState state = getBlockState();
+        if (state.getValue(PylonFrame.EMITTING) != hasRedstoneLevel()) {
+            server.setBlock(worldPosition, state.setValue(PylonFrame.EMITTING, hasRedstoneLevel()), Block.UPDATE_ALL);
+        }
+        int signal = hasRedstoneLevel() && !automationPaused() ? analog : 0;
+        if (signal != lastRedstoneSignal) {
+            int previous = lastRedstoneSignal;
+            lastRedstoneSignal = signal;
+            if (signal > 0 || previous > 0) notifyRedstoneNeighbors(server);
+        }
+    }
+
+    protected abstract void notifyRedstoneNeighbors(ServerLevel server);
+
     public boolean isEnergy() { return upgrades.containsKey(PylonUpgrade.Slot.ENERGY); }
     public int getEnergy() { return energy.amount(); }
 
@@ -858,14 +985,29 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected int insertItems(ItemStack stack, int amount, boolean simulate) {
+        return (int) insertItemAmount(stack, amount, simulate);
+    }
+
+    long insertItemAmount(ItemStack stack, long amount, boolean simulate) {
         if (!(level instanceof ServerLevel) || amount <= 0 || !canStoreItem(stack)) return 0;
         if (isVoid()) return amount;
-        int inserted = contents.insertLimit(stack, amount, getItemCapacity());
+        long inserted = contents.insertLimit(stack, amount, getItemCapacity());
         if (!simulate && inserted > 0) {
             contents.add(stack, inserted, getItemCapacity());
             sync();
         }
         return inserted;
+    }
+
+    long extractItemAmount(ItemStack stack, long amount, boolean simulate) {
+        if (!(level instanceof ServerLevel) || !canExtractItems() ||
+            !PylonItemRules.exactlyEqual(getStoredItem(), stack)) return 0;
+        long extracted = Math.min(amount, getAvailableItemCount());
+        if (!simulate && extracted > 0) {
+            contents.remove(extracted);
+            sync();
+        }
+        return extracted;
     }
 
     protected ItemStack extractAutomation(int amount, boolean simulate) {
@@ -915,13 +1057,14 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     protected boolean canStoreItem(ItemStack input) {
         if (isRemoved() || input.isEmpty() || input.is(Items.COMMAND_BLOCK) || input.getItem() instanceof PylonUpgradeItem || PylonItemRules.isModifier(input) ||
             (!hasItemStorage() && !isVoid()) || !allowsItem(input)) return false;
+        if (automationPaused()) return true;
         if (getSpecialty() == PylonUpgrade.PLANTER) return PylonFarming.canPlant(input);
         if (getSpecialty() == PylonUpgrade.PLACER) return input.getItem() instanceof BlockItem;
         return true;
     }
 
     private boolean allowsItem(ItemStack input) {
-        if (!hasFilter() || input.isEmpty()) return true;
+        if (!hasFilter() || input.isEmpty() || automationPaused()) return true;
         for (int i = 0; i < FILTER_SIZE; i++) {
             String tag = filterTags[i];
             if (tag == null ? PylonItemRules.exactlyEqual(filter.getItem(i), input) : PylonItemRules.matches(input, "#" + tag)) {
@@ -934,6 +1077,17 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public boolean use(Player player, InteractionHand hand) {
         if (player.isSpectator()) return false;
         ItemStack held = player.getItemInHand(hand);
+        if (isHub()) {
+            if (held.getItem() instanceof PylonToolItem tool) return tool.applyTo(this, player, hand);
+            if (held.getItem() instanceof PylonUpgradeItem upgrade) {
+                if (level instanceof ServerLevel) install(player, held, upgrade.upgrade());
+                return true;
+            }
+            if (hand != InteractionHand.MAIN_HAND || !held.isEmpty()) return false;
+            if (player.isShiftKeyDown()) return tryRemoveUpgrade(player);
+            if (level instanceof ServerLevel) notifyPlayer(player, hubStatus());
+            return true;
+        }
         if (held.isEmpty()) {
             if (hand != InteractionHand.MAIN_HAND) return false;
             if (player.isShiftKeyDown()) return tryRemoveUpgrade(player);
@@ -1021,6 +1175,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private void install(Player player, ItemStack held, PylonUpgrade next) {
+        if (isHub() && !hubUpgrade(next)) {
+            warn(player, "hub_upgrade");
+            return;
+        }
         PylonUpgrade previous = upgrades.get(next.slot());
         if (previous != null && previous.tier() >= next.tier()) {
             warn(player, "upgrade_slot_occupied");
@@ -1030,7 +1188,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             warn(player, "upgrade_needs_empty");
             return;
         }
-        if ((next == PylonUpgrade.ANVIL || next == PylonUpgrade.ENCHANTING) && getStoredCount() > 1) {
+        if (next.isWorkshop() && getStoredCount() > 1) {
             warn(player, "workshop_single_item");
             return;
         }
@@ -1049,6 +1207,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     void applyUpgradeSetup(Player player, String saved) {
+        if (isHub()) return;
         var next = new EnumMap<PylonUpgrade.Slot, PylonUpgrade>(PylonUpgrade.Slot.class);
         for (String id : saved.split(",")) {
             PylonUpgrade upgrade = PylonUpgrade.byId(id);
@@ -1099,7 +1258,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         int energyCapacity = energyUpgrade == null ? 0 : energyUpgrade.value();
         if ((specialty == PylonUpgrade.VOID && getEnergy() > 0) || getEnergy() > energyCapacity ||
-            getStoredCount() > (specialty == PylonUpgrade.ANVIL || specialty == PylonUpgrade.ENCHANTING ?
+            getStoredCount() > (specialty != null && specialty.isWorkshop() ?
                 1 : PylonUpgrade.itemCapacity(storage)) ||
             (storage != upgrades.get(PylonUpgrade.Slot.STORAGE) &&
                 (getFluidAmount() > PylonUpgrade.storageCapacity(BASE_FLUID_CAPACITY_MB, storage) ||
@@ -1170,7 +1329,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         if ((upgrade == PylonUpgrade.XP_TANK && hasExperience()) ||
             (upgrade.isEnergy() && getEnergy() > 0) ||
-            ((upgrade == PylonUpgrade.HARVESTER || upgrade == PylonUpgrade.BREAK || upgrade.slot() == PylonUpgrade.Slot.PROCESSING) &&
+            ((upgrade == PylonUpgrade.HARVESTER || upgrade == PylonUpgrade.BREAK || upgrade == PylonUpgrade.GRINDSTONE ||
+                upgrade.slot() == PylonUpgrade.Slot.PROCESSING) &&
                 !outputBuffer.isEmpty())) {
             warn(player, "specialty_needs_empty");
             return true;
@@ -1196,7 +1356,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             upgrade.slot() == PylonUpgrade.Slot.RANGE) excavationCursor = 0;
         trimWorkshopLinks();
         updateChunkLoading();
-        if (upgrade == PylonUpgrade.ANVIL || upgrade == PylonUpgrade.ENCHANTING) {
+        if (upgrade.isWorkshop()) {
             contents.clearWorkshopOutput();
             clearWorkshopLinks();
         }
@@ -1240,14 +1400,27 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public void withdraw(Player player) {
         if (!(level instanceof ServerLevel) || player.isSpectator()) return;
         ItemStack removed = contents.extract(player.isShiftKeyDown() ? Integer.MAX_VALUE : 1);
+        if (removed.isEmpty() && getSpecialty() == PylonUpgrade.GRINDSTONE && !outputBuffer.isEmpty()) {
+            removed = outputBuffer.remove(0);
+        }
         if (removed.isEmpty()) return;
         sync();
         player.getInventory().placeItemBackInInventory(removed);
     }
 
     public void tick(ServerLevel server) {
+        if (isHub()) return;
         updatePaintedState();
-        updateChunkLoading();
+        updateRedstone(server);
+        boolean paused = automationPaused();
+        updateChunkLoading(server, !paused && upgrades.containsKey(PylonUpgrade.Slot.CHUNK_LOADER) ? range() : 0);
+        if (paused) {
+            if (energyUpdatePending) {
+                energyUpdatePending = false;
+                sync();
+            }
+            return;
+        }
         if (isWorkshop()) refreshWorkshopLinks();
         tickTransfers(server);
         PylonUpgrade specialty = getSpecialty();
@@ -1262,6 +1435,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         PylonUpgrade generator = getGenerator();
         if (specialty == null && processor == null && generator == null) return;
         if (specialty == PylonUpgrade.ENCHANTING) emitEnchantingParticles(server);
+        if (specialty == PylonUpgrade.GRINDSTONE) emitGrindstoneParticles(server);
         PylonUpgrade speed = upgrades.get(PylonUpgrade.Slot.SPEED);
         int speedTier = speed == null ? 0 : speed.tier();
         if (specialty == PylonUpgrade.XP_TANK) transferExperience(server, 1 << speedTier);
@@ -1272,6 +1446,12 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (generator != null && !isVoid()) {
             if (generator.generatesFluid()) generateFluid(generator.generatedFluid(), amount * 100);
             else if (contents.add(new ItemStack(generator.generatedItem()), amount, getItemCapacity()) > 0) sync();
+        }
+        if (specialty == PylonUpgrade.GRINDSTONE && !outputBuffer.isEmpty()) {
+            flushGrindstoneBooks(server);
+            if (contents.isWorkshopOutput()) exportWorkshopOutput(server);
+            if (!outputBuffer.isEmpty()) return;
+            sync();
         }
         if (isWorkshop()) operateWorkshop(server);
         else if (specialty != null) {
@@ -1302,7 +1482,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 default -> { }
             }
         }
-        if (processor != null) process(server, processor, amount, quantity == null ? 0 : quantity.tier());
+        if (processor != null && specialty != PylonUpgrade.GRINDSTONE) process(server, processor, amount, quantity == null ? 0 : quantity.tier());
     }
 
     private void dispenseItems(ServerLevel server, int amount) {
@@ -1452,7 +1632,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         long inserted = target.receiveExperience(extracted, false);
         if (inserted < extracted) {
             long remainder = extracted - inserted;
-            if (source instanceof PylonBlockEntityBase pylon) {
+            if (source instanceof PylonBlockEntityBase pylon && !pylon.isHub()) {
                 if (!pylon.isCreativeStorage()) {
                     pylon.experience += remainder;
                     pylon.sync();
@@ -1987,7 +2167,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         upgrades.clear();
         for (String id : saved.split(",")) {
             PylonUpgrade upgrade = PylonUpgrade.byId(id);
-            if (upgrade != null) upgrades.put(upgrade.slot(), upgrade);
+            if (upgrade != null && (!isHub() || hubUpgrade(upgrade))) upgrades.put(upgrade.slot(), upgrade);
         }
     }
 
@@ -1999,6 +2179,11 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public void dropContents() {
         if (!(level instanceof ServerLevel server) || contentsDropped) return;
         contentsDropped = true;
+        if (isHub()) {
+            for (PylonUpgrade upgrade : upgrades.values()) Block.popResource(level, worldPosition, upgradeStack(upgrade));
+            upgrades.clear();
+            return;
+        }
         updateChunkLoading(server, 0);
         clearFluid();
         dropConnectedWires(server);

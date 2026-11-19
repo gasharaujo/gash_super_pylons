@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CPC",
+    "PEP",
+    "CPC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:chest"
+    },
+    "E": {
+      "item": "minecraft:ender_chest"
+    },
+    "P": {
+      "item": "minecraft:deepslate_tiles"
+    }
+  },
+  "result": {
+    "id": "gash_super_pylons:pylon_hub",
+    "count": 1
+  }
+}

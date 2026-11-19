@@ -43,6 +43,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
+    private final PylonHubPorts hubPorts = new PylonHubPorts(hub());
     private final ItemPort itemPort = new ItemPort();
     private final PylonTank<FluidStack> tank = new PylonTank<>(this::isCreativeStorage, this::getFluidCapacity);
     private final TankHandler fluidHandler = new TankHandler();
@@ -51,13 +52,23 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final EnergyPort energyInput = new EnergyPort(Direction.UP);
     private final EnergyPort energyInternal = new EnergyPort(null);
     private LazyOptional<IEnergyStorage> inputCapability = LazyOptional.of(() -> energyInput);
-    private LazyOptional<IEnergyStorage> internalCapability = LazyOptional.of(() -> energyInternal);
+    private LazyOptional<IEnergyStorage> internalCapability = LazyOptional.of(() -> isHub() ? hubPorts.energy() : energyInternal);
     private LazyOptional<IFluidHandler> tankCapability = LazyOptional.of(this::getFluidHandler);
     private LazyOptional<IFluidHandler> xpFluidCapability = LazyOptional.of(() -> xpFluidPort);
-    private LazyOptional<IItemHandler> itemCapability = LazyOptional.of(() -> itemPort);
+    private LazyOptional<IItemHandler> itemCapability = LazyOptional.of(() -> isHub() ? hubPorts.items() : itemPort);
     private LazyOptional<PylonExperienceStorage> experienceCapability = LazyOptional.of(() -> this);
 
+    public IItemHandler getItemHandler() { return isRemoved() ? null : isHub() ? hubPorts.items() : itemPort; }
+
+    public IEnergyStorage getEnergyHandler(Direction side) {
+        if (isRemoved()) return null;
+        if (isHub()) return hubPorts.energy();
+        if (!isEnergy() && !isVoid()) return null;
+        return side == null || side == workDirection() ? energyInternal : energyInput;
+    }
+
     public IFluidHandler getFluidHandler() {
+        if (isHub()) return hubPorts.fluids();
         if (isTank() && isXpTank()) return combinedFluids;
         return isTank() || isVoid() ? fluidHandler : isXpTank() ? xpFluidPort : null;
     }
@@ -70,6 +81,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putString("upgrades", saveUpgrades());
+        if (isHub()) {
+            tag.putString("wire_id", saveWireId());
+            tag.putString("hub_links", hub().save());
+            return;
+        }
         if (!getBreakTool().isEmpty()) tag.put("break_tool", getBreakTool().save(new CompoundTag()));
         if (!getFurnaceAttachment().isEmpty()) tag.put("furnace_attachment", getFurnaceAttachment().save(new CompoundTag()));
         if (excavationCursor() != 0) tag.putInt("excavation_cursor", excavationCursor());
@@ -115,6 +131,10 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
+        if (isHub()) {
+            loadHub(tag.getString("upgrades"), tag.getString("wire_id"), tag.getString("hub_links"));
+            return;
+        }
         loadUpgrades(tag.getString("upgrades"));
         loadBreakTool(ItemStack.of(tag.getCompound("break_tool")));
         loadFurnaceAttachment(ItemStack.of(tag.getCompound("furnace_attachment")));
@@ -187,6 +207,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
+    protected void notifyRedstoneNeighbors(ServerLevel server) {
+        server.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+    }
+
+    @Override
     protected void capabilitiesChanged() {
         invalidatePylonCapabilities();
         createPylonCapabilities();
@@ -213,8 +238,9 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
         if (cap == SuperPylonsMod.EXPERIENCE && !isRemoved()) return experienceCapability.cast();
         if (cap == ForgeCapabilities.ITEM_HANDLER && !isRemoved()) return itemCapability.cast();
-        if (cap == ForgeCapabilities.FLUID_HANDLER && (isTank() || isVoid()) && !isRemoved()) return tankCapability.cast();
+        if (cap == ForgeCapabilities.FLUID_HANDLER && (isHub() || isTank() || isVoid()) && !isRemoved()) return tankCapability.cast();
         if (cap == ForgeCapabilities.FLUID_HANDLER && isXpTank() && !isRemoved()) return xpFluidCapability.cast();
+        if (cap == ForgeCapabilities.ENERGY && isHub() && !isRemoved()) return internalCapability.cast();
         if (cap == ForgeCapabilities.ENERGY && (isEnergy() || isVoid()) && !isRemoved()) {
             return (side == null || side == workDirection() ? internalCapability : inputCapability).cast();
         }
@@ -244,11 +270,11 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     private void createPylonCapabilities() {
         experienceCapability = LazyOptional.of(() -> this);
-        itemCapability = LazyOptional.of(() -> itemPort);
+        itemCapability = LazyOptional.of(() -> isHub() ? hubPorts.items() : itemPort);
         tankCapability = LazyOptional.of(this::getFluidHandler);
         xpFluidCapability = LazyOptional.of(() -> xpFluidPort);
         inputCapability = LazyOptional.of(() -> energyInput);
-        internalCapability = LazyOptional.of(() -> energyInternal);
+        internalCapability = LazyOptional.of(() -> isHub() ? hubPorts.energy() : energyInternal);
     }
 
     @Override
