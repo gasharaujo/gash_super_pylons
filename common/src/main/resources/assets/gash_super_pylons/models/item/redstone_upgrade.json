@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "gash_super_pylons:item/upgrade_overlay",
   "textures": {
-    "layer0": "gash_super_pylons:item/redstone_upgrade"
+    "layer1": "minecraft:item/redstone"
   }
 }

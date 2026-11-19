@@ -69,12 +69,17 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         var renderer = Minecraft.getInstance().getItemRenderer();
         var center = new ItemStack(Items.ENDER_CHEST);
         var chest = new ItemStack(Items.CHEST);
-        for (int orbit = -1; orbit < 4; orbit++) {
-            pose.pushPose();
-            PylonAnimation.placeHubChest(pose, ticks, orbit);
-            renderer.renderStatic(orbit == -1 ? center : chest, ItemDisplayContext.FIXED,
-                light, overlay, pose, buffers, entity.getLevel(), orbit);
-            pose.popPose();
+        pose.pushPose();
+        PylonAnimation.placeHubCenter(pose, ticks);
+        renderer.renderStatic(center, ItemDisplayContext.FIXED, light, overlay, pose, buffers, entity.getLevel(), 0);
+        pose.popPose();
+        for (var ring : PylonAnimation.HubRing.values()) {
+            for (int index = 0; index < PylonAnimation.HUB_CHESTS_PER_RING; index++) {
+                pose.pushPose();
+                PylonAnimation.placeHubChest(pose, ticks, ring, index);
+                renderer.renderStatic(chest, ItemDisplayContext.FIXED, light, overlay, pose, buffers, entity.getLevel(), 0);
+                pose.popPose();
+            }
         }
     }
 
@@ -100,14 +105,31 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
         int toolSlot = PylonUpgradeStamps.toolSlot(!tool.isEmpty(), entity.hasSuperUpgrade());
         var shelves = entity.getShelfItems();
         int shelfSlot = PylonUpgradeStamps.shelfSlot(upgrades, toolSlot, !entity.getFurnaceAttachment().isEmpty());
-        int total = upgrades.size() + (toolSlot >= 0 ? 1 : 0) + shelves.size();
-        var atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
-        var sprites = PylonUpgradeStamps.sprites(upgrades, entity.getFurnaceAttachment(), id -> atlas.apply(ResourceLocation.parse(id)));
-        var buffer = buffers.getBuffer(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
-        var matrix = pose.last();
-        PylonUpgradeStamps.draw(sprites, toolSlot, shelfSlot, shelves.size(), (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
-            .setColor(-1).setUv(u, v).setOverlay(overlay).setLight(light)
-            .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ()));
+        var minecraft = Minecraft.getInstance();
+        var atlas = minecraft.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
+        var stamps = PylonUpgradeStamps.stamps(upgrades, entity.getFurnaceAttachment(),
+            id -> atlas.apply(ResourceLocation.parse(id)), upgrade -> new ItemStack(SuperPylonsMod.UPGRADES.get(upgrade).get()));
+        int total = stamps.size() + (toolSlot >= 0 ? 1 : 0) + shelves.size();
+        if (stamps.stream().anyMatch(stamp -> stamp.sprite() != null)) {
+            var buffer = buffers.getBuffer(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
+            var matrix = pose.last();
+            PylonUpgradeStamps.draw(stamps, toolSlot, shelfSlot, shelves.size(),
+                (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
+                    .setColor(-1).setUv(u, v).setOverlay(overlay).setLight(light)
+                    .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ()));
+        }
+        for (int i = 0; i < stamps.size(); i++) {
+            ItemStack model = stamps.get(i).model();
+            if (model == null) continue;
+            int slot = PylonUpgradeStamps.stampSlot(i, toolSlot, shelfSlot, shelves.size());
+            for (Direction face : Direction.Plane.HORIZONTAL) {
+                pose.pushPose();
+                PylonUpgradeStamps.placeItem(pose, face, total, slot);
+                minecraft.getItemRenderer().renderStatic(model, ItemDisplayContext.NONE,
+                    light, overlay, pose, buffers, entity.getLevel(), (int) entity.getBlockPos().asLong());
+                pose.popPose();
+            }
+        }
         if (!tool.isEmpty()) {
             for (Direction face : Direction.Plane.HORIZONTAL) {
                 pose.pushPose();

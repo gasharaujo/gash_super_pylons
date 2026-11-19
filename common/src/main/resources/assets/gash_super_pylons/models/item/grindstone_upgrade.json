@@ -1,6 +1,175 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "gash_super_pylons:item/upgrade_overlay",
   "textures": {
-    "layer0": "gash_super_pylons:item/grindstone_upgrade"
-  }
+    "leg": "minecraft:block/dark_oak_log",
+    "pivot": "minecraft:block/grindstone_pivot",
+    "wheel": "minecraft:block/grindstone_side"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        7.5
+      ],
+      "to": [
+        16,
+        16,
+        8.5
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#layer0"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#layer0"
+        }
+      }
+    },
+    {
+      "from": [
+        3.5,
+        3.5,
+        7.375
+      ],
+      "to": [
+        5.5,
+        8.5,
+        8.625
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            9,
+            4,
+            16
+          ],
+          "texture": "#leg"
+        },
+        "south": {
+          "uv": [
+            2,
+            9,
+            4,
+            16
+          ],
+          "texture": "#leg"
+        }
+      }
+    },
+    {
+      "from": [
+        10.5,
+        3.5,
+        7.375
+      ],
+      "to": [
+        12.5,
+        8.5,
+        8.625
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            9,
+            14,
+            16
+          ],
+          "texture": "#leg"
+        },
+        "south": {
+          "uv": [
+            12,
+            9,
+            14,
+            16
+          ],
+          "texture": "#leg"
+        }
+      }
+    },
+    {
+      "from": [
+        3.25,
+        7.5,
+        7.25
+      ],
+      "to": [
+        12.75,
+        9.5,
+        8.75
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            6
+          ],
+          "texture": "#pivot"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            6
+          ],
+          "texture": "#pivot"
+        }
+      }
+    },
+    {
+      "from": [
+        4.75,
+        6.5,
+        7.125
+      ],
+      "to": [
+        11.25,
+        13,
+        8.875
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            12,
+            12
+          ],
+          "texture": "#wheel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            12,
+            12
+          ],
+          "texture": "#wheel"
+        }
+      }
+    }
+  ]
 }

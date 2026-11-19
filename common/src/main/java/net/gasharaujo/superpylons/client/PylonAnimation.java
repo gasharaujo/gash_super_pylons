@@ -51,34 +51,52 @@ public final class PylonAnimation {
         pose.scale(0.19F, 0.19F, 0.19F);
     }
 
-    static void placeHubChest(PoseStack pose, float ticks, int orbit) {
-        if (orbit == -1) {
-            pose.translate(0.5, 0.5, 0.5);
-            pose.mulPose(Axis.YP.rotationDegrees(-ticks * 360 / ROTATION_TICKS));
-            pose.scale(0.35F, 0.35F, 0.35F);
-            return;
+    static final int HUB_CHESTS_PER_RING = 6;
+    static final float HUB_CENTER_SCALE = 0.35F;
+
+    enum HubRing {
+        HORIZONTAL(0.28, 0.105F, Math.PI / 6, 1, 1, 0),
+        VERTICAL(0.28, 0.105F, 0, 1, 0, -1),
+        DIAGONAL_CLOCKWISE(0.41, 0.15F, 0, 1, Math.sqrt(0.5), Math.sqrt(0.5)),
+        DIAGONAL_COUNTERCLOCKWISE(0.41, 0.15F, Math.PI / 6, -1, -Math.sqrt(0.5), Math.sqrt(0.5));
+
+        final double radius;
+        final float scale;
+        final double phase;
+        final int direction;
+        final double axisX;
+        final double axisY;
+
+        HubRing(double radius, float scale, double phase, int direction, double axisX, double axisY) {
+            this.radius = radius;
+            this.scale = scale;
+            this.phase = phase;
+            this.direction = direction;
+            this.axisX = axisX;
+            this.axisY = axisY;
         }
-        double phase = switch (orbit) {
-            case 0 -> 0.5;
-            case 2 -> 0.25;
-            case 3 -> 0.77;
-            default -> 0;
-        };
-        double angle = Math.PI * (ticks * 2 / ROTATION_TICKS + phase);
-        double sin = Math.sin(angle);
-        double cos = Math.cos(angle);
-        double x = 0, y = 0, z = 0;
-        double radius = 0.28;
-        switch (orbit) {
-            case 0 -> { x = cos; z = sin; }
-            case 1 -> { y = -cos; z = sin; }
-            case 2 -> { x = cos * 0.7071; z = sin; y = cos * 0.7071; }
-            case 3 -> { x = -cos * 0.7071; z = -sin; y = cos * 0.7071; }
-            default -> throw new IllegalArgumentException("Unknown hub orbit: " + orbit);
+
+        Vec3 position(float ticks, int chest) {
+            double angle = 2 * Math.PI * (ticks / ROTATION_TICKS + (double) chest / HUB_CHESTS_PER_RING) + phase;
+            double transverse = radius * Math.cos(angle);
+            return new Vec3(0.5 + transverse * axisX, 0.5 + transverse * axisY,
+                0.5 + direction * radius * Math.sin(angle));
         }
-        pose.translate(0.5 + radius * x, 0.5 + radius * y, 0.5 + radius * z);
-        pose.mulPose(Axis.YP.rotationDegrees(orbit * 90));
-        pose.scale(0.17F, 0.17F, 0.17F);
+    }
+
+    static void placeHubCenter(PoseStack pose, float ticks) {
+        pose.translate(0.5, 0.5, 0.5);
+        pose.mulPose(Axis.YP.rotationDegrees(-ticks * 360 / ROTATION_TICKS));
+        pose.scale(HUB_CENTER_SCALE, HUB_CENTER_SCALE, HUB_CENTER_SCALE);
+    }
+
+    static void placeHubChest(PoseStack pose, float ticks, HubRing ring, int chest) {
+        // Each pair of rings shares a radius and crosses on the Z axis. A half-step offset keeps
+        // their chests separated there. The two pairs are separated by their radii everywhere.
+        Vec3 position = ring.position(ticks, chest);
+        pose.translate(position.x, position.y, position.z);
+        pose.mulPose(Axis.YP.rotationDegrees(ring.ordinal() * 90));
+        pose.scale(ring.scale, ring.scale, ring.scale);
     }
 
     static Vec3 xpOrbit(float ticks, int orb) {

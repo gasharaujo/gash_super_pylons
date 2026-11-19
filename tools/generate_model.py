@@ -19,6 +19,58 @@ def write_json(path, data):
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def icon_layer(texture, depth, bounds=(0, 0, 16, 16), uv=(0, 0, 16, 16)):
+    left, bottom, right, top = bounds
+    face = {"uv": uv, "texture": f"#{texture}"}
+    return {
+        "from": [left, bottom, 8 - depth],
+        "to": [right, top, 8 + depth],
+        "shade": False,
+        "faces": {"north": face, "south": face},
+    }
+
+
+def write_upgrade_icons(assets):
+    base = f"{MOD}:item/upgrade_base"
+    plate = icon_layer("layer0", 0.5)
+    standard = json.loads((assets / "models/item/icon.json").read_text(encoding="utf-8"))
+    display = {
+        **standard["display"],
+        "ground": {"translation": [0, 2, 0], "scale": [0.5] * 3},
+        "thirdperson_righthand": {"translation": [0, 3, 1], "scale": [0.55] * 3},
+        "firstperson_righthand": {
+            "rotation": [0, -90, 25], "translation": [1.13, 3.2, 1.13], "scale": [0.68] * 3,
+        },
+    }
+    parent = f"{MOD}:item/upgrade_overlay"
+    write_json(assets / "models/item/upgrade_overlay.json", {
+        "gui_light": "front",
+        "display": display,
+        "textures": {"particle": base, "layer0": base},
+        "elements": [plate, icon_layer("layer1", 0.625, (2.5, 2.5, 13.5, 13.5))],
+    })
+    for name, symbol in (("redstone_upgrade", "redstone"), ("redstone_level_upgrade", "comparator")):
+        write_json(assets / f"models/item/{name}.json", {
+            "parent": parent,
+            "textures": {"layer1": f"minecraft:item/{symbol}"},
+        })
+    write_json(assets / "models/item/grindstone_upgrade.json", {
+        "parent": parent,
+        "textures": {
+            "leg": "minecraft:block/dark_oak_log",
+            "pivot": "minecraft:block/grindstone_pivot",
+            "wheel": "minecraft:block/grindstone_side",
+        },
+        "elements": [
+            plate,
+            icon_layer("leg", 0.625, (3.5, 3.5, 5.5, 8.5), (2, 9, 4, 16)),
+            icon_layer("leg", 0.625, (10.5, 3.5, 12.5, 8.5), (12, 9, 14, 16)),
+            icon_layer("pivot", 0.75, (3.25, 7.5, 12.75, 9.5), (0, 0, 6, 6)),
+            icon_layer("wheel", 0.875, (4.75, 6.5, 11.25, 13), (0, 0, 12, 12)),
+        ],
+    })
+
+
 def main():
     source = json.loads((ROOT / "model-source/Pylon.json").read_text(encoding="utf-8"))
     cores = [element for element in source["elements"] if element.get("name") == "core"]
@@ -44,6 +96,7 @@ def main():
         bars.append(bar)
 
     assets = ROOT / f"common/src/main/resources/assets/{MOD}"
+    write_upgrade_icons(assets)
     write_json(assets / "models/block/super_pylon.json", {
         "parent": "minecraft:block/block",
         "credit": source.get("credit", "Made with Blockbench"),
