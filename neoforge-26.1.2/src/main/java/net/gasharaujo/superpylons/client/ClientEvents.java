@@ -1,6 +1,11 @@
 package net.gasharaujo.superpylons.client;
 
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.block.PylonXpFluidRegistration;
+import net.minecraft.client.renderer.block.FluidModel;
+import net.minecraft.client.resources.model.sprite.Material;
+import net.neoforged.neoforge.client.event.RegisterFluidModelsEvent;
+import net.neoforged.neoforge.client.fluid.FluidTintSources;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -36,4 +41,11 @@ public final class ClientEvents {
             SuperPylonItemRenderer.Unbaked.MAP_CODEC);
     }
 
+    @SubscribeEvent
+    public static void registerFluidModels(RegisterFluidModelsEvent event) {
+        Material still = new Material(Identifier.withDefaultNamespace("block/water_still"));
+        Material flowing = new Material(Identifier.withDefaultNamespace("block/water_flow"));
+        event.register(new FluidModel.Unbaked(still, flowing, null, FluidTintSources.constant(0xFF81CF2F)),
+            PylonXpFluidRegistration.FALLBACK);
+    }
 }

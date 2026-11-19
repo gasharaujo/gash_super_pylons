@@ -43,6 +43,11 @@ public final class PylonPulverizing {
 
         String item = PylonItemRules.itemId(input);
         String path = item.substring(item.indexOf(':') + 1);
+        if (item.equals("minecraft:quartz_block")) return single("minecraft:quartz", 4);
+        if (item.equals("minecraft:amethyst_block")) return single("minecraft:amethyst_shard", 4);
+        if (item.startsWith("geore:") && path.endsWith("_block")) {
+            return single("geore:" + path.substring(0, path.length() - "_block".length()) + "_shard", 4);
+        }
         if (path.equals("gravel") || inCommonTag(input, "gravel")) {
             return List.of(result("minecraft:sand", 1, 100), result("minecraft:flint", 1, FLINT_CHANCE[tier]));
         }

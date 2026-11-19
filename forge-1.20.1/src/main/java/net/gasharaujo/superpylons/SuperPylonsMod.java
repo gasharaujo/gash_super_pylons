@@ -8,6 +8,7 @@ import net.gasharaujo.superpylons.block.PylonToolActions.Kind;
 import net.gasharaujo.superpylons.block.PylonToolItem;
 import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonExperienceStorage;
+import net.gasharaujo.superpylons.block.PylonXpFluidRegistration;
 import net.gasharaujo.superpylons.block.PylonBreaker;
 import net.gasharaujo.superpylons.block.PylonDispenseAim;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
@@ -120,6 +121,7 @@ public final class SuperPylonsMod {
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
         CREATIVE_TABS.register(bus);
+        PylonXpFluidRegistration.register(bus);
         PylonControls.register();
         MinecraftForge.EVENT_BUS.addListener(PylonControls::syncCrush);
         MinecraftForge.EVENT_BUS.addListener(PylonControls::tagsUpdated);

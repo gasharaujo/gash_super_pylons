@@ -348,7 +348,6 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             case ITEM -> { template = getStoredItem(); available = getAvailableItemCount(); }
             case FLUID -> { template = tank.resource(); available = tank.available(); }
             case XP -> {
-                if (fluid == net.minecraft.world.level.material.Fluids.EMPTY) return -1;
                 template = new FluidStack(fluid, 1);
                 available = availableXpFluid();
                 limit = PylonXpFluids.millibuckets(limit);
@@ -377,7 +376,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         Fluid preferred = preferredXpFluid();
         long moved = moveFluidKind(xpFluidPort, other, new FluidStack(preferred, 1), limit);
         if (moved > 0) return moved;
-        for (Fluid fluid : PylonXpFluids.available()) {
+        for (Fluid fluid : PylonXpFluids.externalSources()) {
             if (fluid == preferred) continue;
             moved = moveFluidKind(xpFluidPort, other, new FluidStack(fluid, 1), limit);
             if (moved > 0) return moved;
@@ -572,7 +571,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     private final class XpFluidPort implements IFluidHandler {
         @Override public int getTanks() { return 1; }
         @Override public FluidStack getFluidInTank(int tank) {
-            return tank == 0 && isXpTank() && !PylonXpFluids.available().isEmpty() ?
+            return tank == 0 && isXpTank() && availableXpFluid() > 0 ?
                 new FluidStack(preferredXpFluid(), (int) Math.min(Integer.MAX_VALUE, availableXpFluid())) : FluidStack.EMPTY;
         }
         @Override public int getTankCapacity(int tank) {

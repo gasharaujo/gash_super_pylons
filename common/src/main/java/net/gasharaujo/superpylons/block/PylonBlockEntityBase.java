@@ -664,9 +664,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected Fluid preferredXpFluid() {
-        var fluids = PylonXpFluids.available();
-        for (Fluid fluid : fluids) if (PylonXpFluids.id(fluid).equals(experienceFluid)) return fluid;
-        return fluids.isEmpty() ? Fluids.EMPTY : fluids.get(0);
+        return PylonXpFluids.preferred(experienceFluid);
     }
 
     protected long xpFluidCapacity() { return PylonXpFluids.millibuckets(getExperienceCapacity()); }
@@ -681,7 +679,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     protected int xpFluidLimit(boolean input, Fluid fluid, int requested) {
-        if (!(level instanceof ServerLevel) || isRemoved() || !isXpTank() || requested <= 0 || !PylonXpFluids.supports(fluid)) return 0;
+        if (!(level instanceof ServerLevel) || isRemoved() || !isXpTank() || requested <= 0 ||
+            !(input ? PylonXpFluids.supports(fluid) : PylonXpFluids.canExport(fluid))) return 0;
         long available = input ? Math.max(0, PylonXpFluids.millibuckets(experienceSpace()) - experienceRemainder) : availableXpFluid();
         return (int) Math.min(requested, available);
     }
@@ -689,7 +688,10 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     protected void moveXpFluid(boolean input, Fluid fluid, long amount) {
         int ratio = PylonXpFluids.MILLIBUCKETS_PER_POINT;
         if (input) {
-            if (!hasExperience() || experienceFluid.isEmpty()) experienceFluid = PylonXpFluids.id(fluid);
+            if (!hasExperience() || experienceFluid.isEmpty() ||
+                experienceFluid.equals(PylonXpFluids.id(PylonXpFluidRegistration.FALLBACK.get()))) {
+                experienceFluid = PylonXpFluids.id(fluid);
+            }
             int remainder = experienceRemainder + (int) (amount % ratio);
             experience += amount / ratio + remainder / ratio;
             experienceRemainder = remainder % ratio;

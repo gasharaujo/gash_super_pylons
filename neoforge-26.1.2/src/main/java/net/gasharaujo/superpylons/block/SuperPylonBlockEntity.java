@@ -443,7 +443,6 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             case ITEM -> { template = getStoredItem(); available = getAvailableItemCount(); }
             case FLUID -> { template = tank.resource(); available = tank.available(); }
             case XP -> {
-                if (fluid == net.minecraft.world.level.material.Fluids.EMPTY) return -1;
                 template = FluidResource.of(fluid);
                 available = availableXpFluid();
                 limit = PylonXpFluids.millibuckets(limit);
@@ -472,7 +471,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         Fluid preferred = preferredXpFluid();
         long moved = exportLiquidXp(other, preferred, limit);
         if (moved > 0) return moved;
-        for (Fluid fluid : PylonXpFluids.available()) {
+        for (Fluid fluid : PylonXpFluids.externalSources()) {
             if (fluid == preferred) continue;
             moved = exportLiquidXp(other, fluid, limit);
             if (moved > 0) return moved;
@@ -615,7 +614,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             return getAmountAsLong(index) == 0 ? FluidResource.EMPTY : FluidResource.of(preferredXpFluid());
         }
         @Override public long getAmountAsLong(int index) {
-            return index == 0 && isXpTank() && !PylonXpFluids.available().isEmpty() ? availableXpFluid() : 0;
+            return index == 0 && isXpTank() ? availableXpFluid() : 0;
         }
         @Override public long getCapacityAsLong(int index, FluidResource resource) {
             return index == 0 && isXpTank() && (resource.isEmpty() || isValid(index, resource)) ? xpFluidCapacity() : 0;
