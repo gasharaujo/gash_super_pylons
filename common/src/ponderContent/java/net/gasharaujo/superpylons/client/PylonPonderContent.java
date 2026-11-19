@@ -65,7 +65,7 @@ final class PylonPonderContent {
                 "Installing a higher tier returns the older one. Sneak and right-click with an empty hand to remove the rightmost upgrade.",
                 Action.RIGHT, Focus.PYLON, new Display("speed_upgrade_2", "", 0)),
             new Step("super_upgrade",
-                "Removal order starts with Super, then the equipped tool or weapon, Creative Storage, Filter, Speed, Quantity and Range.",
+                "Removal order starts with Super, then the equipped tool or weapon, Creative Storage, Redstone, Redstone Level, Filter, Speed, Quantity and Range.",
                 Action.HOLD, Focus.PYLON, null),
             new Step("extract_item_upgrade",
                 "Insert and Extract follow in item, fluid, energy and XP order, before their storage upgrades. Then remove Energy and Chunk Loader.",
@@ -142,7 +142,7 @@ final class PylonPonderContent {
         )),
         new Chapter("utility_storage", "Utility: Storage and Control",
             items("fluid_storage_upgrade xp_tank_upgrade filter_upgrade void_upgrade " +
-                "chunk_loader_upgrade super_upgrade"), Layout.SINGLE, List.of(
+                "chunk_loader_upgrade"), Layout.SINGLE, List.of(
             new Step("fluid_storage_upgrade",
                 "Fluid Storage holds one fluid and starts at 32 buckets. Empty the tank before removing it.",
                 Action.HOLD, Focus.PYLON, null),
@@ -249,8 +249,71 @@ final class PylonPonderContent {
                 "The result goes to the working-side chest. If it waits in the core, hit the main pylon to collect it.",
                 Action.HOLD, Focus.CHEST, null),
             new Step("super_upgrade",
-                "Super keeps an enchanted book in the item auxiliary for repeated use. Each operation still spends XP.",
+                "With Super, put a plain book in the main pylon to copy the linked enchanted book. The donor stays and the copy costs XP.",
                 Action.HOLD, Focus.PYLON, new Display("anvil_upgrade,super_upgrade", "", 0))
+        )),
+        new Chapter("grindstone", "Advanced Workshops — Grindstone",
+            items("grindstone_upgrade"), Layout.WORKSHOP, List.of(
+            new Step("grindstone_upgrade",
+                "Install Grindstone. Link an XP Tank and an item pylon within five blocks using the Wrench in Bind mode.",
+                Action.RIGHT, Focus.PYLON, new Display("grindstone_upgrade", "", 0)),
+            new Step("xp_tank_upgrade",
+                "Grindstone removes ordinary enchantments from the item in its core and sends the XP to the linked tank.",
+                Action.HOLD, Focus.XP, new Display("xp_tank_upgrade", "", 0)),
+            new Step("super_upgrade",
+                "Super puts the enchantments into books and generates no XP. Each Quantity tier adds one enchantment per book.",
+                Action.RIGHT, Focus.PYLON, new Display("grindstone_upgrade,super_upgrade", "", 0)),
+            new Step("minecraft:book",
+                "If the server requires blank books, put them in the item auxiliary. Collect the results from the output chest or hit the main pylon.",
+                Action.HOLD, Focus.OTHER, null)
+        )),
+        new Chapter("redstone_level", "Upgrades — Redstone Level",
+            items("redstone_level_upgrade"), Layout.SINGLE, List.of(
+            new Step("minecraft:comparator",
+                "Craft Redstone Level with an Upgrade Base and a Comparator.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("redstone_level_upgrade",
+                "Signal strength rises from 0 to 15 as the pylon fills.",
+                Action.RIGHT, Focus.PYLON, new Display("redstone_level_upgrade", "minecraft:iron_ingot", 1024))
+        )),
+        new Chapter("redstone", "Upgrades — Redstone",
+            items("redstone_upgrade"), Layout.SINGLE, List.of(
+            new Step("minecraft:redstone",
+                "Craft Redstone with an Upgrade Base and redstone dust.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("redstone_upgrade",
+                "A powered pylon pauses automation. Its capacity and storage types still work.",
+                Action.RIGHT, Focus.PYLON, new Display("redstone_upgrade", "minecraft:iron_ingot", 32)),
+            new Step("minecraft:lever",
+                "With both Redstone upgrades installed, the working side is the output. Supply power from another side.",
+                Action.HOLD, Focus.PYLON, null)
+        )),
+        new Chapter("super", "Upgrades — Super",
+            items("super_upgrade"), Layout.SINGLE, List.of(
+            new Step("super_upgrade",
+                "Super unlocks extra functions on compatible upgrades.",
+                Action.RIGHT, Focus.PYLON, new Display("super_upgrade", "", 0)),
+            new Step("minecraft:enchanted_book",
+                "Super Anvil copies a donor book. Super Grindstone puts enchantments in books instead of creating XP.",
+                Action.HOLD, Focus.PYLON, null),
+            new Step("pylon_hub",
+                "A Super HUB can connect to loaded pylons in any dimension.",
+                Action.HOLD, Focus.PYLON, null)
+        )),
+        new Chapter("pylon_hub", "Pylon HUB — Linked Storage",
+            items("pylon_hub"), Layout.PAIR, List.of(
+            new Step("wrench",
+                "In Bind mode, sneak and right-click the HUB to select it.",
+                Action.SNEAK_RIGHT, Focus.PYLON, null),
+            new Step("wrench",
+                "Right-click a pylon within 16 blocks to link it. Click again to remove the link.",
+                Action.RIGHT, Focus.OTHER, new Display("", "minecraft:iron_ingot", 32)),
+            new Step("range_upgrade_1",
+                "Range adds 16 blocks per tier. Super permits links to loaded pylons at any distance and in any dimension.",
+                Action.RIGHT, Focus.PYLON, new Display("range_upgrade_1", "", 0)),
+            new Step("",
+                "Right-click with an empty hand to see totals. Connected readers and cables access the linked pylons directly.",
+                Action.RIGHT, Focus.PYLON, null)
         )),
         new Chapter("automation", "Upgrades: Automation",
             items("insert_item_upgrade insert_fluid_upgrade insert_energy_upgrade insert_xp_upgrade " +

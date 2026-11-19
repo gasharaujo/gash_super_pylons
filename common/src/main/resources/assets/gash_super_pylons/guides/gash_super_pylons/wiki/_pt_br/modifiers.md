@@ -4,37 +4,6 @@ navigation:
   icon: gash_super_pylons:speed_upgrade_1
   position: 1
   parent: upgrades.md
-item_ids:
-  - gash_super_pylons:speed_upgrade_1
-  - gash_super_pylons:speed_upgrade_2
-  - gash_super_pylons:speed_upgrade_3
-  - gash_super_pylons:speed_upgrade_4
-  - gash_super_pylons:speed_upgrade_5
-  - gash_super_pylons:speed_upgrade_6
-  - gash_super_pylons:quantity_upgrade_1
-  - gash_super_pylons:quantity_upgrade_2
-  - gash_super_pylons:quantity_upgrade_3
-  - gash_super_pylons:quantity_upgrade_4
-  - gash_super_pylons:quantity_upgrade_5
-  - gash_super_pylons:quantity_upgrade_6
-  - gash_super_pylons:range_upgrade_1
-  - gash_super_pylons:range_upgrade_2
-  - gash_super_pylons:range_upgrade_3
-  - gash_super_pylons:range_upgrade_4
-  - gash_super_pylons:range_upgrade_5
-  - gash_super_pylons:range_upgrade_6
-  - gash_super_pylons:storage_upgrade_1
-  - gash_super_pylons:storage_upgrade_2
-  - gash_super_pylons:storage_upgrade_3
-  - gash_super_pylons:storage_upgrade_4
-  - gash_super_pylons:storage_upgrade_5
-  - gash_super_pylons:storage_upgrade_6
-  - gash_super_pylons:energy_upgrade_1
-  - gash_super_pylons:energy_upgrade_2
-  - gash_super_pylons:energy_upgrade_3
-  - gash_super_pylons:energy_upgrade_4
-  - gash_super_pylons:energy_upgrade_5
-  - gash_super_pylons:energy_upgrade_6
 ---
 
 # Modificadores

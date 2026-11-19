@@ -4,23 +4,6 @@ navigation:
   icon: gash_super_pylons:harvester_upgrade
   position: 2
   parent: upgrades.md
-item_ids:
-  - gash_super_pylons:fluid_storage_upgrade
-  - gash_super_pylons:xp_tank_upgrade
-  - gash_super_pylons:clicker_upgrade
-  - gash_super_pylons:fertilizer_upgrade
-  - gash_super_pylons:harvester_upgrade
-  - gash_super_pylons:break_upgrade
-  - gash_super_pylons:filter_upgrade
-  - gash_super_pylons:magnet_upgrade
-  - gash_super_pylons:planter_upgrade
-  - gash_super_pylons:placer_upgrade
-  - gash_super_pylons:dropper_upgrade
-  - gash_super_pylons:void_upgrade
-  - gash_super_pylons:chunk_loader_upgrade
-  - gash_super_pylons:super_upgrade
-  - gash_super_pylons:smelt_upgrade
-  - gash_super_pylons:pulverize_upgrade
 ---
 
 # Utilidades
@@ -60,3 +43,5 @@ Ambos enviam os resultados ao inventário no lado de trabalho e custam **1.000 F
 - **Magnet** deposita diretamente no inventário de saída. **Placer** preenche espaços de um plano três blocos abaixo. **Dropper** funciona como ejetor e mira os projéteis na direção de trabalho.
 
 Veja [Oficinas avançadas](workshops.md) para as combinações de Super com Encantador e Bigorna.
+
+O [upgrade Super](super.md) também altera a [Bigorna](anvil.md), o [Rebolo](grindstone.md), o [Encantador](enchanter.md) e o [HUB](pylon_hub.md).

@@ -32,12 +32,18 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
             PylonDecorationRenderer.render(entity, ticks, pose, buffers, light, overlay);
             renderStamps(entity, pose, buffers, light, overlay);
             if (entity.hasSuperUpgrade()) renderStars(entity, ticks, pose, buffers, overlay);
+            if (entity.isHub()) {
+                renderHub(entity, ticks, pose, buffers, light, overlay);
+                return;
+            }
             PylonUpgrade auxiliary = entity.auxiliaryMode();
             if (auxiliary == PylonUpgrade.ENCHANTING) {
                 workshop.renderBook(ticks, partialTick, pose, buffers, light, overlay);
                 return;
             }
-            if (auxiliary == PylonUpgrade.ANVIL) workshop.renderOrbs(ticks, pose, buffers, light, overlay);
+            if (auxiliary == PylonUpgrade.ANVIL || auxiliary == PylonUpgrade.GRINDSTONE) {
+                workshop.renderOrbs(auxiliary == PylonUpgrade.GRINDSTONE ? -ticks : ticks, pose, buffers, light, overlay);
+            }
             if (core.renderFluid(entity, pose, buffers, ticks, light, overlay)) return;
             ItemStack stored = entity.getStoredItem();
             if (stored.isEmpty()) {
@@ -56,6 +62,20 @@ public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonB
     @Override
     public boolean shouldRenderOffScreen(SuperPylonBlockEntity entity) {
         return !entity.outgoingWires().isEmpty();
+    }
+
+    private static void renderHub(SuperPylonBlockEntity entity, float ticks, PoseStack pose,
+                                  MultiBufferSource buffers, int light, int overlay) {
+        var renderer = Minecraft.getInstance().getItemRenderer();
+        var center = new ItemStack(Items.ENDER_CHEST);
+        var chest = new ItemStack(Items.CHEST);
+        for (int orbit = -1; orbit < 4; orbit++) {
+            pose.pushPose();
+            PylonAnimation.placeHubChest(pose, ticks, orbit);
+            renderer.renderStatic(orbit == -1 ? center : chest, ItemDisplayContext.FIXED,
+                light, overlay, pose, buffers, entity.getLevel(), orbit);
+            pose.popPose();
+        }
     }
 
     private static void renderStars(SuperPylonBlockEntity entity, float ticks, PoseStack pose,

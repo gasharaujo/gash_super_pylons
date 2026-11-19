@@ -1,0 +1,7 @@
+{
+  "parent": "gash_super_pylons:block/super_pylon",
+  "textures": {
+    "frame": "minecraft:block/reinforced_deepslate_side",
+    "particle": "minecraft:block/reinforced_deepslate_side"
+  }
+}

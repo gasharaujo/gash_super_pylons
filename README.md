@@ -26,6 +26,14 @@ O frame permanece imóvel. O core mantém sua inclinação original, centralizad
 
 A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e os requisitos de ferramenta do bloco de ferro. Use uma picareta de pedra ou superior para recuperá-lo.
 
+## Novidades da 1.2.0
+
+- **Pylon HUB** expõe os itens, fluidos, XP e FE de pylons vinculados. A Chave vincula a 16 blocos, mais 16 por nível de Alcance. Super permite vincular em qualquer dimensão com os chunks carregados. Clique com a mão vazia para ver os totais. No NeoForge, o Storage Bus do AE2 acessa itens e fluidos pela API de armazenamento ME.
+- **Redstone** usa Base + Pó de Redstone e pausa a automação sob sinal. **Nível de Redstone** usa Base + Comparador e emite sinal proporcional ao armazenamento.
+- **Rebolo** usa Base + Rebolo. Vincule um Tanque de XP e um auxiliar de itens. O Rebolo envia a XP ao tanque. Com Super, guarda os encantamentos em livros, com um encantamento extra por nível de Quantidade. A opção de servidor `grindstoneConsumesBooks` vem desativada.
+- **Bigorna com Super** aceita um livro em branco para copiar o livro encantado do auxiliar, usando XP e preservando o doador.
+- O GuideME tem uma página por upgrade e agrupa os níveis na mesma página. O Ponder inclui cenas para HUB, Rebolo, Redstone, Nível de Redstone e Super.
+
 ### Receita e armazenamento
 
 Fabrique com **8 barras de ferro** (`minecraft:iron_ingot`) ao redor de **1 bloco de tijolos de pedra talhados** (`minecraft:chiseled_stone_bricks`), produzindo 1 Super Pylon.

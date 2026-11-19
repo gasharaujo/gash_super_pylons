@@ -1,6 +1,8 @@
 package net.gasharaujo.superpylons.block;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import net.minecraft.core.component.DataComponents;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -58,7 +60,18 @@ final class PylonEnchanting {
     }
 
     static PylonWorkshopResult anvil(ServerPlayer player, ItemStack input, ItemStack donor) {
+        return anvil(player, input, donor, false);
+    }
+
+    static PylonWorkshopResult anvil(ServerPlayer player, ItemStack input, ItemStack donor, boolean superUpgrade) {
         if (input.isEmpty() || donor.isEmpty()) return null;
+        if (superUpgrade && input.is(Items.BOOK) && donor.is(Items.ENCHANTED_BOOK)) {
+            var donorEnchantments = enchantments(donor);
+            if (donorEnchantments.isEmpty()) return null;
+            long cost = donorEnchantments.entrySet().stream()
+                .mapToLong(enchant -> (long) bookCost(enchant.getKey()) * enchant.getValue()).sum();
+            return new PylonWorkshopResult(donor.copyWithCount(1), cost);
+        }
         boolean previousCreative = player.getAbilities().instabuild;
         ItemStack vanilla;
         try {
@@ -75,7 +88,7 @@ final class PylonEnchanting {
         var combination = PylonEnchantmentRules.combine(enchantments(input),
             donor.is(Items.ENCHANTED_BOOK) || donor.is(input.getItem()) ? enchantments(donor) : Map.<Holder<Enchantment>, Integer>of(),
             e -> book || e.value().canEnchant(input), Enchantment::areCompatible,
-            e -> e.value().getMaxLevel(), e -> PylonEnchantmentRules.rarity(e.value().getWeight()));
+            e -> e.value().getMaxLevel(), PylonEnchanting::bookCost);
         boolean repaired = !vanilla.isEmpty() && vanilla.getDamageValue() < input.getDamageValue();
         if (!combination.changed() && !repaired) return null;
         ItemStack output = vanilla.isEmpty() ? input.copyWithCount(1) : vanilla.copyWithCount(1);
@@ -83,6 +96,52 @@ final class PylonEnchanting {
         combination.enchantments().forEach(enchants::set);
         EnchantmentHelper.setEnchantments(output, enchants.toImmutable());
         return new PylonWorkshopResult(output, combination.levels());
+    }
+
+    private static int bookCost(Holder<Enchantment> e) { return PylonEnchantmentRules.rarity(e.value().getWeight()); }
+
+    static PylonGrindstoneResult grindstone(ServerLevel level, ItemStack input, boolean capture, int perBook) {
+        var original = enchantments(input);
+        Map<Holder<Enchantment>, Integer> kept = new LinkedHashMap<>();
+        Map<Holder<Enchantment>, Integer> captured = new LinkedHashMap<>();
+        List<ItemStack> books = new ArrayList<>();
+        int cost = 0;
+        for (var enchant : original.entrySet()) {
+            var enchantment = enchant.getKey();
+            if (!capture && enchantment.is(EnchantmentTags.CURSE)) {
+                kept.put(enchantment, enchant.getValue());
+            } else if (capture) {
+                captured.put(enchantment, enchant.getValue());
+                if (captured.size() == perBook) {
+                    books.add(capturedBook(captured));
+                    captured.clear();
+                }
+            } else {
+                cost += enchantment.value().getMinCost(enchant.getValue());
+            }
+        }
+        if (!captured.isEmpty()) books.add(capturedBook(captured));
+        if (original.size() == kept.size()) return null;
+        ItemStack output = input.is(Items.ENCHANTED_BOOK) && kept.isEmpty() ?
+            input.transmuteCopy(Items.BOOK, 1) : input.copyWithCount(1);
+        output.remove(DataComponents.REPAIR_COST);
+        if (output.is(Items.BOOK)) output.remove(DataComponents.STORED_ENCHANTMENTS);
+        setEnchantments(output, kept);
+        int half = (cost + 1) / 2;
+        int experience = half <= 0 ? 0 : half + level.getRandom().nextInt(half);
+        return new PylonGrindstoneResult(output, books, experience);
+    }
+
+    private static ItemStack capturedBook(Map<Holder<Enchantment>, Integer> enchantments) {
+        var book = new ItemStack(Items.ENCHANTED_BOOK);
+        setEnchantments(book, enchantments);
+        return book;
+    }
+
+    private static void setEnchantments(ItemStack stack, Map<Holder<Enchantment>, Integer> enchants) {
+        var mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        enchants.forEach(mutable::set);
+        EnchantmentHelper.setEnchantments(stack, mutable.toImmutable());
     }
 
     private static Map<Holder<Enchantment>, Integer> enchantments(ItemStack stack) {

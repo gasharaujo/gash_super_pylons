@@ -51,6 +51,36 @@ public final class PylonAnimation {
         pose.scale(0.19F, 0.19F, 0.19F);
     }
 
+    static void placeHubChest(PoseStack pose, float ticks, int orbit) {
+        if (orbit == -1) {
+            pose.translate(0.5, 0.5, 0.5);
+            pose.mulPose(Axis.YP.rotationDegrees(-ticks * 360 / ROTATION_TICKS));
+            pose.scale(0.35F, 0.35F, 0.35F);
+            return;
+        }
+        double phase = switch (orbit) {
+            case 0 -> 0.5;
+            case 2 -> 0.25;
+            case 3 -> 0.77;
+            default -> 0;
+        };
+        double angle = Math.PI * (ticks * 2 / ROTATION_TICKS + phase);
+        double sin = Math.sin(angle);
+        double cos = Math.cos(angle);
+        double x = 0, y = 0, z = 0;
+        double radius = 0.28;
+        switch (orbit) {
+            case 0 -> { x = cos; z = sin; }
+            case 1 -> { y = -cos; z = sin; }
+            case 2 -> { x = cos * 0.7071; z = sin; y = cos * 0.7071; }
+            case 3 -> { x = -cos * 0.7071; z = -sin; y = cos * 0.7071; }
+            default -> throw new IllegalArgumentException("Unknown hub orbit: " + orbit);
+        }
+        pose.translate(0.5 + radius * x, 0.5 + radius * y, 0.5 + radius * z);
+        pose.mulPose(Axis.YP.rotationDegrees(orbit * 90));
+        pose.scale(0.17F, 0.17F, 0.17F);
+    }
+
     static Vec3 xpOrbit(float ticks, int orb) {
         double angle = ticks * Math.PI * 2 / ROTATION_TICKS * (orb + 2) + orb * 2.4;
         double radius = 0.41 + 0.09 * Math.sin(angle * 2 + orb);

@@ -6,6 +6,7 @@ import net.minecraft.world.phys.AABB;
 
 public final class PylonFrame {
     public static final BooleanProperty PAINTED = BooleanProperty.create("painted");
+    public static final BooleanProperty EMITTING = BooleanProperty.create("emitting");
     public static final List<AABB> BARS = List.of(
         box(0, 0, 0, 2, 2, 16), box(14, 0, 0, 16, 2, 16),
         box(0, 14, 0, 2, 16, 16), box(14, 14, 0, 16, 16, 16),

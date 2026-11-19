@@ -44,6 +44,7 @@ public enum PylonUpgrade {
     WATER_GENERATOR("water_generator_upgrade", Slot.GENERATOR, 1, 0, null, () -> Fluids.WATER),
     LAVA_GENERATOR("lava_generator_upgrade", Slot.GENERATOR, 1, 0, null, () -> Fluids.LAVA),
     ANVIL("anvil_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    GRINDSTONE("grindstone_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     ENCHANTING("enchanting_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     CLICKER("clicker_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     XP_TANK("xp_tank_upgrade", Slot.SPECIALTY, 1, 0, null, null),
@@ -56,6 +57,8 @@ public enum PylonUpgrade {
     FERTILIZER("fertilizer_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     HARVESTER("harvester_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     BREAK("break_upgrade", Slot.SPECIALTY, 1, 0, null, null),
+    REDSTONE("redstone_upgrade", Slot.REDSTONE, 1, 0, null, null),
+    REDSTONE_LEVEL("redstone_level_upgrade", Slot.REDSTONE_LEVEL, 1, 0, null, null),
     FILTER("filter_upgrade", Slot.FILTER, 1, 0, null, null),
     MAGNET("magnet_upgrade", Slot.SPECIALTY, 1, 0, null, null),
     PLANTER("planter_upgrade", Slot.SPECIALTY, 1, 0, null, null),
@@ -78,7 +81,7 @@ public enum PylonUpgrade {
 
     // Transfers are removed before resource storage, and generators before processing.
     public enum Slot {
-        SUPER, CREATIVE, FILTER, SPEED, QUANTITY, RANGE, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
+        SUPER, CREATIVE, REDSTONE, REDSTONE_LEVEL, FILTER, SPEED, QUANTITY, RANGE, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER,
         ENERGY, CHUNK_LOADER, GENERATOR, PROCESSING, SPECIALTY, STORAGE
     }
 
@@ -140,7 +143,7 @@ public enum PylonUpgrade {
             case STORAGE, SPEED, QUANTITY, RANGE, ENERGY -> "modifier";
             case PROCESSING -> "processing";
             case GENERATOR -> "generator";
-            case FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER, CHUNK_LOADER, SUPER, CREATIVE -> "utility";
+            case REDSTONE, REDSTONE_LEVEL, FILTER, ITEM_TRANSFER, FLUID_TRANSFER, ENERGY_TRANSFER, XP_TRANSFER, CHUNK_LOADER, SUPER, CREATIVE -> "utility";
             case SPECIALTY -> {
                 if (this == FLUID_STORAGE || this == XP_TANK) yield "type";
                 yield "utility";
@@ -156,6 +159,8 @@ public enum PylonUpgrade {
         return this == FLUID_STORAGE || this == XP_TANK ||
             this == FERTILIZER || this == HARVESTER || this == VOID;
     }
+
+    public boolean isWorkshop() { return this == ANVIL || this == ENCHANTING || this == GRINDSTONE; }
 
     public boolean isEnergy() { return slot == Slot.ENERGY; }
 

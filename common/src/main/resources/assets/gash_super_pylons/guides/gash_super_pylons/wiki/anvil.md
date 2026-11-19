@@ -27,4 +27,6 @@ For each enchantment on the result, multiply its level by its rarity multiplier 
 
 Install **Super** on the main pylon. An enchanted book in the item auxiliary stays in its core after use. The Anvil still spends XP for each operation and consumes other donor items or repair materials normally.
 
+Put a plain book in the main pylon to copy the enchanted book in the linked auxiliary. The copy keeps the donor's enchantments and still costs XP.
+
 <RecipeFor id="gash_super_pylons:anvil_upgrade" />

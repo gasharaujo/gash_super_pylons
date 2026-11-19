@@ -31,7 +31,7 @@ public final class PylonProbeProvider implements IProbeInfoProvider {
     @Override
     public void addProbeInfo(ProbeMode mode, IProbeInfo info, Player player, Level level,
                              BlockState state, IProbeHitData hit) {
-        if (state.is(SuperPylonsMod.SUPER_PYLON.get()) &&
+        if ((state.is(SuperPylonsMod.SUPER_PYLON.get()) || state.is(SuperPylonsMod.PYLON_HUB.get())) &&
             level.getBlockEntity(hit.getPos()) instanceof SuperPylonBlockEntity pylon) {
             PylonTooltip.append(pylon, info::text);
         }

@@ -16,6 +16,7 @@ sourceSets.main {
 sourceSets.test.java.srcDir '../common/src/test/java'
 
 repositories {
+    mavenCentral { content { includeModule 'org.appliedenergistics', 'appliedenergistics2' } }
     maven {
         url = 'https://maven.createmod.net'
         content {
@@ -41,6 +42,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly('org.appliedenergistics:appliedenergistics2:26.1.13-beta:api') { transitive = false }
     compileOnly('net.createmod.ponder:ponder-neoforge:1.0.52+mc26.1.2') { transitive = false }
     compileOnly('net.createmod.catnip:catnip-neoforge:1.0.52+mc26.1.2') { transitive = false }
     compileOnly 'mezz.jei:jei-26.1.2-common-api:29.47.0.110'

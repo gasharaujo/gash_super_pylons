@@ -57,7 +57,11 @@ public final class PylonContents {
     }
 
     int add(ItemStack template, int amount, long capacity) {
-        int accepted = insertLimit(template, amount, capacity);
+        return (int) add(template, (long) amount, capacity);
+    }
+
+    long add(ItemStack template, long amount, long capacity) {
+        long accepted = insertLimit(template, amount, capacity);
         if (accepted == 0) return 0;
         if (count == 0) item = template.copyWithCount(1);
         count += accepted;
@@ -65,9 +69,13 @@ public final class PylonContents {
     }
 
     int insertLimit(ItemStack template, int amount, long capacity) {
+        return (int) insertLimit(template, (long) amount, capacity);
+    }
+
+    long insertLimit(ItemStack template, long amount, long capacity) {
         if (template.isEmpty() || amount <= 0 || count >= capacity ||
             (count > 0 && !PylonItemRules.exactlyEqual(item, template))) return 0;
-        return (int) Math.min(amount, capacity - count);
+        return Math.min(amount, capacity - count);
     }
 
     long moveTo(PylonContents target, long maximum, long capacity) {

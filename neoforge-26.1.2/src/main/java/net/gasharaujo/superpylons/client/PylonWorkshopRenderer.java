@@ -33,9 +33,9 @@ final class PylonWorkshopRenderer {
         pose.popPose();
     }
 
-    void submitOrbs(SuperPylonRenderer.State pylon, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
+    void submitOrbs(float ticks, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
         for (int orb = 0; orb < PylonAnimation.XP_ORB_COUNT; orb++) {
-            var point = PylonAnimation.xpOrbit(pylon.ticks, orb);
+            var point = PylonAnimation.xpOrbit(ticks, orb);
             pose.pushPose();
             pose.translate(point.x, point.y, point.z);
             pose.mulPose(camera.orientation);

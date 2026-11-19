@@ -9,6 +9,7 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 
@@ -31,12 +32,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public final class SuperPylonBlock extends BaseEntityBlock {
     public SuperPylonBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(PylonFrame.PAINTED, false));
+        registerDefaultState(stateDefinition.any().setValue(PylonFrame.PAINTED, false).setValue(PylonFrame.EMITTING, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(PylonFrame.PAINTED);
+        builder.add(PylonFrame.PAINTED, PylonFrame.EMITTING);
     }
 
     @Override
@@ -102,6 +103,14 @@ public final class SuperPylonBlock extends BaseEntityBlock {
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
         return level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon ? pylon.comparatorSignal() : 0;
+    }
+
+    @Override
+    public boolean isSignalSource(BlockState state) { return state.getValue(PylonFrame.EMITTING); }
+
+    @Override
+    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        return level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon ? pylon.redstoneSignal(direction.getOpposite()) : 0;
     }
 
     @Override

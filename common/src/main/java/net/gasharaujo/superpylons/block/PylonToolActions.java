@@ -28,6 +28,7 @@ public final class PylonToolActions {
 
     static void use(Kind kind, PylonBlockEntityBase pylon, Player player, ItemStack stack, String saved, Consumer<String> save) {
         if (!(pylon.getLevel() instanceof ServerLevel level)) return;
+        if (pylon.isHub() && (kind != Kind.WRENCH || isDirectionMode(saved))) return;
         switch (kind) {
             case PAINT -> {
                 if (player.getOffhandItem().getItem() instanceof BlockItem block) {
@@ -111,16 +112,20 @@ public final class PylonToolActions {
     private static void useWrench(PylonBlockEntityBase pylon, Player player, ServerLevel level,
                                   String saved, Consumer<String> save) {
         if (player.isShiftKeyDown()) {
-            if (pylon.isWorkshop()) {
+            if (pylon.isWorkshop() || pylon.isHub()) {
                 save.accept(level.dimension() + "|" + pylon.getBlockPos().asLong() + "|" + pylon.wireId());
-                player.sendSystemMessage(Component.translatable("message.gash_super_pylons.workshop_select"));
+                player.sendSystemMessage(Component.translatable("message.gash_super_pylons." +
+                    (pylon.isHub() ? "hub_select" : "workshop_select")));
             }
             return;
         }
         String[] fields = saved.split("\\|", 3);
         BlockPos start = wireStart(fields);
-        if (start != null && fields[0].equals(level.dimension().toString()) && level.hasChunkAt(start) &&
-            level.getBlockEntity(start) instanceof PylonBlockEntityBase source && source.wireId().toString().equals(fields[2]) &&
+        if (start == null) return;
+        ServerLevel selected = PylonHub.findLevel(level, fields[0]);
+        if (selected != null && selected.hasChunkAt(start) &&
+            selected.getBlockEntity(start) instanceof PylonBlockEntityBase source &&
+            source.wireId().toString().equals(fields[2]) && (selected == level || source.isHub()) &&
             source.linkAuxiliary(pylon, player)) save.accept("");
     }
 
