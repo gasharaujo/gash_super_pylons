@@ -636,7 +636,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 iterator.remove();
                 target.wireInputs.remove(new PylonWire(wire.type(), worldPosition, wireId));
                 target.sync();
-                player.getInventory().placeItemBackInInventory(wire.type().itemStack());
+                PylonItemRules.returnToInventory(player, wire.type().itemStack());
                 removed = true;
             }
         }
@@ -1125,7 +1125,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 ItemStack previous = furnaceAttachment;
                 furnaceAttachment = held.copyWithCount(1);
                 held.shrink(1);
-                if (!previous.isEmpty()) player.getInventory().placeItemBackInInventory(previous);
+                if (!previous.isEmpty()) PylonItemRules.returnToInventory(player, previous);
                 sync();
             }
             return true;
@@ -1153,7 +1153,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             return;
         }
         held.shrink(1);
-        player.getInventory().placeItemBackInInventory(new ItemStack(returned));
+        PylonItemRules.returnToInventory(player, new ItemStack(returned));
         sync();
     }
 
@@ -1168,7 +1168,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             ItemStack previous = breakTool;
             breakTool = held.copyWithCount(1);
             held.shrink(1);
-            if (!previous.isEmpty()) player.getInventory().placeItemBackInInventory(previous);
+            if (!previous.isEmpty()) PylonItemRules.returnToInventory(player, previous);
             sync();
         }
         return true;
@@ -1287,7 +1287,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (previousSpecialty != specialty) {
             contents.clearWorkshopOutput();
             clearWorkshopLinks();
-            for (ItemStack shelf : shelves) player.getInventory().placeItemBackInInventory(shelf);
+            for (ItemStack shelf : shelves) PylonItemRules.returnToInventory(player, shelf);
             shelves.clear();
         }
         if (!hasFilter()) {
@@ -1318,7 +1318,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         if (upgrade == PylonUpgrade.ENCHANTING && !shelves.isEmpty()) {
             ItemStack shelf = shelves.remove(0);
-            player.getInventory().placeItemBackInInventory(shelf);
+            PylonItemRules.returnToInventory(player, shelf);
             sync();
             return true;
         }
@@ -1375,14 +1375,14 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         if (furnaceAttachment.isEmpty()) return;
         ItemStack removed = furnaceAttachment;
         furnaceAttachment = ItemStack.EMPTY;
-        player.getInventory().placeItemBackInInventory(removed);
+        PylonItemRules.returnToInventory(player, removed);
     }
 
     private void giveBackBreakTool(Player player) {
         if (breakTool.isEmpty()) return;
         ItemStack removed = breakTool;
         breakTool = ItemStack.EMPTY;
-        player.getInventory().placeItemBackInInventory(removed);
+        PylonItemRules.returnToInventory(player, removed);
     }
 
     private void warn(Player player, String key) {
@@ -1390,7 +1390,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     }
 
     private static void giveUpgrade(Player player, PylonUpgrade upgrade) {
-        player.getInventory().placeItemBackInInventory(upgradeStack(upgrade));
+        PylonItemRules.returnToInventory(player, upgradeStack(upgrade));
     }
 
     private static ItemStack upgradeStack(PylonUpgrade upgrade) {
@@ -1405,7 +1405,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
         if (removed.isEmpty()) return;
         sync();
-        player.getInventory().placeItemBackInInventory(removed);
+        PylonItemRules.returnToInventory(player, removed);
     }
 
     public void tick(ServerLevel server) {

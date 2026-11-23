@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": "minecraft:gold_ingot",
+    "M": "minecraft:redstone",
+    "N": "gash_super_pylons:energy_upgrade_2"
+  },
+  "result": {
+    "id": "gash_super_pylons:energy_upgrade_3",
+    "count": 1
+  }
+}

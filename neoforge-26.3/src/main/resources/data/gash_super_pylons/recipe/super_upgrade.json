@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SnS",
+    "nNn",
+    "SnS"
+  ],
+  "key": {
+    "S": "minecraft:nether_star",
+    "n": "minecraft:netherite_ingot",
+    "N": "gash_super_pylons:upgrade_base"
+  },
+  "result": {
+    "id": "gash_super_pylons:super_upgrade",
+    "count": 1
+  }
+}

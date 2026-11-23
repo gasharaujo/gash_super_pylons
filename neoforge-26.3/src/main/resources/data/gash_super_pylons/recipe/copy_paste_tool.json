@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "gash_super_pylons:upgrade_base"
+  ],
+  "result": {
+    "id": "gash_super_pylons:copy_paste_tool",
+    "count": 1
+  }
+}

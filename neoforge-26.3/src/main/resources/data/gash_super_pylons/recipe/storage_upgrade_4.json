@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": "minecraft:diamond_block",
+    "M": "minecraft:chest",
+    "N": "gash_super_pylons:storage_upgrade_3"
+  },
+  "result": {
+    "id": "gash_super_pylons:storage_upgrade_4",
+    "count": 1
+  }
+}

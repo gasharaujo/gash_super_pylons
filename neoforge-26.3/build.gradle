@@ -1,0 +1,127 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+version = mod_version
+group = mod_group_id
+
+sourceSets.main {
+    java.srcDir '../common/src/main/java'
+    java.srcDir '../common/src/jei/java'
+    resources.srcDir '../common/src/main/resources'
+}
+
+sourceSets.test.java.srcDir '../common/src/test/java'
+
+repositories {
+    maven {
+        url = 'https://maven.blamejared.com'
+        content { includeGroup 'mezz.jei' }
+    }
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeModule 'maven.modrinth', 'jade'
+            includeModule 'maven.modrinth', 'the-one-probe'
+            includeModule 'maven.modrinth', 'ae2'
+            includeModule 'maven.modrinth', 'wthit'
+        }
+    }
+}
+
+dependencies {
+    compileOnly('maven.modrinth:ae2:PDPQ4WfW') { transitive = false }
+    compileOnly 'mezz.jei:jei-26.3-common-api:31.14.0.72'
+    compileOnly 'mezz.jei:jei-26.3-neoforge-api:31.14.0.72'
+    compileOnly 'maven.modrinth:jade:dVB8U7Td'
+    compileOnly 'maven.modrinth:wthit:Id8LEy2N'
+    compileOnly 'maven.modrinth:the-one-probe:VhuLm6OA'
+    testImplementation(enforcedPlatform('org.junit:junit-bom:5.14.1'))
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation "net.neoforged:testframework:${neo_version}"
+}
+
+test { useJUnitPlatform() }
+
+base {
+    archivesName = "${mod_id}-neoforge-${minecraft_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+neoForge {
+    version = neo_version
+
+
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('run-client')
+        }
+        server {
+            server()
+            gameDirectory = project.file('run-server')
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+neoForge.unitTest {
+    enable()
+    testedMod = neoForge.mods.gash_super_pylons
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+def grindstoneModel = 'assets/gash_super_pylons/models/item/grindstone_upgrade.json'
+def sharedGrindstoneModel = file("../common/src/main/resources/${grindstoneModel}")
+processResources {
+    filesMatching(grindstoneModel) { details ->
+        if (details.file == sharedGrindstoneModel) details.exclude()
+    }
+    def properties = [
+        mod_id: mod_id,
+        mod_name: mod_name,
+        mod_version: mod_version,
+        mod_authors: mod_authors,
+        mod_license: mod_license,
+        mod_description: mod_description,
+        minecraft_version: minecraft_version,
+        neo_version: neo_version
+    ]
+    inputs.properties properties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand properties
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes(
+            'Implementation-Title': mod_name,
+            'Implementation-Version': mod_version,
+            'Implementation-Vendor': mod_authors
+        )
+    }
+}
+
+def ponderJar = providers.gradleProperty('ponderJar')
+if (ponderJar.isPresent()) {
+    sourceSets.main.java.srcDirs 'src/ponder/java', '../common/src/ponderContent/java'
+    dependencies {
+        compileOnly files(ponderJar)
+        if (providers.gradleProperty('catnipJar').isPresent()) {
+            compileOnly files(providers.gradleProperty('catnipJar'))
+        }
+    }
+}

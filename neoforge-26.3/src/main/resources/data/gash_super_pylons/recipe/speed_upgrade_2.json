@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": "minecraft:iron_ingot",
+    "M": "minecraft:sugar",
+    "N": "gash_super_pylons:speed_upgrade_1"
+  },
+  "result": {
+    "id": "gash_super_pylons:speed_upgrade_2",
+    "count": 1
+  }
+}

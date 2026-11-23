@@ -54,7 +54,7 @@ final class PylonFarming {
             if (stage.getPossibleValues().contains(next)) return level.setBlockAndUpdate(pos, state.setValue(stage, next));
         }
         if (state.getBlock() instanceof SaplingBlock sapling) {
-            sapling.performBonemeal(level, level.getRandom(), pos, state);
+            sapling.advanceTree(level, pos, state, level.getRandom());
             return true;
         }
         return false;

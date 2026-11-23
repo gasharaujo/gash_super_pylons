@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CMC"
+  ],
+  "key": {
+    "C": "minecraft:copper_ingot",
+    "M": "minecraft:redstone"
+  },
+  "result": {
+    "id": "gash_super_pylons:energy_wire",
+    "count": 16
+  }
+}

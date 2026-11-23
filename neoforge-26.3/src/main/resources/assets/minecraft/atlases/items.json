@@ -1,0 +1,34 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/command_block_front",
+      "sprite": "gash_super_pylons:block/command_block_front"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/blast_furnace_front",
+      "sprite": "gash_super_pylons:block/blast_furnace_front"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/smoker_front",
+      "sprite": "gash_super_pylons:block/smoker_front"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/dark_oak_log",
+      "sprite": "gash_super_pylons:block/dark_oak_log"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/grindstone_pivot",
+      "sprite": "gash_super_pylons:block/grindstone_pivot"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:block/grindstone_side",
+      "sprite": "gash_super_pylons:block/grindstone_side"
+    }
+  ]
+}

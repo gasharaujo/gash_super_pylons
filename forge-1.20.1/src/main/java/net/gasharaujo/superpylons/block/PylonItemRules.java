@@ -62,4 +62,8 @@ public final class PylonItemRules {
     public static boolean exactlyEqual(ItemStack first, ItemStack second) {
         return ItemStack.isSameItemSameTags(first, second);
     }
+
+    static void returnToInventory(net.minecraft.world.entity.player.Player player, net.minecraft.world.item.ItemStack stack) {
+        player.getInventory().placeItemBackInInventory(stack);
+    }
 }
