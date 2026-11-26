@@ -14,6 +14,7 @@ import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonExperienceStorage;
 import net.gasharaujo.superpylons.block.PylonXpFluidRegistration;
 import net.gasharaujo.superpylons.block.PylonBreaker;
+import net.gasharaujo.superpylons.compat.PylonTreeChop;
 import net.gasharaujo.superpylons.block.PylonDispenseAim;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -31,7 +32,9 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.ICancellableEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -168,6 +171,12 @@ public final class SuperPylonsMod {
     }
 
     private void enqueueIntegrations(InterModEnqueueEvent event) {
+        if (ModList.get().isLoaded("treechop")) {
+            PylonTreeChop.register((eventType, isHarvester) -> NeoForge.EVENT_BUS.addListener(
+                EventPriority.HIGHEST, false, eventType.asSubclass(Event.class), chop -> {
+                    if (isHarvester.test(chop)) ((ICancellableEvent) chop).setCanceled(true);
+                }));
+        }
         PylonSccCompat.register();
         if (ModList.get().isLoaded("theoneprobe")) {
             PylonProbeProvider.enqueueRegistration();

@@ -22,7 +22,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -1915,13 +1914,16 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     private void harvest(ServerLevel server) {
         BiFunction<ItemStack, Boolean, ItemStack> output = workOutput(server);
-        if (output != null) flushOutput(output);
+        if (output != null) {
+            flushOutput(output);
+            if (!outputBuffer.isEmpty()) return;
+        }
         boolean harvestCrops = outputBuffer.isEmpty();
         ServerPlayer automation = getAutomationPlayer(server, AUTOMATION_PROFILE);
         for (BlockPos pos : farmArea()) {
             if (!server.hasChunkAt(pos)) continue;
             BlockState state = server.getBlockState(pos);
-            if (state.is(BlockTags.LOGS) && harvestTree(server, automation, pos)) return;
+            if (PylonFarming.isTreeLog(server, pos, state) && harvestTree(server, automation, pos, output)) return;
             if (!harvestCrops) continue;
             PylonFarming.Harvest harvest = PylonFarming.harvest(server, pos, state);
             if (harvest == null || !mayWorkAt(server, automation, pos)) continue;
@@ -1943,20 +1945,29 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
     }
 
-    private boolean harvestTree(ServerLevel server, ServerPlayer automation, BlockPos root) {
+    private boolean harvestTree(ServerLevel server, ServerPlayer automation, BlockPos root,
+                                BiFunction<ItemStack, Boolean, ItemStack> output) {
         var tree = PylonFarming.tree(server, root);
         if (tree.isEmpty() || tree.stream().anyMatch(pos -> !mayWorkAt(server, automation, pos))) return false;
         boolean harvested = false;
         for (var pos : tree) {
-            var drops = PylonBreaker.breakBlock(server, pos, automation, new ItemStack(Items.DIAMOND_AXE)).drops();
+            var drops = PylonBreaker.breakTreeBlock(server, pos, automation, new ItemStack(Items.DIAMOND_AXE)).drops();
+            if (isRemoved()) return true;
             for (ItemEntity drop : drops) {
                 ItemStack stack = drop.getItem().copy();
-                if (allowsItem(stack) && contents.insert(stack, getItemCapacity()) > 0) {
+                if (output != null) {
+                    outputBuffer.add(stack);
+                    drop.discard();
+                } else if (allowsItem(stack) && contents.insert(stack, getItemCapacity()) > 0) {
                     harvested = true;
                     if (stack.isEmpty()) drop.discard();
                     else drop.setItem(stack);
                 }
             }
+        }
+        if (output != null && !outputBuffer.isEmpty()) {
+            setChanged();
+            flushOutput(output);
         }
         if (harvested) sync();
         return true;

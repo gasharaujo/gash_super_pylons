@@ -27,6 +27,11 @@ O frame permanece imóvel. O core mantém sua inclinação original, centralizad
 
 A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e os requisitos de ferramenta do bloco de ferro. Use uma picareta de pedra ou superior para recuperá-lo.
 
+## Novidades da 1.4.0
+
+- O **Harvester** envia cultivos, árvores e fungos gigantes ao inventário no lado de trabalho. Quando falta espaço, guarda os drops pendentes para a próxima tentativa.
+- O **HT’s TreeChop** é opcional. O Harvester reconhece troncos parcialmente cortados e derruba a árvore inteira de uma vez, mesmo com a opção de corte progressivo de jogadores simulados ativada.
+
 ## Novidades da 1.3.0
 
 - **Planter**, **Fertilizer** e **Harvester** automatizam os fungos do carmesim e distorcido. O Fertilizer faz cada fungo crescer sobre seu próprio tipo de nicélio, e o Harvester corta o fungo gigante já formado.
@@ -91,7 +96,7 @@ Os upgrades com receita também aparecem no JEI quando o mod está instalado.
 - **Energy** cabe em qualquer pylon e recebe FE por todas as faces. Puxa do lado oposto ao de trabalho, carrega um item compatível quando ele está sozinho no pedestal e envia o restante ao lado de trabalho. Esvazie XP ou FE antes de retirar o upgrade correspondente. Quebrar o pylon guarda o saldo no bloco junto com os upgrades.
 - **Range** amplia o raio horizontal e vertical de Fertilizer, Harvester, Planter e Magnet. Sem Range, o raio é de um bloco. Fertilizer e Harvester exigem um pylon vazio na instalação.
 - **Fertilizer** seleciona plantas ao acaso, sem repetir a mesma posição no ciclo. Speed I–VI define o intervalo de 40, 30, 20, 10, 5 ou 1 tick entre ciclos e aplica respectivamente 1, 2, 3, 4, 5 ou 6 random ticks por planta. Quantity I–VI seleciona até 2, 4, 8, 16, 32 ou 64 plantas por ciclo. Na configuração inicial, tenta um random tick em uma planta a cada 60 ticks.
-- **Harvester** reinicia cultivos maduros, recolhe frutos e corta a ponta de cana, cacto e bambu. Usa o inventário no lado de trabalho quando disponível. Também derruba troncos com copa natural e recolhe os drops que couberem no pylon. O excedente fica no chão.
+- **Harvester** reinicia cultivos maduros, recolhe frutos, corta a ponta de cana, cacto e bambu e derruba árvores com copa natural. Use a Chave para apontar o lado de trabalho para um inventário adjacente. Sem inventário na saída, o pylon guarda o que couber no núcleo e solta o excedente.
 - **Planter** planta sementes e mudas do estoque em espaços válidos na área de Range. Speed define o intervalo e Quantity define quantas plantas cabem em cada ciclo.
 - **Placer** coloca um bloco do estoque no lado de trabalho por ciclo de Speed.
 - **Dropper** solta itens armazenados no centro do bloco do lado de trabalho, sem espalhar. Começa com um item a cada 60 ticks. Quantity define quantos itens saem por ciclo, Speed define o intervalo e cada tier de Range estende a distância em um bloco. Se o espaço de saída estiver bloqueado, os itens ficam no pylon.

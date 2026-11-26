@@ -10,7 +10,9 @@ item_ids:
 
 # Harvester Upgrade
 
-Harvests mature crops and whole trees. With Super it attacks nearby mobs. Equip a weapon by sneaking and right-clicking the pylon with it.
+Harvests mature crops, whole trees and giant Nether fungi. Use the Wrench to face an adjacent inventory. The Harvester sends drops there and holds items until space is available. With HT’s TreeChop installed, it can harvest trees with partially chopped logs.
+
+With Super it attacks nearby mobs. Equip a weapon by sneaking and right-clicking the pylon with it.
 
 ## Recipe
 

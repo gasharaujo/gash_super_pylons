@@ -11,7 +11,7 @@ navigation:
 ## Farming, collection and building
 
 - **Fertilizer** gives plants random ticks. Speed controls the cycle and the number of attempts per plant. Quantity sets the number of plants.
-- **Harvester** harvests mature crops and leaves them planted. It also fells whole trees with natural leaves. Drops that cannot be stored fall in the world. Craft it with an Upgrade Base and a diamond axe.
+- **Harvester** harvests mature crops and fells whole trees with natural leaves. It sends drops to the inventory on the working side and holds any that do not fit. With no output inventory, it stores what fits in the pylon and drops the rest. Craft it with an Upgrade Base and a diamond axe.
 - **Planter** plants stored seeds or saplings in valid spaces within range.
 - **Magnet** gathers dropped items. It starts with one item per 60 ticks in a 3×3×3 area and follows the pylon's filter.
 - **Placer** places a stored block on the working side.

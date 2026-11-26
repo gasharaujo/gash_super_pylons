@@ -13,6 +13,7 @@ import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.PylonExperienceStorage;
 import net.gasharaujo.superpylons.block.PylonXpFluidRegistration;
 import net.gasharaujo.superpylons.block.PylonBreaker;
+import net.gasharaujo.superpylons.compat.PylonTreeChop;
 import net.gasharaujo.superpylons.block.PylonDispenseAim;
 import net.gasharaujo.superpylons.block.PylonUpgradeItem;
 
@@ -26,6 +27,7 @@ import net.gasharaujo.superpylons.block.SuperPylonBlockItem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -164,6 +166,12 @@ public final class SuperPylonsMod {
     }
 
     private void enqueueIntegrations(InterModEnqueueEvent event) {
+        if (ModList.get().isLoaded("treechop")) {
+            PylonTreeChop.register((eventType, isHarvester) -> MinecraftForge.EVENT_BUS.addListener(
+                EventPriority.HIGHEST, false, eventType.asSubclass(Event.class), chop -> {
+                    if (isHarvester.test(chop)) chop.setCanceled(true);
+                }));
+        }
         if (ModList.get().isLoaded("theoneprobe")) {
             PylonProbeProvider.enqueueRegistration();
         }
