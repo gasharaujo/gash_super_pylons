@@ -14,6 +14,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntBinaryOperator;
 import java.util.stream.Collectors;
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.compat.PylonAgriCraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
@@ -941,8 +942,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     protected abstract ProcessingSource processingSource(ServerLevel server, BlockPos pos, Direction side);
     protected abstract ItemStack smeltingRecipe(ServerLevel server, ItemStack input);
-    protected abstract void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
-                                      BonemealableBlock fungus, boolean force);
+    protected abstract boolean applyBonemeal(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                                            BonemealableBlock plant, boolean force);
     protected abstract int minimumY(ServerLevel server);
     protected abstract boolean collectFluidSource(ServerLevel server, ServerPlayer player, BlockPos pos, BlockState state);
     protected abstract List<ItemStack> dispense(ServerLevel server, BlockPos origin, Direction direction, ItemStack stack);
@@ -1048,6 +1049,20 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             if (restored > 0) sync();
         }
         dropTransferItems(worldPosition, remainder);
+    }
+
+    protected long exportStoredItems(BiFunction<ItemStack, Boolean, ItemStack> output, long limit) {
+        int maximum = (int) Math.min(limit, getStoredItem().getMaxStackSize());
+        ItemStack offered = extractAutomation(maximum, true);
+        if (offered.isEmpty()) return 0;
+        int accepted = offered.getCount() - output.apply(offered.copy(), true).getCount();
+        boolean copied = isCreativeStorage();
+        ItemStack extracted = extractAutomation(accepted, false);
+        if (extracted.isEmpty()) return 0;
+        int count = extracted.getCount();
+        ItemStack remainder = output.apply(extracted, false);
+        returnTransferItems(remainder, copied);
+        return count - remainder.getCount();
     }
 
     protected void dropTransferItems(BlockPos pos, ItemStack stack) {
@@ -1874,7 +1889,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             if (!mayWorkAt(server, automation, pos)) continue;
             boolean advanced = false;
             for (int j = 0; j < ticks; j++) {
-                if (!PylonFarming.grow(server, pos, hasSuperUpgrade(), random, this::growFungus)) break;
+                if (!PylonFarming.grow(server, pos, hasSuperUpgrade(), random, this::applyBonemeal)) break;
                 advanced = true;
             }
             if (advanced) count--;
@@ -1925,19 +1940,28 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             BlockState state = server.getBlockState(pos);
             if (PylonFarming.isTreeLog(server, pos, state) && harvestTree(server, automation, pos, output)) return;
             if (!harvestCrops) continue;
-            PylonFarming.Harvest harvest = PylonFarming.harvest(server, pos, state);
-            if (harvest == null || !mayWorkAt(server, automation, pos)) continue;
-            if (output != null && harvest.drops().stream()
-                .noneMatch(drop -> output.apply(drop.copy(), true).getCount() < drop.getCount())) continue;
-            if (harvest.drops().isEmpty() || !server.setBlockAndUpdate(pos, harvest.remainder())) continue;
+            BlockEntity crop = state.hasBlockEntity() ? server.getBlockEntity(pos) : null;
+            List<ItemStack> drops;
+            if (crop != null && PylonAgriCraft.isCrop(crop)) {
+                if (!mayWorkAt(server, automation, pos)) continue;
+                drops = PylonAgriCraft.harvest(crop);
+                if (drops.isEmpty()) continue;
+            } else {
+                PylonFarming.Harvest harvest = PylonFarming.harvest(server, pos, state);
+                if (harvest == null || !mayWorkAt(server, automation, pos)) continue;
+                if (output != null && harvest.drops().stream()
+                    .noneMatch(drop -> output.apply(drop.copy(), true).getCount() < drop.getCount())) continue;
+                if (harvest.drops().isEmpty() || !server.setBlockAndUpdate(pos, harvest.remainder())) continue;
+                drops = harvest.drops();
+            }
             if (output == null) {
-                for (ItemStack drop : harvest.drops()) {
+                for (ItemStack drop : drops) {
                     if (allowsItem(drop)) contents.insert(drop, getItemCapacity());
                     if (!drop.isEmpty()) Block.popResource(server, pos, drop);
                 }
                 sync();
             } else {
-                outputBuffer.addAll(harvest.drops());
+                outputBuffer.addAll(drops);
                 setChanged();
                 flushOutput(output);
             }

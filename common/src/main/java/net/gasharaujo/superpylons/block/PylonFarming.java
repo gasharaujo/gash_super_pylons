@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons.block;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import net.gasharaujo.superpylons.compat.PylonAgriCraft;
 import net.gasharaujo.superpylons.compat.PylonTreeChop;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,9 +31,9 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 final class PylonFarming {
     record Harvest(BlockState remainder, List<ItemStack> drops) {}
-    interface FungusGrowth {
-        void grow(ServerLevel level, BlockPos pos, BlockState state, RandomSource random,
-                  BonemealableBlock fungus, boolean force);
+    interface BonemealGrowth {
+        boolean apply(ServerLevel level, BlockPos pos, BlockState state, RandomSource random,
+                      BonemealableBlock plant, boolean force);
     }
 
     private PylonFarming() {}
@@ -56,19 +57,28 @@ final class PylonFarming {
     }
 
     static boolean canGrow(ServerLevel level, BlockPos pos) {
-        return canGrow(level, pos, level.getBlockState(pos));
+        BlockState state = level.getBlockState(pos);
+        return canGrow(level, pos, state) || isAgriCraftCrop(level, pos, state);
     }
 
-    static boolean grow(ServerLevel level, BlockPos pos, boolean force, RandomSource random, FungusGrowth fungusGrowth) {
+    static boolean grow(ServerLevel level, BlockPos pos, boolean force, RandomSource random, BonemealGrowth bonemeal) {
         BlockState state = level.getBlockState(pos);
+        if (isAgriCraftCrop(level, pos, state) && state.getBlock() instanceof BonemealableBlock plant) {
+            return bonemeal.apply(level, pos, state, random, plant, false);
+        }
         if (!canGrow(level, pos, state)) return false;
         if (fungusSoil(state) != null && state.getBlock() instanceof BonemealableBlock fungus) {
-            fungusGrowth.grow(level, pos, state, random, fungus, force);
+            bonemeal.apply(level, pos, state, random, fungus, force);
             return true;
         }
         if (force) return advanceStage(level, pos, state);
         state.randomTick(level, pos, random);
         return true;
+    }
+
+    private static boolean isAgriCraftCrop(ServerLevel level, BlockPos pos, BlockState state) {
+        return state.hasBlockEntity() && state.getBlock() instanceof BonemealableBlock &&
+            PylonAgriCraft.isCrop(level.getBlockEntity(pos));
     }
 
     private static Block fungusSoil(BlockState state) {

@@ -260,6 +260,8 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
 
     @Override
     protected BiFunction<ItemStack, Boolean, ItemStack> inventoryOutput(ServerLevel server, BlockPos target) {
+        var scc = PylonSccCompat.itemOutput(server, worldPosition, target);
+        if (scc != null) return scc;
         IItemHandler handler = server.getCapability(Capabilities.ItemHandler.BLOCK, target, workDirection().getOpposite());
         return handler == null ? null : (stack, simulate) -> ItemHandlerHelper.insertItemStacked(handler, stack, simulate);
     }
@@ -321,11 +323,12 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
-                              BonemealableBlock fungus, boolean force) {
-        if (force || fungus.isBonemealSuccess(server, random, pos, state)) {
-            fungus.performBonemeal(server, random, pos, state);
-        }
+    protected boolean applyBonemeal(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                                   BonemealableBlock plant, boolean force) {
+        if (!force && (!plant.isValidBonemealTarget(server, pos, state) ||
+            !plant.isBonemealSuccess(server, random, pos, state))) return false;
+        plant.performBonemeal(server, random, pos, state);
+        return true;
     }
 
     @Override
@@ -372,6 +375,10 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected long transferAdjacentExternal(ServerLevel server, BlockPos neighbor, PylonWire.Type type,
                                             boolean importing, long limit) {
+        if (type == PylonWire.Type.ITEM && !importing) {
+            var scc = PylonSccCompat.itemOutput(server, worldPosition, neighbor);
+            if (scc != null) return exportStoredItems(scc, limit);
+        }
         if (!importing && hasBulkTransfer()) {
             long accepted = insertIntoCondenser(server.getBlockEntity(neighbor), type, limit);
             if (accepted >= 0) return accepted;
@@ -574,7 +581,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     @Override
     protected boolean exposesProcessingOutput() {
         return level instanceof ServerLevel && canUseProcessingCalculator() &&
-            PylonSccCompat.hasCalculator(level, worldPosition);
+            PylonSccCompat.usesCalculatorOutput(level, worldPosition, workTarget());
     }
 
     private final class ItemPort implements IItemHandler {

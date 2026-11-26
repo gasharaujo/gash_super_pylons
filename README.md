@@ -27,6 +27,12 @@ O frame permanece imóvel. O core mantém sua inclinação original, centralizad
 
 A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e os requisitos de ferramenta do bloco de ferro. Use uma picareta de pedra ou superior para recuperá-lo.
 
+## Novidades da 1.4.1
+
+- A integração opcional com **AgriCraft** permite que o Harvester colha plantas maduras nos suportes de cultivo. A planta, o suporte e a genética ficam no lugar para a próxima colheita. Os produtos seguem para o inventário no lado de trabalho.
+- O **Fertilizer** usa o efeito da farinha de osso do AgriCraft nos cultivos que aceitam o fertilizante.
+- Aponte o lado de trabalho do Super Pylon para um **Processing Calculator** do SCC voltado para ele. As saídas do pylon podem enviar produtos diretamente ao armazenamento da rede. Use **Extract Item** para exportar o estoque do núcleo.
+
 ## Novidades da 1.4.0
 
 - O **Harvester** envia cultivos, árvores e fungos gigantes ao inventário no lado de trabalho. Quando falta espaço, guarda os drops pendentes para a próxima tentativa.
