@@ -6,14 +6,17 @@ import de.scc.calculator.api.SccNetwork;
 import de.scc.calculator.api.SccRecipeProviders;
 import de.scc.calculator.network.CableBusBlockEntity;
 import de.scc.calculator.network.ProcessingCalculatorBlockEntity;
+import java.util.Set;
 import java.util.function.BiFunction;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.gasharaujo.superpylons.block.PylonPulverizing;
+import net.gasharaujo.superpylons.block.PylonUpgrade;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.gasharaujo.superpylons.client.PylonCrushRecipes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
@@ -23,6 +26,9 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 public final class PylonSccCompat {
+    private static final String CRUSH = SuperPylonsMod.MOD_ID + ":crushing";
+    private static final String CRUSH_PREFIX = CRUSH + "/";
+    private static final String[] QUANTITY_LABELS = {"0", "I", "II", "III", "IV", "V", "VI"};
     private static boolean registered;
 
     private PylonSccCompat() {}
@@ -47,10 +53,52 @@ public final class PylonSccCompat {
         return registered ? Api.itemOutput(level, pylon, target) : null;
     }
 
-    private static final class Api {
-        private static final String CRUSH = SuperPylonsMod.MOD_ID + ":crushing";
-        private static final String CRUSH_PREFIX = CRUSH + "/";
+    public static Set<String> processingCategories(Level level, BlockPos pos) {
+        var pylon = pylonAt(level, pos);
+        if (pylon == null) return null;
+        String category = processingCategory(pylon);
+        return category == null ? Set.of() : Set.of(category);
+    }
 
+    public static boolean acceptsLegacyCrushCategory(Level level, BlockPos pos, String category) {
+        if (!CRUSH.equals(category)) return false;
+        var pylon = pylonAt(level, pos);
+        return pylon != null && pylon.canUseProcessingCalculator() && pylon.getProcessing() == PylonUpgrade.PULVERIZE;
+    }
+
+    public static Component processingLabel(Level level, BlockPos pos) {
+        var pylon = pylonAt(level, pos);
+        if (pylon == null || !pylon.canUseProcessingCalculator()) return null;
+        if (pylon.getProcessing() == PylonUpgrade.PULVERIZE) {
+            return Component.translatable("gui.gash_super_pylons.scc.crush", QUANTITY_LABELS[pylon.processingQuantityTier()]);
+        }
+        var type = pylon.smeltingType();
+        if (type == RecipeType.BLASTING) return Component.translatable("gui.gash_super_pylons.scc.blasting");
+        if (type == RecipeType.SMOKING) return Component.translatable("gui.gash_super_pylons.scc.smoking");
+        return Component.translatable("gui.gash_super_pylons.scc.smelt");
+    }
+
+    public static ItemStack processingIcon(Level level, BlockPos pos) {
+        var pylon = pylonAt(level, pos);
+        if (pylon == null || !pylon.canUseProcessingCalculator()) return ItemStack.EMPTY;
+        return new ItemStack(SuperPylonsMod.UPGRADES.get(pylon.getProcessing()).get());
+    }
+
+    private static SuperPylonBlockEntity pylonAt(Level level, BlockPos pos) {
+        if (!registered || level == null || !level.hasChunkAt(pos)) return null;
+        return level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon ? pylon : null;
+    }
+
+    private static String processingCategory(SuperPylonBlockEntity pylon) {
+        if (!pylon.canUseProcessingCalculator()) return null;
+        return switch (pylon.getProcessing()) {
+            case SMELT -> BuiltInRegistries.RECIPE_TYPE.getKey(pylon.smeltingType()).toString();
+            case PULVERIZE -> CRUSH_PREFIX + "quantity_" + pylon.processingQuantityTier();
+            case null, default -> null;
+        };
+    }
+
+    private static final class Api {
         private static void register() {
             var item = SuperPylonsMod.SUPER_PYLON_ITEM.get();
             var crush = BuiltInRegistries.ITEM.getKey(item).withPath("crushing");
@@ -65,7 +113,11 @@ public final class PylonSccCompat {
 
                 @Override
                 public void addRecipes(SccRecipeProviders.Output output) {
+                    // Keep the original catalyst and IDs available to orders saved before tier-specific planning.
                     output.catalyst(crush, item);
+                    for (int tier = 0; tier < QUANTITY_LABELS.length; tier++) {
+                        output.catalyst(crush.withPath("crushing/quantity_" + tier), item);
+                    }
                     output.catalyst(BuiltInRegistries.RECIPE_TYPE.getKey(RecipeType.SMELTING), item);
                     output.catalyst(BuiltInRegistries.RECIPE_TYPE.getKey(RecipeType.BLASTING), item);
                     output.catalyst(BuiltInRegistries.RECIPE_TYPE.getKey(RecipeType.SMOKING), item);
@@ -80,9 +132,14 @@ public final class PylonSccCompat {
                         String id = CRUSH_PREFIX + mask + "/" + input.getNamespace() + "/" + input.getPath();
                         int index = 0;
                         for (var result : recipe.outputs()) {
-                            output.recipe(id + "/" + index++, crush).name("Pylon Crush")
-                                .input(recipe.input(), 1).output(result.stack(), result.stack().getCount())
-                                .chance(result.chance() / 100.0F).add();
+                            String baseId = id + "/" + index++;
+                            for (int tier : recipe.tiers()) {
+                                String tierId = tier == recipe.tiers().getFirst() ? baseId : baseId + "/quantity_" + tier;
+                                output.recipe(tierId, crush.withPath("crushing/quantity_" + tier))
+                                    .name("Pylon Crush " + QUANTITY_LABELS[tier])
+                                    .input(recipe.input(), 1).output(result.stack(), result.stack().getCount())
+                                    .chance(result.chance() / 100.0F).add();
+                            }
                         }
                     }
                 }
@@ -92,13 +149,13 @@ public final class PylonSccCompat {
         }
 
         private static Boolean acceptsStep(Level level, BlockPos pos, String category, String recipeId) {
-            if (!(level.getBlockEntity(pos) instanceof SuperPylonBlockEntity pylon)) return null;
-            if (!pylon.canUseProcessingCalculator()) return false;
-            return switch (pylon.getProcessing()) {
-                case SMELT -> BuiltInRegistries.RECIPE_TYPE.getKey(pylon.smeltingType()).toString().equals(category);
-                case PULVERIZE -> CRUSH.equals(category) && acceptsCrushTier(recipeId, pylon.processingQuantityTier());
-                case null, default -> false;
-            };
+            var pylon = pylonAt(level, pos);
+            if (pylon == null) return null;
+            String active = processingCategory(pylon);
+            if (active == null) return false;
+            if (pylon.getProcessing() == PylonUpgrade.SMELT) return active.equals(category);
+            if (!active.equals(category) && !CRUSH.equals(category)) return false;
+            return recipeId == null ? active.equals(category) : acceptsCrushTier(recipeId, pylon.processingQuantityTier());
         }
 
         private static boolean acceptsCrushTier(String recipeId, int tier) {

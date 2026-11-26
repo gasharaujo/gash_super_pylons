@@ -9,6 +9,10 @@ displayName = "${mod_name}"
 authors = "${mod_authors}"
 description = '''${mod_description}'''
 
+[[mixins]]
+config = "gash_super_pylons.scc.mixins.json"
+requiredMods = ["scc"]
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"

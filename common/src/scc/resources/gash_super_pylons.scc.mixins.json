@@ -1,0 +1,6 @@
+{
+  "required": false,
+  "package": "net.gasharaujo.superpylons.compat.mixin",
+  "mixins": ["SccProcessingCalculatorMixin", "SccTerminalMixin"],
+  "client": ["SccProcessorScreenMixin"]
+}

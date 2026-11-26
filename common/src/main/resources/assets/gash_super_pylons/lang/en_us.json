@@ -1,6 +1,10 @@
 {
   "jei.gash_super_pylons.crushing": "Crush",
   "jei.gash_super_pylons.quantity": "Quantity %s",
+  "gui.gash_super_pylons.scc.crush": "Crush %s",
+  "gui.gash_super_pylons.scc.smelt": "Smelt",
+  "gui.gash_super_pylons.scc.blasting": "Smelt (Blast)",
+  "gui.gash_super_pylons.scc.smoking": "Smelt (Smoke)",
   "jei.gash_super_pylons.cost": "1,000 FE / item or 1 furnace fuel use",
   "jei.gash_super_pylons.chance": "%s%% chance",
   "item_group.gash_super_pylons.main": "Gash's Super Pylons",
