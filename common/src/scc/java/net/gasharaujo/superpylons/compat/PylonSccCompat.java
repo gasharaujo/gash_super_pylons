@@ -2,9 +2,11 @@ package net.gasharaujo.superpylons.compat;
 
 import com.mojang.logging.LogUtils;
 import de.scc.calculator.api.SccMachines;
+import de.scc.calculator.api.SccNetwork;
 import de.scc.calculator.api.SccRecipeProviders;
 import de.scc.calculator.network.CableBusBlockEntity;
 import de.scc.calculator.network.ProcessingCalculatorBlockEntity;
+import java.util.function.BiFunction;
 import net.gasharaujo.superpylons.SuperPylonsMod;
 import net.gasharaujo.superpylons.block.PylonPulverizing;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
@@ -12,6 +14,7 @@ import net.gasharaujo.superpylons.client.PylonCrushRecipes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -36,8 +39,12 @@ public final class PylonSccCompat {
         }
     }
 
-    public static boolean hasCalculator(Level level, BlockPos pylon) {
-        return registered && Api.hasCalculator(level, pylon);
+    public static boolean usesCalculatorOutput(Level level, BlockPos pylon, BlockPos target) {
+        return registered && Api.usesCalculatorOutput(level, pylon, target);
+    }
+
+    public static BiFunction<ItemStack, Boolean, ItemStack> itemOutput(Level level, BlockPos pylon, BlockPos target) {
+        return registered ? Api.itemOutput(level, pylon, target) : null;
     }
 
     private static final class Api {
@@ -106,23 +113,47 @@ public final class PylonSccCompat {
             }
         }
 
-        private static boolean hasCalculator(Level level, BlockPos pylon) {
+        private static boolean usesCalculatorOutput(Level level, BlockPos pylon, BlockPos target) {
+            var directed = calculatorAt(level, pylon, target);
+            if (directed != null && processingJob(directed)) return true;
             for (Direction side : Direction.values()) {
-                BlockPos pos = pylon.relative(side);
-                if (!level.hasChunkAt(pos)) continue;
-                BlockEntity neighbor = level.getBlockEntity(pos);
-                if (targetsPylon(neighbor, pylon)) return true;
-                if (neighbor instanceof CableBusBlockEntity cable) {
-                    for (var part : cable.parts()) {
-                        if (targetsPylon(part, pylon)) return true;
-                    }
-                }
+                BlockPos neighbor = pylon.relative(side);
+                if (neighbor.equals(target)) continue;
+                var calculator = calculatorAt(level, pylon, neighbor);
+                if (calculator != null && (directed == null || processingJob(calculator))) return true;
             }
             return false;
         }
 
-        private static boolean targetsPylon(BlockEntity entity, BlockPos pylon) {
-            return entity instanceof ProcessingCalculatorBlockEntity calculator && calculator.machinePos().equals(pylon);
+        private static BiFunction<ItemStack, Boolean, ItemStack> itemOutput(Level level, BlockPos pylon, BlockPos target) {
+            var calculator = calculatorAt(level, pylon, target);
+            if (calculator == null) return null;
+            return (stack, simulate) -> {
+                if (processingJob(calculator)) return stack;
+                var network = calculator.network();
+                return network.online() ? SccNetwork.insert(network, stack, simulate) : stack;
+            };
+        }
+
+        private static boolean processingJob(ProcessingCalculatorBlockEntity calculator) {
+            // SCC must pull outputs itself while a job is reserving or waiting on this calculator.
+            return calculator.heldJob() != 0 || calculator.awaitingResult();
+        }
+
+        private static ProcessingCalculatorBlockEntity calculatorAt(Level level, BlockPos pylon, BlockPos pos) {
+            if (!level.hasChunkAt(pos)) return null;
+            BlockEntity neighbor = level.getBlockEntity(pos);
+            if (neighbor instanceof ProcessingCalculatorBlockEntity calculator && calculator.machinePos().equals(pylon)) {
+                return calculator;
+            }
+            if (neighbor instanceof CableBusBlockEntity cable) {
+                for (var part : cable.parts()) {
+                    if (part instanceof ProcessingCalculatorBlockEntity calculator && calculator.machinePos().equals(pylon)) {
+                        return calculator;
+                    }
+                }
+            }
+            return null;
         }
     }
 }

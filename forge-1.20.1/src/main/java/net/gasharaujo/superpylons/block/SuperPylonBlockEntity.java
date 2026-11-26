@@ -347,11 +347,12 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
     }
 
     @Override
-    protected void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
-                              BonemealableBlock fungus, boolean force) {
-        if (force || fungus.isBonemealSuccess(server, random, pos, state)) {
-            fungus.performBonemeal(server, random, pos, state);
-        }
+    protected boolean applyBonemeal(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                                   BonemealableBlock plant, boolean force) {
+        if (!force && (!plant.isValidBonemealTarget(server, pos, state, false) ||
+            !plant.isBonemealSuccess(server, random, pos, state))) return false;
+        plant.performBonemeal(server, random, pos, state);
+        return true;
     }
 
     @Override
