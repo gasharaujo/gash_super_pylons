@@ -23,6 +23,7 @@ import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 import com.mojang.logging.LogUtils;
+import net.gasharaujo.superpylons.compat.PylonSccCompat;
 import net.gasharaujo.superpylons.block.SuperPylonBlock;
 import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
 import net.gasharaujo.superpylons.compat.PylonProbeProvider;
@@ -167,6 +168,7 @@ public final class SuperPylonsMod {
     }
 
     private void enqueueIntegrations(InterModEnqueueEvent event) {
+        PylonSccCompat.register();
         if (ModList.get().isLoaded("theoneprobe")) {
             PylonProbeProvider.enqueueRegistration();
         }

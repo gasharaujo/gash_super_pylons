@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import java.util.List;
 import java.util.function.BiFunction;
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.compat.PylonSccCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Mob;
@@ -14,6 +15,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
@@ -280,7 +283,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         };
     }
 
-    private RecipeType<? extends AbstractCookingRecipe> smeltingType() {
+    public RecipeType<? extends AbstractCookingRecipe> smeltingType() {
         ItemStack attachment = getFurnaceAttachment();
         if (attachment.is(Items.BLAST_FURNACE)) return RecipeType.BLASTING;
         if (attachment.is(Items.SMOKER)) return RecipeType.SMOKING;
@@ -324,6 +327,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             player.attackStrengthTicker = cooldown;
             player.setItemInHand(InteractionHand.MAIN_HAND, previous);
             player.detectEquipmentUpdates();
+        }
+    }
+
+    @Override
+    protected void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                              BonemealableBlock fungus, boolean force) {
+        if (force || fungus.isBonemealSuccess(server, random, pos, state)) {
+            fungus.performBonemeal(server, random, pos, state);
         }
     }
 
@@ -569,12 +580,22 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return server.hasChunkAt(pos) ? server.getCapability(Capabilities.Energy.BLOCK, pos, side) : null;
     }
 
+    @Override
+    protected boolean exposesProcessingOutput() {
+        return level instanceof ServerLevel && canUseProcessingCalculator() &&
+            PylonSccCompat.hasCalculator(level, worldPosition);
+    }
+
     private final class ItemPort extends SnapshotJournal<PylonContents.State> implements ResourceHandler<ItemResource> {
-        @Override public int size() { return 1; }
+        @Override public int size() { return 1 + (exposesProcessingOutput() ? outputBuffer.size() : 0); }
         @Override public ItemResource getResource(int index) {
+            if (index > 0) return exposesProcessingOutput() ? ItemResource.of(bufferedOutput(index - 1)) : ItemResource.EMPTY;
             return index == 0 && canExtractItems() ? ItemResource.of(getStoredItem()) : ItemResource.EMPTY;
         }
-        @Override public long getAmountAsLong(int index) { return index == 0 && canExtractItems() ? getAvailableItemCount() : 0; }
+        @Override public long getAmountAsLong(int index) {
+            if (index > 0) return exposesProcessingOutput() ? bufferedOutput(index - 1).getCount() : 0;
+            return index == 0 && canExtractItems() ? getAvailableItemCount() : 0;
+        }
         @Override public long getCapacityAsLong(int index, ItemResource resource) {
             if (resource.isEmpty()) return index == 0 && (hasItemStorage() || isVoid()) ? getItemCapacity() : 0;
             return isValid(index, resource) ? getItemCapacity() : 0;
@@ -598,6 +619,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override
         public int extract(int index, ItemResource resource, int amount, TransactionContext transaction) {
             TransferPreconditions.checkNonNegative(amount);
+            if (index > 0 && !resource.isEmpty() && resource.equals(getResource(index))) {
+                int extracted = Math.min(amount, bufferedOutput(index - 1).getCount());
+                if (extracted > 0) {
+                    outputJournal.updateSnapshots(transaction);
+                    removeBufferedOutput(index - 1, extracted);
+                }
+                return extracted;
+            }
             if (!(level instanceof ServerLevel) || index != 0 || !canExtractItems() ||
                 resource.isEmpty() || !resource.equals(getResource(index))) return 0;
             int extracted = (int) Math.min(amount, getAvailableItemCount());
@@ -611,6 +640,15 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         @Override protected void revertToSnapshot(PylonContents.State snapshot) { contents.restore(snapshot); }
         @Override protected void onRootCommit(PylonContents.State original) { sync(); }
     }
+
+    private final SnapshotJournal<List<ItemStack>> outputJournal = new SnapshotJournal<>() {
+        @Override protected List<ItemStack> createSnapshot() { return List.copyOf(outputBuffer); }
+        @Override protected void revertToSnapshot(List<ItemStack> snapshot) {
+            outputBuffer.clear();
+            outputBuffer.addAll(snapshot);
+        }
+        @Override protected void onRootCommit(List<ItemStack> original) { setChanged(); }
+    };
 
     private final class EnergyPort implements EnergyHandler {
         private final Direction side;

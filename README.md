@@ -9,6 +9,7 @@ O Super Pylon armazena **2.048 itens exatamente iguais** na configuração inici
 | 1.20.1 | Forge 47.4.10 | 17 | `forge-1.20.1` |
 | 1.21.1 | NeoForge 21.1.248 | 21 | `neoforge-1.21.1` |
 | 26.1.2 | NeoForge 26.1.2.109 | 25 | `neoforge-26.1.2` |
+| 26.3 | NeoForge 26.3.0.113 | 25 | `neoforge-26.3` |
 
 Identificador do mod: `gash_super_pylons`
 
@@ -25,6 +26,11 @@ Encontre o bloco na aba **Gash's Super Pylons** do Criativo ou use:
 O frame permanece imóvel. O core mantém sua inclinação original, centralizado no vão, e gira no eixo vertical em sentido anti-horário visto de cima, completando uma volta a cada 8 segundos. A flutuação tem período de 4 segundos e percurso total de **1/8 da altura interna do frame**, o equivalente a 1,5 unidades do modelo. Um tanque cheio ou parcialmente cheio usa a textura do fluido no cubo animado. Ao esvaziar, o core volta a ficar branco.
 
 A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e os requisitos de ferramenta do bloco de ferro. Use uma picareta de pedra ou superior para recuperá-lo.
+
+## Novidades da 1.3.0
+
+- **Planter**, **Fertilizer** e **Harvester** automatizam os fungos do carmesim e distorcido. O Fertilizer faz cada fungo crescer sobre seu próprio tipo de nicélio, e o Harvester corta o fungo gigante já formado.
+- No NeoForge 1.21.1 e 26.1.2, o **Processing Calculator** do SCC 1.6.5 ou posterior detecta **Smelt** e **Crush** ao ser apontado para um Super Pylon. O SCC usa o tipo de fornalha instalado e os rendimentos e chances do nível de **Quantity**. Abasteça o pylon com FE ou combustível para o processamento. A integração com o SCC é opcional.
 
 ## Novidades da 1.2.0
 
@@ -186,7 +192,7 @@ Na raiz do projeto, com PowerShell e os JDKs 17, 21 e 25 instalados:
 .\tools\build.ps1
 ```
 
-O script encontra JDKs em `JAVA_HOME`, `.jdks`, `.gradle/jdks`, Program Files e nos runtimes do CurseForge. Também aceita `JAVA17_HOME`, `JAVA21_HOME` e `JAVA25_HOME`. Os três JARs e seus hashes SHA-256 ficam em `artifacts/`.
+O script encontra JDKs em `JAVA_HOME`, `.jdks`, `.gradle/jdks`, Program Files e nos runtimes do CurseForge. Também aceita `JAVA17_HOME`, `JAVA21_HOME` e `JAVA25_HOME`. Os quatro JARs e seus hashes SHA-256 ficam em `artifacts/`.
 
 Para uma versão específica:
 
@@ -194,7 +200,7 @@ Para uma versão específica:
 .\tools\build.ps1 -Target neoforge-1.21.1
 ```
 
-Use `-Offline` quando todas as dependências já estiverem no cache.
+Use `-Offline` quando as dependências estiverem no cache. Em 1.21.1 e 26.1.2, esse modo também aceita o JAR do SCC 1.6.5 já instalado na pasta `mods` da instância correspondente.
 
 Alternativamente, entre na pasta do módulo e execute `./gradlew build` (Linux/macOS) ou `.\gradlew.bat build` (Windows), com o JDK correspondente em `JAVA_HOME`.
 
@@ -211,6 +217,7 @@ Para compilar e instalar nas instâncias de teste:
 | `forge-1.20.1` | `C:\Users\pichau\curseforge\minecraft\Instances\20.1` |
 | `neoforge-1.21.1` | `C:\Users\pichau\curseforge\minecraft\Instances\21` |
 | `neoforge-26.1.2` | `C:\Users\pichau\curseforge\minecraft\Instances\26.1.2` |
+| `neoforge-26.3` | `C:\Users\pichau\curseforge\minecraft\Instances\26.3` |
 
 O script instala somente o JAR correspondente e preserva versões antigas deste mod com a extensão `.disabled`. Feche a instância antes de atualizar o arquivo. As instâncias ficam fora do repositório.
 
@@ -232,7 +239,7 @@ O arquivo original foi movido de `Pylon.json` para `model-source/Pylon.json`. O 
 
 Após editar o modelo original, execute `python tools/generate_model.py` para atualizar os recursos. Mudanças de tamanho ou inclinação do core também precisam ser aplicadas em `PylonCoreModel.java` e `PylonAnimation.java`. Os recursos gerados são versionados; compilar não exige Python.
 
-Integração contínua: `.github/workflows/build.yml` compila as três versões e guarda os JARs como artefatos.
+A integração contínua compila as quatro versões e guarda os JARs como artefatos.
 
 ## Referências
 

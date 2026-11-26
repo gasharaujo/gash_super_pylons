@@ -15,6 +15,8 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
@@ -341,6 +343,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             player.attackStrengthTicker = cooldown;
             player.setItemInHand(InteractionHand.MAIN_HAND, previous);
             player.detectEquipmentUpdates();
+        }
+    }
+
+    @Override
+    protected void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                              BonemealableBlock fungus, boolean force) {
+        if (force || fungus.isBonemealSuccess(server, random, pos, state)) {
+            fungus.performBonemeal(server, random, pos, state);
         }
     }
 

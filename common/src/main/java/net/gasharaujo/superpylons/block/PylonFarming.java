@@ -7,11 +7,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.CaveVines;
 import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
@@ -27,6 +29,10 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 final class PylonFarming {
     record Harvest(BlockState remainder, List<ItemStack> drops) {}
+    interface FungusGrowth {
+        void grow(ServerLevel level, BlockPos pos, BlockState state, RandomSource random,
+                  BonemealableBlock fungus, boolean force);
+    }
 
     private PylonFarming() {}
 
@@ -34,10 +40,12 @@ final class PylonFarming {
         if (!(stack.getItem() instanceof BlockItem item)) return false;
         BlockState state = item.getBlock().defaultBlockState();
         return state.is(BlockTags.SAPLINGS) || state.getBlock() instanceof CropBlock ||
-            state.getBlock() instanceof StemBlock || state.is(Blocks.NETHER_WART);
+            state.getBlock() instanceof StemBlock || state.is(Blocks.NETHER_WART) || fungusSoil(state) != null;
     }
 
-    static boolean canGrow(BlockState state) {
+    private static boolean canGrow(ServerLevel level, BlockPos pos, BlockState state) {
+        Block soil = fungusSoil(state);
+        if (soil != null) return level.getBlockState(pos.below()).is(soil);
         Block block = state.getBlock();
         return state.isRandomlyTicking() && (block instanceof CropBlock || block instanceof GrowingPlantHeadBlock ||
             state.is(BlockTags.CROPS) || state.is(BlockTags.SAPLINGS) || state.is(Blocks.COCOA) ||
@@ -46,7 +54,29 @@ final class PylonFarming {
             state.is(Blocks.BAMBOO) || state.is(Blocks.BAMBOO_SAPLING) || state.is(Blocks.CHORUS_FLOWER));
     }
 
-    static boolean advanceStage(ServerLevel level, BlockPos pos, BlockState state) {
+    static boolean canGrow(ServerLevel level, BlockPos pos) {
+        return canGrow(level, pos, level.getBlockState(pos));
+    }
+
+    static boolean grow(ServerLevel level, BlockPos pos, boolean force, RandomSource random, FungusGrowth fungusGrowth) {
+        BlockState state = level.getBlockState(pos);
+        if (!canGrow(level, pos, state)) return false;
+        if (fungusSoil(state) != null && state.getBlock() instanceof BonemealableBlock fungus) {
+            fungusGrowth.grow(level, pos, state, random, fungus, force);
+            return true;
+        }
+        if (force) return advanceStage(level, pos, state);
+        state.randomTick(level, pos, random);
+        return true;
+    }
+
+    private static Block fungusSoil(BlockState state) {
+        if (state.is(Blocks.CRIMSON_FUNGUS)) return Blocks.CRIMSON_NYLIUM;
+        if (state.is(Blocks.WARPED_FUNGUS)) return Blocks.WARPED_NYLIUM;
+        return null;
+    }
+
+    private static boolean advanceStage(ServerLevel level, BlockPos pos, BlockState state) {
         for (var property : state.getProperties()) {
             if (!(property instanceof IntegerProperty stage) ||
                 !(stage.getName().equals("age") || stage.getName().equals("stage"))) continue;
@@ -86,7 +116,14 @@ final class PylonFarming {
     }
 
     static List<BlockPos> tree(ServerLevel level, BlockPos root) {
-        if (!level.getBlockState(root).is(BlockTags.LOGS) || level.getBlockState(root.below()).is(BlockTags.LOGS)) {
+        BlockState state = level.getBlockState(root);
+        if (state.is(Blocks.CRIMSON_STEM)) {
+            return hugeFungus(level, root, Blocks.CRIMSON_STEM, Blocks.CRIMSON_NYLIUM, Blocks.NETHER_WART_BLOCK);
+        }
+        if (state.is(Blocks.WARPED_STEM)) {
+            return hugeFungus(level, root, Blocks.WARPED_STEM, Blocks.WARPED_NYLIUM, Blocks.WARPED_WART_BLOCK);
+        }
+        if (!state.is(BlockTags.LOGS) || level.getBlockState(root.below()).is(BlockTags.LOGS)) {
             return List.of();
         }
         var tree = new ArrayList<BlockPos>();
@@ -117,6 +154,33 @@ final class PylonFarming {
             }
         }
         return tree.size() == logs ? List.of() : tree;
+    }
+
+    private static List<BlockPos> hugeFungus(ServerLevel level, BlockPos root, Block stem, Block soil, Block wart) {
+        if (!level.getBlockState(root.below()).is(soil)) return List.of();
+        var parts = new ArrayList<BlockPos>();
+        var found = new HashSet<BlockPos>();
+        BlockPos tip = root;
+        while (level.getBlockState(tip).is(stem)) {
+            if (parts.size() == 32) return List.of();
+            parts.add(tip.immutable());
+            found.add(tip.immutable());
+            tip = tip.above();
+        }
+        int stems = parts.size();
+        for (int i = 0; i < parts.size(); i++) {
+            BlockPos part = parts.get(i);
+            for (BlockPos next : BlockPos.betweenClosed(part.offset(-1, -1, -1), part.offset(1, 1, 1))) {
+                if (next.getY() < root.getY() || next.getY() > tip.getY() ||
+                    Math.abs(next.getX() - root.getX()) > 3 || Math.abs(next.getZ() - root.getZ()) > 3 ||
+                    !level.hasChunkAt(next)) continue;
+                BlockState cap = level.getBlockState(next);
+                if ((cap.is(wart) || cap.is(Blocks.SHROOMLIGHT)) && found.add(next.immutable())) {
+                    parts.add(next.immutable());
+                }
+            }
+        }
+        return parts.size() == stems ? List.of() : parts;
     }
 
     private static Harvest withLoot(ServerLevel level, BlockPos pos, BlockState state, BlockState remainder) {

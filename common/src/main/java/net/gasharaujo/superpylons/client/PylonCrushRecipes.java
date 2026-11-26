@@ -20,6 +20,8 @@ public final class PylonCrushRecipes {
     }
 
     private static List<PylonPulverizing.Recipe> custom = List.of();
+    private static String stamp = "";
+    private static final List<Runnable> refreshListeners = new ArrayList<>();
     private static ByteArrayOutputStream pending;
     private static int nextPart;
     private static int expectedParts;
@@ -40,26 +42,35 @@ public final class PylonCrushRecipes {
         pending.writeBytes(bytes);
         nextPart++;
         if (nextPart == total) {
-            custom = PylonPulverizing.importRecipes(pending.toString(StandardCharsets.UTF_8));
+            String data = pending.toString(StandardCharsets.UTF_8);
+            custom = PylonPulverizing.importRecipes(data);
+            stamp = Integer.toHexString(data.hashCode());
             pending = null;
-            if (refresh != null) refresh.run();
+            tagsUpdated();
         }
     }
 
     public static void onRefresh(Runnable listener) { refresh = listener; }
+    public static void addRefreshListener(Runnable listener) { refreshListeners.add(listener); }
+    public static String stamp() { return stamp; }
 
     public static void tagsUpdated() {
         if (refresh != null) refresh.run();
+        refreshListeners.forEach(Runnable::run);
     }
 
     public static List<Recipe> recipes() {
+        return recipes(custom);
+    }
+
+    public static List<Recipe> recipes(List<PylonPulverizing.Recipe> customRecipes) {
         List<Recipe> recipes = new ArrayList<>();
         for (var item : BuiltInRegistries.ITEM) {
             ItemStack input = new ItemStack(item);
             if (input.isEmpty()) continue;
             var variants = new LinkedHashMap<String, Recipe>();
             for (int tier = 0; tier <= 6; tier++) {
-                var outputs = PylonPulverizing.find(custom, input, tier);
+                var outputs = PylonPulverizing.find(customRecipes, input, tier);
                 if (outputs.isEmpty()) continue;
                 String key = outputs.stream().map(result -> BuiltInRegistries.ITEM.getKey(result.stack().getItem()) +
                     ":" + result.stack().getCount() + ":" + result.chance()).collect(Collectors.joining(","));

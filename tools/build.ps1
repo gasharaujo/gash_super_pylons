@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('all', 'forge-1.20.1', 'neoforge-1.21.1', 'neoforge-26.1.2')]
+    [ValidateSet('all', 'forge-1.20.1', 'neoforge-1.21.1', 'neoforge-26.1.2', 'neoforge-26.3')]
     [string]$Target = 'all',
     [switch]$Offline,
     [switch]$Install
@@ -41,8 +41,9 @@ function Find-Jdk([int]$Major) {
 
 $matrix = @(
     @{ Module = 'forge-1.20.1'; Java = 17; Instance = '20.1' },
-    @{ Module = 'neoforge-1.21.1'; Java = 21; Instance = '21' },
-    @{ Module = 'neoforge-26.1.2'; Java = 25; Instance = '26.1.2' }
+    @{ Module = 'neoforge-1.21.1'; Java = 21; Instance = '21'; Scc = $true },
+    @{ Module = 'neoforge-26.1.2'; Java = 25; Instance = '26.1.2'; Scc = $true },
+    @{ Module = 'neoforge-26.3'; Java = 25; Instance = '26.3' }
 )
 if ($Target -ne 'all') { $matrix = @($matrix | Where-Object { $_.Module -eq $Target }) }
 
@@ -59,7 +60,13 @@ try {
         Push-Location $moduleDirectory
         try {
             $buildArguments = @('build', '--no-daemon', '--console=plain')
-            if ($Offline) { $buildArguments += '--offline' }
+            if ($Offline) {
+                $buildArguments += '--offline'
+                if ($entry.Scc) {
+                    $sccJar = Join-Path $env:USERPROFILE "curseforge\minecraft\Instances\$($entry.Instance)\mods\scc-1.6.5.jar"
+                    if (Test-Path -LiteralPath $sccJar) { $buildArguments += "-PsccJar=$sccJar" }
+                }
+            }
             & '.\gradlew.bat' @buildArguments
             if ($LASTEXITCODE -ne 0) { throw "Build failed: $($entry.Module)" }
         } finally { Pop-Location }

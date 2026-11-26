@@ -39,6 +39,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -144,6 +145,15 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     public PylonUpgrade getGenerator() { return upgrades.get(PylonUpgrade.Slot.GENERATOR); }
     public PylonUpgrade getSpecialty() { return upgrades.get(PylonUpgrade.Slot.SPECIALTY); }
     public PylonUpgrade getProcessing() { return upgrades.get(PylonUpgrade.Slot.PROCESSING); }
+    public boolean canUseProcessingCalculator() {
+        return !isHub() && !isVoid() && getProcessing() != null &&
+            getSpecialty() != PylonUpgrade.GRINDSTONE && hasItemStorage();
+    }
+
+    public int processingQuantityTier() {
+        PylonUpgrade quantity = upgrades.get(PylonUpgrade.Slot.QUANTITY);
+        return quantity == null ? 0 : quantity.tier();
+    }
     public double getFuelUses() { return (double) smeltFuel / FURNACE_TICKS_PER_ITEM; }
     public boolean hasSuperUpgrade() { return upgrades.containsKey(PylonUpgrade.Slot.SUPER); }
 
@@ -932,6 +942,8 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
 
     protected abstract ProcessingSource processingSource(ServerLevel server, BlockPos pos, Direction side);
     protected abstract ItemStack smeltingRecipe(ServerLevel server, ItemStack input);
+    protected abstract void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                                      BonemealableBlock fungus, boolean force);
     protected abstract int minimumY(ServerLevel server);
     protected abstract boolean collectFluidSource(ServerLevel server, ServerPlayer player, BlockPos pos, BlockState state);
     protected abstract List<ItemStack> dispense(ServerLevel server, BlockPos origin, Direction direction, ItemStack stack);
@@ -1482,7 +1494,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 default -> { }
             }
         }
-        if (processor != null && specialty != PylonUpgrade.GRINDSTONE) process(server, processor, amount, quantity == null ? 0 : quantity.tier());
+        if (processor != null && specialty != PylonUpgrade.GRINDSTONE) process(server, processor, amount, processingQuantityTier());
     }
 
     private void dispenseItems(ServerLevel server, int amount) {
@@ -1693,10 +1705,23 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
         }
     }
 
+    protected boolean exposesProcessingOutput() { return false; }
+
+    protected ItemStack bufferedOutput(int index) {
+        return index >= 0 && index < outputBuffer.size() ? outputBuffer.get(index) : ItemStack.EMPTY;
+    }
+
+    protected void removeBufferedOutput(int index, int amount) {
+        ItemStack stack = outputBuffer.get(index);
+        if (amount == stack.getCount()) outputBuffer.remove(index);
+        else outputBuffer.set(index, stack.copyWithCount(stack.getCount() - amount));
+    }
+
     private void process(ServerLevel server, PylonUpgrade processor, int amount, int tier) {
-        var output = workOutput(server);
-        if (output == null) return;
-        flushOutput(output);
+        boolean directOutput = exposesProcessingOutput();
+        var output = directOutput ? null : workOutput(server);
+        if (!directOutput && output == null) return;
+        if (output != null) flushOutput(output);
         if (!outputBuffer.isEmpty()) return;
 
         long previousFuel = smeltFuel;
@@ -1748,7 +1773,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private boolean processOne(ServerLevel server, BiFunction<ItemStack, Boolean, ItemStack> output,
                                List<PylonPulverizing.Result> recipe, BlockPos inputInventory, BooleanSupplier takeInput) {
         ItemStack first = recipe.get(0).stack();
-        if (!output.apply(first.copyWithCount(Math.min(first.getCount(), first.getMaxStackSize())), true).isEmpty() ||
+        if ((output != null && !output.apply(first.copyWithCount(Math.min(first.getCount(), first.getMaxStackSize())), true).isEmpty()) ||
             !consumeProcessingFuel(server, inputInventory, takeInput)) return false;
         for (PylonPulverizing.Result result : recipe) {
             if (result.chance() < 100 && server.getRandom().nextInt(100) >= result.chance()) continue;
@@ -1757,7 +1782,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
                 outputBuffer.add(stack.copyWithCount(Math.min(count, stack.getMaxStackSize())));
             }
         }
-        flushOutput(output);
+        if (output != null) flushOutput(output);
         setChanged();
         return true;
     }
@@ -1840,7 +1865,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
     private void fertilize(ServerLevel server, int ticks, int count) {
         List<BlockPos> plants = new ArrayList<>();
         for (BlockPos pos : farmArea()) {
-            if (server.hasChunkAt(pos) && PylonFarming.canGrow(server.getBlockState(pos))) plants.add(pos.immutable());
+            if (server.hasChunkAt(pos) && PylonFarming.canGrow(server, pos)) plants.add(pos.immutable());
         }
         ServerPlayer automation = getAutomationPlayer(server, AUTOMATION_PROFILE);
         RandomSource random = server.getRandom();
@@ -1850,13 +1875,7 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             if (!mayWorkAt(server, automation, pos)) continue;
             boolean advanced = false;
             for (int j = 0; j < ticks; j++) {
-                BlockState plant = server.getBlockState(pos);
-                if (!PylonFarming.canGrow(plant)) break;
-                if (hasSuperUpgrade()) {
-                    if (!PylonFarming.advanceStage(server, pos, plant)) break;
-                } else {
-                    plant.randomTick(server, pos, random);
-                }
+                if (!PylonFarming.grow(server, pos, hasSuperUpgrade(), random, this::growFungus)) break;
                 advanced = true;
             }
             if (advanced) count--;
