@@ -11,7 +11,7 @@ navigation:
 ## Agricultura, coleta e construção
 
 - **Fertilizer** aplica ticks aleatórios nas plantas. Velocidade controla o intervalo e as tentativas por planta. Quantidade define o número de plantas.
-- **Harvester** colhe cultivos maduros e mantém a plantação. Também derruba árvores inteiras com copa natural. Os drops que não couberem caem no chão. A receita usa uma Base de Upgrade e um machado de diamante.
+- **Harvester** colhe cultivos maduros e derruba árvores inteiras com copa natural. Envia os drops ao inventário no lado de trabalho e guarda os que não couberem. Sem inventário na saída, o pylon guarda o que couber no núcleo e solta o excedente. A receita usa uma Base de Upgrade e um machado de diamante.
 - **Planter** planta as sementes ou mudas guardadas em espaços válidos dentro do alcance.
 - **Magnet** recolhe itens caídos. Começa com um item a cada 60 ticks numa área de 3×3×3 e respeita o filtro.
 - **Placer** coloca um bloco do estoque no lado de trabalho.

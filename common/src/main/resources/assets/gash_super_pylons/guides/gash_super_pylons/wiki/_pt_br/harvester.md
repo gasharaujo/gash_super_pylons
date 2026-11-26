@@ -10,7 +10,9 @@ item_ids:
 
 # Upgrade de Colheitadeira
 
-Colhe culturas maduras e derruba árvores inteiras. Com Super, ataca criaturas próximas. Para equipar uma arma, agache e clique no pylon com ela.
+Colhe culturas maduras, árvores inteiras e fungos gigantes do Nether. Use a Chave para apontar o lado de trabalho para um inventário adjacente. O Harvester envia os drops para lá e guarda o excedente até haver espaço. Com HT’s TreeChop instalado, também colhe árvores com troncos parcialmente cortados.
+
+Com Super, ataca criaturas próximas. Para equipar uma arma, agache e clique no pylon com ela.
 
 ## Receita
 

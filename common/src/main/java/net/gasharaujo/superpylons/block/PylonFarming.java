@@ -3,6 +3,7 @@ package net.gasharaujo.superpylons.block;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import net.gasharaujo.superpylons.compat.PylonTreeChop;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -115,15 +116,23 @@ final class PylonFarming {
         return null;
     }
 
+    static boolean isTreeLog(ServerLevel level, BlockPos pos, BlockState state) {
+        return PylonTreeChop.originalState(level, pos, state).is(BlockTags.LOGS);
+    }
+
+    private static BlockState treeState(ServerLevel level, BlockPos pos) {
+        return PylonTreeChop.originalState(level, pos, level.getBlockState(pos));
+    }
+
     static List<BlockPos> tree(ServerLevel level, BlockPos root) {
-        BlockState state = level.getBlockState(root);
+        BlockState state = treeState(level, root);
         if (state.is(Blocks.CRIMSON_STEM)) {
             return hugeFungus(level, root, Blocks.CRIMSON_STEM, Blocks.CRIMSON_NYLIUM, Blocks.NETHER_WART_BLOCK);
         }
         if (state.is(Blocks.WARPED_STEM)) {
             return hugeFungus(level, root, Blocks.WARPED_STEM, Blocks.WARPED_NYLIUM, Blocks.WARPED_WART_BLOCK);
         }
-        if (!state.is(BlockTags.LOGS) || level.getBlockState(root.below()).is(BlockTags.LOGS)) {
+        if (!state.is(BlockTags.LOGS) || treeState(level, root.below()).is(BlockTags.LOGS)) {
             return List.of();
         }
         var tree = new ArrayList<BlockPos>();
@@ -134,7 +143,7 @@ final class PylonFarming {
             BlockPos log = tree.get(i);
             for (BlockPos next : BlockPos.betweenClosed(log.offset(-1, -1, -1), log.offset(1, 1, 1))) {
                 if (next.getY() < root.getY() || !level.hasChunkAt(next) ||
-                    !level.getBlockState(next).is(BlockTags.LOGS) || !found.add(next.immutable())) continue;
+                    !treeState(level, next).is(BlockTags.LOGS) || !found.add(next.immutable())) continue;
                 if (tree.size() >= 256) return List.of();
                 tree.add(next.immutable());
             }
@@ -161,7 +170,7 @@ final class PylonFarming {
         var parts = new ArrayList<BlockPos>();
         var found = new HashSet<BlockPos>();
         BlockPos tip = root;
-        while (level.getBlockState(tip).is(stem)) {
+        while (treeState(level, tip).is(stem)) {
             if (parts.size() == 32) return List.of();
             parts.add(tip.immutable());
             found.add(tip.immutable());
