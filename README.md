@@ -32,6 +32,7 @@ A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e
 - A integração opcional com **AgriCraft** permite que o Harvester colha plantas maduras nos suportes de cultivo. A planta, o suporte e a genética ficam no lugar para a próxima colheita. Os produtos seguem para o inventário no lado de trabalho.
 - O **Fertilizer** usa o efeito da farinha de osso do AgriCraft nos cultivos que aceitam o fertilizante.
 - Aponte o lado de trabalho do Super Pylon para um **Processing Calculator** do SCC voltado para ele. As saídas do pylon podem enviar produtos diretamente ao armazenamento da rede. Use **Extract Item** para exportar o estoque do núcleo.
+- No modo automático, o Processing Calculator exibe o ícone do upgrade ativo e o modo de processamento. Ao trocar o upgrade, a fornalha de Smelt ou o tier de Quantity do Crush, o SCC atualiza as receitas disponíveis no terminal.
 
 ## Novidades da 1.4.0
 

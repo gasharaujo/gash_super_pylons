@@ -13,6 +13,7 @@ sourceSets.main {
     java.srcDir '../common/src/ponderContent/java'
     java.srcDir '../common/src/ponder/java'
     resources.srcDir '../common/src/main/resources'
+    resources.srcDir '../common/src/scc/resources'
 }
 
 sourceSets.test.java.srcDir '../common/src/test/java'
