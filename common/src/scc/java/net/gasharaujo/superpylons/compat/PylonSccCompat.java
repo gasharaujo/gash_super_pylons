@@ -29,6 +29,7 @@ public final class PylonSccCompat {
     private static final String CRUSH = SuperPylonsMod.MOD_ID + ":crushing";
     private static final String CRUSH_PREFIX = CRUSH + "/";
     private static final String[] QUANTITY_LABELS = {"0", "I", "II", "III", "IV", "V", "VI"};
+    private static final String CRUSH_RECIPE_FORMAT = "quantity-categories-1:";
     private static boolean registered;
 
     private PylonSccCompat() {}
@@ -107,8 +108,10 @@ public final class PylonSccCompat {
                 @Override
                 public String stamp() {
                     var server = ServerLifecycleHooks.getCurrentServer();
-                    if (server == null || !server.isSameThread()) return PylonCrushRecipes.stamp();
-                    return Integer.toHexString(PylonPulverizing.exportRecipes(server.getResourceManager()).hashCode());
+                    String dataStamp = server != null && server.isSameThread()
+                        ? Integer.toHexString(PylonPulverizing.exportRecipes(server.getResourceManager()).hashCode())
+                        : PylonCrushRecipes.stamp();
+                    return CRUSH_RECIPE_FORMAT + dataStamp;
                 }
 
                 @Override
