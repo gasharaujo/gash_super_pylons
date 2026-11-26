@@ -58,12 +58,12 @@ final class PylonFarming {
 
     static boolean canGrow(ServerLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        return canGrow(level, pos, state) || isAgriCraftCrop(level, pos, state);
+        return canGrow(level, pos, state) || hasAgriCraftPlant(level, pos, state);
     }
 
     static boolean grow(ServerLevel level, BlockPos pos, boolean force, RandomSource random, BonemealGrowth bonemeal) {
         BlockState state = level.getBlockState(pos);
-        if (isAgriCraftCrop(level, pos, state) && state.getBlock() instanceof BonemealableBlock plant) {
+        if (state.getBlock() instanceof BonemealableBlock plant && hasAgriCraftPlant(level, pos, state)) {
             return bonemeal.apply(level, pos, state, random, plant, false);
         }
         if (!canGrow(level, pos, state)) return false;
@@ -76,9 +76,9 @@ final class PylonFarming {
         return true;
     }
 
-    private static boolean isAgriCraftCrop(ServerLevel level, BlockPos pos, BlockState state) {
+    private static boolean hasAgriCraftPlant(ServerLevel level, BlockPos pos, BlockState state) {
         return state.hasBlockEntity() && state.getBlock() instanceof BonemealableBlock &&
-            PylonAgriCraft.isCrop(level.getBlockEntity(pos));
+            PylonAgriCraft.hasPlant(level.getBlockEntity(pos));
     }
 
     private static Block fungusSoil(BlockState state) {

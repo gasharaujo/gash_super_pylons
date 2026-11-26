@@ -10,24 +10,37 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public final class PylonAgriCraft {
-    private static final Method HARVEST = findHarvest();
+    private record CropApi(Class<?> cropType, Method hasPlant, Method harvest) {}
+
+    private static final CropApi API = findApi();
 
     private PylonAgriCraft() {}
 
-    private static Method findHarvest() {
+    private static CropApi findApi() {
         try {
             Class<?> crop = Class.forName("com.agricraft.agricraft.api.crop.AgriCrop");
-            return crop.getMethod("harvest", Consumer.class, LivingEntity.class);
+            return new CropApi(crop, crop.getMethod("hasPlant"),
+                crop.getMethod("harvest", Consumer.class, LivingEntity.class));
         } catch (ClassNotFoundException ignored) {
             return null;
         } catch (ReflectiveOperationException | LinkageError error) {
-            LogUtils.getLogger().warn("Could not load the optional AgriCraft harvest API", error);
+            LogUtils.getLogger().warn("Could not load the optional AgriCraft crop API", error);
             return null;
         }
     }
 
     public static boolean isCrop(BlockEntity entity) {
-        return HARVEST != null && HARVEST.getDeclaringClass().isInstance(entity);
+        return API != null && API.cropType().isInstance(entity);
+    }
+
+    public static boolean hasPlant(BlockEntity entity) {
+        if (!isCrop(entity)) return false;
+        try {
+            return Boolean.TRUE.equals(API.hasPlant().invoke(entity));
+        } catch (ReflectiveOperationException error) {
+            LogUtils.getLogger().warn("Could not check for an AgriCraft plant at {}", entity.getBlockPos(), error);
+            return false;
+        }
     }
 
     public static List<ItemStack> harvest(BlockEntity crop) {
@@ -37,7 +50,7 @@ public final class PylonAgriCraft {
         };
         try {
             // AgriCraft accepts a null harvester for automation and handles maturity and regrowth itself.
-            return Boolean.TRUE.equals(HARVEST.invoke(crop, collect, null)) ? drops : List.of();
+            return Boolean.TRUE.equals(API.harvest().invoke(crop, collect, null)) ? drops : List.of();
         } catch (ReflectiveOperationException error) {
             LogUtils.getLogger().warn("AgriCraft harvest failed at {}", crop.getBlockPos(), error);
             return List.of();
