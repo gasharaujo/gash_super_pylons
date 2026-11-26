@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": "minecraft:emerald_block",
+    "M": "minecraft:lapis_block",
+    "N": "gash_super_pylons:quantity_upgrade_4"
+  },
+  "result": {
+    "id": "gash_super_pylons:quantity_upgrade_5",
+    "count": 1
+  }
+}

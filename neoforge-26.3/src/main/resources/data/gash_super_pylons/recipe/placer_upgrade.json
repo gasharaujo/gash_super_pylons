@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:stone",
+    "minecraft:stone"
+  ],
+  "result": {
+    "id": "gash_super_pylons:placer_upgrade",
+    "count": 1
+  }
+}

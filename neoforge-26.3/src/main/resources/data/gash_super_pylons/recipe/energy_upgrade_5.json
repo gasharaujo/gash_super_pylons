@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": "minecraft:emerald_block",
+    "M": "minecraft:redstone_block",
+    "N": "gash_super_pylons:energy_upgrade_4"
+  },
+  "result": {
+    "id": "gash_super_pylons:energy_upgrade_5",
+    "count": 1
+  }
+}

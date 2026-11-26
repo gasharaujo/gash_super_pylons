@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TMT",
+    "MNM",
+    "TMT"
+  ],
+  "key": {
+    "T": "minecraft:crying_obsidian",
+    "M": "minecraft:ender_chest",
+    "N": "gash_super_pylons:storage_upgrade_5"
+  },
+  "result": {
+    "id": "gash_super_pylons:storage_upgrade_6",
+    "count": 1
+  }
+}

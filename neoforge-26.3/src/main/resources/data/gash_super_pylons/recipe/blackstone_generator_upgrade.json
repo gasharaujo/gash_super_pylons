@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LMW",
+    "MNM",
+    "WML"
+  ],
+  "key": {
+    "W": "minecraft:water_bucket",
+    "L": "minecraft:lava_bucket",
+    "M": "minecraft:blackstone",
+    "N": "gash_super_pylons:upgrade_base"
+  },
+  "result": {
+    "id": "gash_super_pylons:blackstone_generator_upgrade",
+    "count": 1
+  }
+}

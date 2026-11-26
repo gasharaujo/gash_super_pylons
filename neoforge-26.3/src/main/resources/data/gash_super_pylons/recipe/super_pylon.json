@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "ISI",
+    "III"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "S": "minecraft:chiseled_stone_bricks"
+  },
+  "result": {
+    "id": "gash_super_pylons:super_pylon",
+    "count": 1
+  }
+}

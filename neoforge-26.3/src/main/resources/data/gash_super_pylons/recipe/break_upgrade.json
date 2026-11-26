@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:diamond_pickaxe",
+    "minecraft:diamond_pickaxe"
+  ],
+  "result": {
+    "id": "gash_super_pylons:break_upgrade",
+    "count": 1
+  }
+}

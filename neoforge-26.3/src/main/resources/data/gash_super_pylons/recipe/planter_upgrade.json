@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "#gash_super_pylons:planter_seeds",
+    "#minecraft:saplings"
+  ],
+  "result": {
+    "id": "gash_super_pylons:planter_upgrade",
+    "count": 1
+  }
+}

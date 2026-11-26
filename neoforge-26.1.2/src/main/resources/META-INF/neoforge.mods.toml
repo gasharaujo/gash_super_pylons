@@ -29,3 +29,9 @@ type = "optional"
 versionRange = "[1.0.52,)"
 ordering = "AFTER"
 side = "CLIENT"
+
+[[dependencies.${mod_id}]]
+modId = "scc"
+type = "optional"
+ordering = "AFTER"
+side = "BOTH"

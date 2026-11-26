@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gash_super_pylons:upgrade_base",
+    "minecraft:paper",
+    "minecraft:paper"
+  ],
+  "result": {
+    "id": "gash_super_pylons:filter_upgrade",
+    "count": 1
+  }
+}

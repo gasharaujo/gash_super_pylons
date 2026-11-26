@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import java.util.List;
 import java.util.function.BiFunction;
 import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.compat.PylonSccCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Mob;
@@ -16,6 +17,8 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
@@ -275,7 +278,7 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         };
     }
 
-    private RecipeType<? extends AbstractCookingRecipe> smeltingType() {
+    public RecipeType<? extends AbstractCookingRecipe> smeltingType() {
         ItemStack attachment = getFurnaceAttachment();
         if (attachment.is(Items.BLAST_FURNACE)) return RecipeType.BLASTING;
         if (attachment.is(Items.SMOKER)) return RecipeType.SMOKING;
@@ -314,6 +317,14 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             player.attackStrengthTicker = cooldown;
             player.setItemInHand(InteractionHand.MAIN_HAND, previous);
             player.detectEquipmentUpdates();
+        }
+    }
+
+    @Override
+    protected void growFungus(ServerLevel server, BlockPos pos, BlockState state, RandomSource random,
+                              BonemealableBlock fungus, boolean force) {
+        if (force || fungus.isBonemealSuccess(server, random, pos, state)) {
+            fungus.performBonemeal(server, random, pos, state);
         }
     }
 
@@ -560,9 +571,16 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
         return server.hasChunkAt(pos) ? server.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side) : null;
     }
 
+    @Override
+    protected boolean exposesProcessingOutput() {
+        return level instanceof ServerLevel && canUseProcessingCalculator() &&
+            PylonSccCompat.hasCalculator(level, worldPosition);
+    }
+
     private final class ItemPort implements IItemHandler {
-        @Override public int getSlots() { return 1; }
+        @Override public int getSlots() { return 1 + (exposesProcessingOutput() ? outputBuffer.size() : 0); }
         @Override public ItemStack getStackInSlot(int slot) {
+            if (slot > 0) return exposesProcessingOutput() ? bufferedOutput(slot - 1).copy() : ItemStack.EMPTY;
             return slot == 0 && canExtractItems() ?
                 getStoredItem().copyWithCount((int) Math.min(Integer.MAX_VALUE, getAvailableItemCount())) : ItemStack.EMPTY;
         }
@@ -570,7 +588,17 @@ public final class SuperPylonBlockEntity extends PylonBlockEntityBase {
             return slot == 0 ? insertAutomation(stack, simulate) : stack;
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            return slot == 0 ? extractAutomation(amount, simulate) : ItemStack.EMPTY;
+            if (slot == 0) return extractAutomation(amount, simulate);
+            if (amount <= 0 || !exposesProcessingOutput()) return ItemStack.EMPTY;
+            ItemStack stack = bufferedOutput(slot - 1);
+            if (stack.isEmpty()) return ItemStack.EMPTY;
+            int extracted = Math.min(stack.getCount(), amount);
+            ItemStack result = stack.copyWithCount(extracted);
+            if (!simulate) {
+                removeBufferedOutput(slot - 1, extracted);
+                setChanged();
+            }
+            return result;
         }
         @Override public int getSlotLimit(int slot) {
             return slot == 0 && hasItemStorage() ? (int) Math.min(Integer.MAX_VALUE, getItemCapacity()) : 0;

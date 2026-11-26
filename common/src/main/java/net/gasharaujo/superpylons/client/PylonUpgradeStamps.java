@@ -93,7 +93,7 @@ final class PylonUpgradeStamps {
         float depth = FACE_DEPTH + 1.0F / 128;
         pose.translate(0.5F + face.getStepX() * depth + face.getStepZ() * right, width / 2,
             0.5F + face.getStepZ() * depth - face.getStepX() * right);
-        pose.mulPose(Axis.YP.rotationDegrees(-face.toYRot()));
+        PylonRenderTransforms.rotate(pose, Axis.YP.rotationDegrees(-face.toYRot()));
         pose.scale(width, width, width);
     }
 

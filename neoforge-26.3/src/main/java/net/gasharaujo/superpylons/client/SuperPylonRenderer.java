@@ -1,0 +1,192 @@
+package net.gasharaujo.superpylons.client;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.List;
+import net.gasharaujo.superpylons.SuperPylonsMod;
+import net.gasharaujo.superpylons.block.PylonUpgrade;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.gasharaujo.superpylons.block.PylonWire;
+import net.gasharaujo.superpylons.block.SuperPylonBlockEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Direction;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.data.AtlasIds;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
+
+public final class SuperPylonRenderer implements BlockEntityRenderer<SuperPylonBlockEntity, SuperPylonRenderer.State> {
+    private final PylonCoreRenderer core = new PylonCoreRenderer();
+    private final PylonWorkshopRenderer workshop;
+
+    public SuperPylonRenderer(BlockEntityRendererProvider.Context context) {
+        workshop = new PylonWorkshopRenderer(context);
+    }
+
+    public static final class State extends BlockEntityRenderState {
+        public float ticks;
+        boolean hub;
+        final ItemStackRenderState hubCenter = new ItemStackRenderState();
+        final ItemStackRenderState hubChest = new ItemStackRenderState();
+        @Nullable PylonUpgrade auxiliary;
+        @Nullable PylonFluidCore fluid;
+        PylonDecorationRenderer.@Nullable Frame frame;
+        List<PylonWire> wires = List.of();
+        List<PylonUpgradeStamps.Stamp<ItemStackRenderState>> stamps = List.of();
+        int toolSlot = -1;
+        int shelfSlot = -1;
+        List<ItemStackRenderState> shelves = List.of();
+        public final ItemStackRenderState storedItem = new ItemStackRenderState();
+        public final ItemStackRenderState breakTool = new ItemStackRenderState();
+        final ItemStackRenderState superStar = new ItemStackRenderState();
+    }
+
+    @Override
+    public State createRenderState() { return new State(); }
+
+    @Override
+    public void extractRenderState(SuperPylonBlockEntity entity, State state, float partialTick, Vec3 camera,
+                                   ModelFeatureRenderer.@Nullable CrumblingOverlay breaking) {
+        BlockEntityRenderer.super.extractRenderState(entity, state, partialTick, camera, breaking);
+        state.ticks = entity.getLevel() == null ? 0 :
+            PylonAnimation.ticks(entity.getLevel().getGameTime(), partialTick);
+        state.hub = entity.isHub();
+        var resolver = Minecraft.getInstance().getItemModelResolver();
+        if (state.hub) {
+            resolver.updateForTopItem(state.hubCenter, new ItemStack(Items.ENDER_CHEST), ItemDisplayContext.FIXED,
+                entity.getLevel(), null, 0);
+            resolver.updateForTopItem(state.hubChest, new ItemStack(Items.CHEST), ItemDisplayContext.FIXED,
+                entity.getLevel(), null, 0);
+        }
+        state.fluid = PylonCoreRenderer.extractFluid(entity, state.lightCoords);
+        state.auxiliary = entity.auxiliaryMode();
+        state.frame = PylonDecorationRenderer.frame(entity);
+        state.wires = entity.outgoingWires();
+        var upgrades = entity.getInstalledUpgrades();
+        if (upgrades.isEmpty()) {
+            state.stamps = List.of();
+        } else {
+            var atlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.ITEMS);
+            state.stamps = PylonUpgradeStamps.stamps(upgrades, entity.getFurnaceAttachment(),
+                id -> atlas.getSprite(Identifier.parse(switch (id) {
+                    case "minecraft:block/command_block_front" -> "gash_super_pylons:block/command_block_front";
+                    case "minecraft:block/blast_furnace_front" -> "gash_super_pylons:block/blast_furnace_front";
+                    case "minecraft:block/smoker_front" -> "gash_super_pylons:block/smoker_front";
+                    default -> id;
+                })), upgrade -> {
+                    var model = new ItemStackRenderState();
+                    var item = new ItemStack(SuperPylonsMod.UPGRADES.get(upgrade).get());
+                    resolver.updateForTopItem(model, item, ItemDisplayContext.NONE, entity.getLevel(), null, 0);
+                    return model;
+                });
+        }
+        Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.storedItem,
+            entity.getStoredItem(), ItemDisplayContext.FIXED, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
+        Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.breakTool,
+            entity.getBreakTool(), ItemDisplayContext.GUI, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
+        state.toolSlot = PylonUpgradeStamps.toolSlot(!state.breakTool.isEmpty(), entity.hasSuperUpgrade());
+        state.shelfSlot = PylonUpgradeStamps.shelfSlot(upgrades, state.toolSlot, !entity.getFurnaceAttachment().isEmpty());
+        state.shelves = entity.getShelfItems().stream().map(item -> {
+            var render = new ItemStackRenderState();
+            Minecraft.getInstance().getItemModelResolver().updateForTopItem(render, item,
+                ItemDisplayContext.GUI, entity.getLevel(), null, (int) entity.getBlockPos().asLong());
+            return render;
+        }).toList();
+        Minecraft.getInstance().getItemModelResolver().updateForTopItem(state.superStar,
+            entity.hasSuperUpgrade() ? new ItemStack(Items.NETHER_STAR) : ItemStack.EMPTY,
+            ItemDisplayContext.FIXED, entity.getLevel(), null, 0);
+    }
+
+    @Override
+    public void submit(State state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
+        PylonDecorationRenderer.submit(state.frame, state.wires, state.blockPos, state.ticks, pose, collector, state.lightCoords);
+        var stamps = state.stamps;
+        int total = stamps.size() + state.shelves.size() + (state.toolSlot >= 0 ? 1 : 0);
+        if (stamps.stream().anyMatch(stamp -> stamp.sprite() != null)) {
+            int light = state.lightCoords;
+            collector.submitCustomGeometry(pose, RenderTypes.entityCutout(TextureAtlas.LOCATION_ITEMS), (matrix, buffer) ->
+                PylonUpgradeStamps.draw(stamps, state.toolSlot, state.shelfSlot, state.shelves.size(),
+                    (x, y, z, normal, u, v) -> buffer.addVertex(matrix, x, y, z)
+                        .setColor(-1).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light)
+                        .setNormal(matrix, normal.getStepX(), normal.getStepY(), normal.getStepZ())));
+        }
+        for (int i = 0; i < stamps.size(); i++) {
+            var model = stamps.get(i).model();
+            if (model == null) continue;
+            int slot = PylonUpgradeStamps.stampSlot(i, state.toolSlot, state.shelfSlot, state.shelves.size());
+            for (Direction face : Direction.Plane.HORIZONTAL) {
+                pose.pushPose();
+                PylonUpgradeStamps.placeItem(pose, face, total, slot);
+                model.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                pose.popPose();
+            }
+        }
+        if (!state.breakTool.isEmpty()) {
+            for (Direction face : Direction.Plane.HORIZONTAL) {
+                pose.pushPose();
+                PylonUpgradeStamps.placeItem(pose, face, total, state.toolSlot);
+                state.breakTool.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                pose.popPose();
+            }
+        }
+        for (int i = 0; i < state.shelves.size(); i++) {
+            for (Direction face : Direction.Plane.HORIZONTAL) {
+                pose.pushPose();
+                PylonUpgradeStamps.placeItem(pose, face, total, state.shelfSlot + i);
+                state.shelves.get(i).submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                pose.popPose();
+            }
+        }
+        if (!state.superStar.isEmpty()) {
+            for (int star = 0; star < PylonAnimation.SUPER_STAR_COUNT; star++) {
+                pose.pushPose();
+                PylonAnimation.placeStar(pose, state.ticks, star, camera.orientation);
+                state.superStar.submit(pose, collector, 0xF000F0, OverlayTexture.NO_OVERLAY, 0);
+                pose.popPose();
+            }
+        }
+        if (state.hub) {
+            pose.pushPose();
+            PylonAnimation.placeHubCenter(pose, state.ticks);
+            state.hubCenter.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+            pose.popPose();
+            for (var ring : PylonAnimation.HubRing.values()) {
+                for (int chest = 0; chest < PylonAnimation.HUB_CHESTS_PER_RING; chest++) {
+                    pose.pushPose();
+                    PylonAnimation.placeHubChest(pose, state.ticks, ring, chest);
+                    state.hubChest.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                    pose.popPose();
+                }
+            }
+            return;
+        }
+        if (state.auxiliary == PylonUpgrade.ANVIL || state.auxiliary == PylonUpgrade.GRINDSTONE) {
+            workshop.submitOrbs(state.auxiliary == PylonUpgrade.GRINDSTONE ? -state.ticks : state.ticks, pose, collector, camera);
+        }
+        if (state.auxiliary == PylonUpgrade.ENCHANTING) {
+            workshop.submitBook(state, pose, collector, camera);
+        } else if (state.fluid != null) {
+            core.submitFluid(state.fluid, pose, collector, state.ticks, OverlayTexture.NO_OVERLAY);
+        } else if (state.storedItem.isEmpty()) {
+            core.submit(pose, collector, state.ticks, state.lightCoords, OverlayTexture.NO_OVERLAY,
+                0, state.breakProgress);
+        } else {
+            pose.pushPose();
+            PylonAnimation.applyOrbit(pose, state.ticks);
+            pose.scale(0.5F, 0.5F, 0.5F);
+            state.storedItem.submit(pose, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+            pose.popPose();
+        }
+    }
+}

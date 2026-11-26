@@ -152,7 +152,7 @@ public final class PylonPulverizing {
         if (!stack.isEmpty() && chance > 0) results.add(new Result(stack, chance));
     }
 
-    private static synchronized List<Recipe> customRecipes(ResourceManager resources) {
+    public static synchronized List<Recipe> customRecipes(ResourceManager resources) {
         return RECIPES.computeIfAbsent(resources, PylonPulverizing::load);
     }
 

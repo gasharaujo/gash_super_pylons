@@ -25,15 +25,15 @@ public final class PylonAnimation {
     public static void apply(PoseStack pose, float ticks) {
         applyOrbit(pose, ticks);
         // Preserve the core's Z/Y/X Euler rotation from Pylon.json about its own center.
-        pose.mulPose(Axis.ZP.rotationDegrees(-125.0F));
-        pose.mulPose(Axis.YP.rotationDegrees(45.0F));
-        pose.mulPose(Axis.XP.rotationDegrees(180.0F));
+        PylonRenderTransforms.rotate(pose, Axis.ZP.rotationDegrees(-125.0F));
+        PylonRenderTransforms.rotate(pose, Axis.YP.rotationDegrees(45.0F));
+        PylonRenderTransforms.rotate(pose, Axis.XP.rotationDegrees(180.0F));
     }
 
     public static void applyOrbit(PoseStack pose, float ticks) {
         pose.translate(0.5, coreHeight(ticks), 0.5);
         // Positive Y rotation is counterclockwise when viewed from above.
-        pose.mulPose(Axis.YP.rotationDegrees(ticks * 360.0F / ROTATION_TICKS));
+        PylonRenderTransforms.rotate(pose, Axis.YP.rotationDegrees(ticks * 360.0F / ROTATION_TICKS));
     }
 
     static double coreHeight(float ticks) {
@@ -47,7 +47,7 @@ public final class PylonAnimation {
         double angle = 2 * Math.PI * (ticks / ROTATION_TICKS + (double) star / SUPER_STAR_COUNT);
         pose.translate(0.5 + Math.cos(angle) * 0.32, coreHeight(ticks) + Math.sin(angle) * 0.13,
             0.5 - Math.sin(angle) * 0.32);
-        pose.mulPose(camera);
+        PylonRenderTransforms.rotate(pose, camera);
         pose.scale(0.19F, 0.19F, 0.19F);
     }
 
@@ -86,7 +86,7 @@ public final class PylonAnimation {
 
     static void placeHubCenter(PoseStack pose, float ticks) {
         pose.translate(0.5, 0.5, 0.5);
-        pose.mulPose(Axis.YP.rotationDegrees(-ticks * 360 / ROTATION_TICKS));
+        PylonRenderTransforms.rotate(pose, Axis.YP.rotationDegrees(-ticks * 360 / ROTATION_TICKS));
         pose.scale(HUB_CENTER_SCALE, HUB_CENTER_SCALE, HUB_CENTER_SCALE);
     }
 
@@ -95,7 +95,7 @@ public final class PylonAnimation {
         // their chests separated there. The two pairs are separated by their radii everywhere.
         Vec3 position = ring.position(ticks, chest);
         pose.translate(position.x, position.y, position.z);
-        pose.mulPose(Axis.YP.rotationDegrees(ring.ordinal() * 90));
+        PylonRenderTransforms.rotate(pose, Axis.YP.rotationDegrees(ring.ordinal() * 90));
         pose.scale(ring.scale, ring.scale, ring.scale);
     }
 

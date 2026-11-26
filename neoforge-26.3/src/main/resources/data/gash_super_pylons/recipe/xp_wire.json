@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CMC"
+  ],
+  "key": {
+    "C": "minecraft:copper_ingot",
+    "M": "minecraft:emerald"
+  },
+  "result": {
+    "id": "gash_super_pylons:xp_wire",
+    "count": 16
+  }
+}
