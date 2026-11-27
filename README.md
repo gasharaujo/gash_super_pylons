@@ -27,6 +27,11 @@ O frame permanece imóvel. O core mantém sua inclinação original, centralizad
 
 A colisão e a área de seleção ocupam o bloco inteiro. O pylon tem a dureza e os requisitos de ferramenta do bloco de ferro. Use uma picareta de pedra ou superior para recuperá-lo.
 
+## Novidades da 1.4.2
+
+- A remoção de upgrades pula os que estão bloqueados e devolve o primeiro disponível na ordem de prioridade.
+- O GuideME explica a remoção e documenta as integrações com AgriCraft e SCC em português e inglês.
+
 ## Novidades da 1.4.1
 
 - A integração opcional com **AgriCraft** permite que o Harvester colha plantas maduras nos suportes de cultivo. A planta, o suporte e a genética ficam no lugar para a próxima colheita. Os produtos seguem para o inventário no lado de trabalho.
@@ -73,7 +78,7 @@ Funis e cabos de itens podem inserir e extrair do estoque por qualquer face. Lei
 
 Os upgrades, ferramentas e cabos estão na aba **Gash's Super Pylons** do Criativo, identificada pelo ícone do Super Pylon. A tooltip azul indica a categoria. Clique com o upgrade na mão para instalar. Um tier superior do mesmo tipo substitui o anterior e o devolve ao inventário. Para retirar, use **Shift + botão direito** com a mão principal vazia. Quando há um gerador e um processador, o gerador sai primeiro.
 
-Insert e Extract saem antes dos upgrades que armazenam seus respectivos recursos. Os ícones aparecem na borda inferior de cada face lateral. O próximo upgrade a sair fica no canto direito, e os demais seguem para a esquerda na ordem de remoção.
+Insert e Extract têm prioridade sobre os upgrades que armazenam seus respectivos recursos. Os ícones na borda inferior de cada face lateral mostram a prioridade da direita para a esquerda. A remoção pula upgrades bloqueados e devolve o primeiro disponível.
 
 | Tier | Intervalo em ticks | Produção por ciclo | Capacidade de armazenamento |
 | --- | ---: | ---: | ---: |
