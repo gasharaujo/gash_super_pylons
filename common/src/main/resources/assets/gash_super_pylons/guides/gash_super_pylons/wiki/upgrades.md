@@ -9,11 +9,15 @@ item_ids:
 
 # Upgrades
 
-Use an upgrade on a pylon to install it. A higher tier of the same modifier replaces the previous tier and returns it to you. Sneak and right-click with your main hand empty to remove the next upgrade. The icons on the lower frame show removal order from right to left.
+Use an upgrade on a pylon to install it. A higher tier of the same modifier replaces the previous tier and returns it to you. Sneak and right-click with your main hand empty to remove the first available upgrade. The icons on the lower frame show removal priority from right to left.
 
 Removal starts with Super, then the equipped tool or weapon, Creative Storage, Redstone, Redstone Level, Filter, Speed, Quantity and Range. Insert and Extract upgrades follow in item, fluid, energy and XP order, before the upgrades that store those resources. Then come Energy, Chunk Loader, the generator, the processor, the specialty and finally Capacity.
 
 A furnace attachment comes out before Smelt, and installed Apotheosis shelves come out before Enchanter.
+
+Removal skips blocked upgrades. A Fluid Storage tank with liquid, an XP Tank with XP, and an Energy upgrade with stored power stay installed. Pending drops or products can block the upgrade that produced them. A Capacity upgrade stays installed if the contents would exceed the base capacity. When every installed upgrade is blocked, the pylon tells you what to clear first.
+
+If removing a fluid generator would discard stored liquid, the pylon asks you to repeat the click to confirm.
 
 The Upgrade Base is made with five cobblestone in a cross. Tier I recipes use the base, and higher tiers use the preceding tier.
 

@@ -1334,39 +1334,49 @@ public abstract class PylonBlockEntityBase extends BlockEntity implements PylonE
             }
             return true;
         }
-        PylonUpgrade upgrade = getInstalledUpgrades().stream().findFirst().orElse(null);
-        if (upgrade == null) return false;
-        if (!(level instanceof ServerLevel)) return true;
-        if (upgrade == PylonUpgrade.SMELT && !furnaceAttachment.isEmpty()) {
-            giveBackFurnaceAttachment(player);
-            sync();
-            return true;
-        }
-        if (upgrade == PylonUpgrade.ENCHANTING && !shelves.isEmpty()) {
-            ItemStack shelf = shelves.remove(0);
-            PylonItemRules.returnToInventory(player, shelf);
-            sync();
-            return true;
-        }
+        if (!(level instanceof ServerLevel)) return !upgrades.isEmpty();
 
+        String firstBlockedReason = null;
+        for (PylonUpgrade upgrade : upgrades.values()) {
+            if (upgrade == PylonUpgrade.SMELT && !furnaceAttachment.isEmpty()) {
+                giveBackFurnaceAttachment(player);
+                sync();
+                return true;
+            }
+            if (upgrade == PylonUpgrade.ENCHANTING && !shelves.isEmpty()) {
+                PylonItemRules.returnToInventory(player, shelves.remove(0));
+                sync();
+                return true;
+            }
+            String reason = upgradeRemovalBlocker(upgrade);
+            if (reason == null) return removeUpgradeOrConfirm(player, upgrade);
+            if (firstBlockedReason == null) firstBlockedReason = reason;
+        }
+        if (firstBlockedReason == null) return false;
+        warn(player, firstBlockedReason);
+        return true;
+    }
+
+    private String upgradeRemovalBlocker(PylonUpgrade upgrade) {
         if (upgrade == PylonUpgrade.FLUID_STORAGE && getFluidAmount() > 0) {
-            warn(player, "tank_needs_empty");
-            return true;
+            return "tank_needs_empty";
         }
         if ((upgrade == PylonUpgrade.XP_TANK && hasExperience()) ||
             (upgrade.isEnergy() && getEnergy() > 0) ||
             ((upgrade == PylonUpgrade.HARVESTER || upgrade == PylonUpgrade.BREAK || upgrade == PylonUpgrade.GRINDSTONE ||
                 upgrade.slot() == PylonUpgrade.Slot.PROCESSING) &&
                 !outputBuffer.isEmpty())) {
-            warn(player, "specialty_needs_empty");
-            return true;
+            return "specialty_needs_empty";
         }
         if (upgrade.slot() == PylonUpgrade.Slot.STORAGE &&
             (getStoredCount() > PylonContents.CAPACITY || getFluidAmount() > BASE_FLUID_CAPACITY_MB ||
              xpFluidAmount() > PylonXpFluids.millibuckets(BASE_XP_CAPACITY))) {
-            warn(player, "storage_over_capacity");
-            return true;
+            return "storage_over_capacity";
         }
+        return null;
+    }
+
+    private boolean removeUpgradeOrConfirm(Player player, PylonUpgrade upgrade) {
         if (upgrade.generatesFluid() && getFluidAmount() > 0) {
             long now = level.getGameTime();
             if (!player.getUUID().equals(warnedPlayer) || now >= warningExpires) {

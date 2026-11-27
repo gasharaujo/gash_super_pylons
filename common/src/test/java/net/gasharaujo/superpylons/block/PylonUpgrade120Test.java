@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -170,6 +171,47 @@ final class PylonUpgrade120Test {
             assertTrue(PylonItemRules.exactlyEqual(donor, main.getStoredItem()));
             assertEquals(1, supplies.getStoredCount());
             assertTrue(xp.getExperience() < beforeCopy);
+        });
+    }
+
+    @Test
+    void removalSkipsBlockedUpgradesAndReturnsTheFirstAvailableItem(MinecraftServer server) {
+        server.executeBlocking(() -> {
+            var level = testLevel(server);
+            var pos = new BlockPos(192, 128, 192);
+            var pylon = place(level, pos, false, "energy_upgrade_1,smelt_upgrade,storage_upgrade_1");
+            var player = pylon.getAutomationPlayer(level, new GameProfile(UUID.randomUUID(), "RemovalTest"));
+            player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 1.5);
+            player.setShiftKeyDown(true);
+            pylon.loadSpecialtyAmounts(0, 500);
+            pylon.loadFurnaceAttachment(new ItemStack(Items.SMOKER));
+            pylon.outputBuffer.add(new ItemStack(Items.STONE));
+
+            assertTrue(pylon.use(player, InteractionHand.MAIN_HAND));
+            assertTrue(player.getInventory().contains(new ItemStack(Items.SMOKER)));
+            assertTrue(pylon.getFurnaceAttachment().isEmpty());
+            assertEquals(PylonUpgrade.SMELT, pylon.getProcessing());
+
+            player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            assertTrue(pylon.use(player, InteractionHand.MAIN_HAND));
+            assertEquals(PylonContents.CAPACITY, pylon.getItemCapacity());
+            assertTrue(player.getInventory().contains(new ItemStack(SuperPylonsMod.UPGRADES.get(PylonUpgrade.STORAGE_1).get())));
+            assertEquals(500, pylon.getEnergy());
+            assertEquals(PylonUpgrade.SMELT, pylon.getProcessing());
+            assertEquals(1, pylon.outputBuffer.size());
+            assertTrue(pylon.outputBuffer.getFirst().is(Items.STONE));
+
+            player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            assertTrue(pylon.use(player, InteractionHand.MAIN_HAND));
+            assertEquals(2, pylon.getInstalledUpgrades().size());
+            assertEquals(500, pylon.getEnergy());
+            assertEquals(1, pylon.outputBuffer.size());
+
+            pylon.outputBuffer.clear();
+            assertTrue(pylon.use(player, InteractionHand.MAIN_HAND));
+            assertNull(pylon.getProcessing());
+            assertTrue(player.getInventory().contains(new ItemStack(SuperPylonsMod.UPGRADES.get(PylonUpgrade.SMELT).get())));
+            assertEquals(500, pylon.getEnergy());
         });
     }
 

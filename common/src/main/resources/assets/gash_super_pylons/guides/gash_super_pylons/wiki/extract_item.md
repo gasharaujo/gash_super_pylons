@@ -12,6 +12,8 @@ item_ids:
 
 Pushes items into the block on the working side. Install one transfer upgrade per resource. Capacity VI enables bulk transfer.
 
+With SCC installed on NeoForge 1.21.1 or 26.1.2, Extract Items can send the pylon’s stock to a Processing Calculator on the working side that faces the pylon and is connected to the network.
+
 ## Recipe
 
 <RecipeFor id="gash_super_pylons:extract_item_upgrade" />
